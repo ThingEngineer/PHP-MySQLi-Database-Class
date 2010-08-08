@@ -121,25 +121,24 @@ class MysqlDB {
     * @return string The joined parameter types.
     */
    protected function _determineType($item) {
-      $param_type = array();
       switch (gettype($item)) {
          case 'string':
-            $param_type[] = 's';
+            $param_type = 's';
             break;
 
          case 'integer':
-            $param_type[] = 'i';
+            $param_type = 'i';
             break;
 
-		case 'blob':
-            $param_type[] = 'b';
+	case 'blob':
+            $param_type = 'b';
             break;
-	
-		case 'double':
-            $param_type[] = 'd';
+
+	case 'double':
+            $param_type = 'd';
             break;
       }
-      return implode($param_type);
+      return $param_type;
    }
 
 
@@ -208,7 +207,6 @@ class MysqlDB {
 
             $this->_query .= '(' . implode($keys, ', ') . ')';
             $this->_query .= ' VALUES(';
-
             while ( $num !== 0 ) {
                ($num !== 1) ? $this->_query .= '?, ' : $this->_query .= '?)';
                $num--;
@@ -231,7 +229,6 @@ class MysqlDB {
          foreach ($tableData as $prop => $val) {
             $args[] = &$tableData[$prop];
          }
-
          call_user_func_array(array($stmt, 'bind_param'), $args);
       }
 
@@ -263,9 +260,9 @@ class MysqlDB {
 
       call_user_func_array(array($stmt, 'bind_result'), $parameters);
 
-      while ($stmt->fetch()) {
+      while ( $stmt->fetch() ) {
          $x = array();
-         foreach ($row as $key => $val) {
+         foreach ( $row as $key => $val ) {
             $x[$key] = $val;
          }
          $results[] = $x;
