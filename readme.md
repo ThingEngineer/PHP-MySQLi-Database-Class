@@ -69,3 +69,13 @@ $results = $Db->query('SELECT * from posts');
 print_r($results); // contains array of returned rows
 </code>
 </pre>
+
+<h3> Where Method </h3>
+<p>This method allows you to specify the parameters of the query. For now, it only accepts one key => value pair. </p>
+<pre>
+<code>
+$Db->where('id', int);
+$results = $Db->get('tableName');
+print_r($results); // contains array of returned rows
+</code>
+</pre>
