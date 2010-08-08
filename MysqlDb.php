@@ -130,6 +130,14 @@ class MysqlDB {
          case 'integer':
             $param_type[] = 'i';
             break;
+
+		case 'blob':
+            $param_type[] = 'b';
+            break;
+	
+		case 'double':
+            $param_type[] = 'd';
+            break;
       }
       return implode($param_type);
    }
