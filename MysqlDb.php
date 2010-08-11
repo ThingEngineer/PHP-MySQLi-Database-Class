@@ -19,13 +19,12 @@ class MysqlDB {
     * @param int $numRows The number of rows total to return.
     * @return array Contains the returned rows from the query.
     */
-   public function query($query, $numRows = NULL)
+   public function query($query)
    {
       $this->_query = filter_var($query, FILTER_SANITIZE_STRING);
-
-      $stmt = $this->_mysql->prepare($this->_query);
+  	  
+	  $stmt = $this->_prepareQuery();
       $stmt->execute();
-
       $results = $this->_dynamicBindResults($stmt);
       return $results;
    }
@@ -152,13 +151,13 @@ class MysqlDB {
     * @return object Returns the $stmt object.
     */
    protected function _buildQuery($numRows = NULL, $tableData = false) {
-
+	  $hasTableData = null;
       if ( gettype($tableData) === 'array') {
          $hasTableData = true;
       }
 
       // Did the user call the "where" method?
-      if (!empty($this->_where)) {
+      if ( !empty($this->_where) ) {
          $keys = array_keys($this->_where);
          $where_prop = $keys[0];
          $where_value = $this->_where[$where_prop];
@@ -220,7 +219,7 @@ class MysqlDB {
       }
 
       // Prepare query
-      $stmt = $this->_mysql->prepare($this->_query) or die('Problem preparing query.');
+     $stmt = $this->_prepareQuery();
 
       // Bind parameters
       if ( $hasTableData ) {
@@ -233,7 +232,7 @@ class MysqlDB {
       }
 
       else {
-         $stmt->bind_param($this->_paramTypeList, $where_value);
+		 if ( $this->_where ) $stmt->bind_param($this->_paramTypeList, $where_value);
       }
 
       return $stmt;
@@ -269,5 +268,14 @@ class MysqlDB {
       }
       return $results;
    }
+
+
+	protected function _prepareQuery()
+	{
+		if ( !$stmt = $this->_mysql->prepare($this->_query) ) {
+		    trigger_error("Connection issue", E_USER_ERROR);
+		}
+		return $stmt;
+	}
 
 }
