@@ -17,7 +17,8 @@ class MysqlDB {
     * @param int $numRows The number of rows total to return.
     * @return array Contains the returned rows from the query.
     */
-   public function query($query) {
+   public function query($query) 
+   {
       $this->_query = filter_var($query, FILTER_SANITIZE_STRING);
 
       $stmt = $this->_prepareQuery();
@@ -33,7 +34,8 @@ class MysqlDB {
     * @param int $numRows The number of rows total to return.
     * @return array Contains the returned rows from the select query.
     */
-   public function get($tableName, $numRows = NULL) {
+   public function get($tableName, $numRows = NULL) 
+   {
 
       $this->_query = "SELECT * FROM $tableName";
       $stmt = $this->_buildQuery($numRows);
@@ -49,7 +51,8 @@ class MysqlDB {
     * @param array $insertData Data containing information for inserting into the DB.
     * @return boolean Boolean indicating whether the insert query was completed succesfully.
     */
-   public function insert($tableName, $insertData) {
+   public function insert($tableName, $insertData) 
+   {
       $this->_query = "INSERT into $tableName";
       $stmt = $this->_buildQuery(NULL, $insertData);
       $stmt->execute();
@@ -65,7 +68,8 @@ class MysqlDB {
     * @param array $tableData Array of data to update the desired row.
     * @return boolean
     */
-   public function update($tableName, $tableData) {
+   public function update($tableName, $tableData) 
+   {
       $this->_query = "UPDATE $tableName SET ";
 
       $stmt = $this->_buildQuery(NULL, $tableData);
@@ -97,7 +101,8 @@ class MysqlDB {
     * @param string $whereProp A string for the name of the database field to update
     * @param mixed $whereValue The value for the field.
     */
-   public function where($whereProp, $whereValue) {
+   public function where($whereProp, $whereValue) 
+   {
       $this->_where[$whereProp] = $whereValue;
    }
 
@@ -110,7 +115,8 @@ class MysqlDB {
     * @param mixed $item Input to determine the type.
     * @return string The joined parameter types.
     */
-   protected function _determineType($item) {
+   protected function _determineType($item) 
+   {
       switch (gettype($item)) {
          case 'string':
             $param_type = 's';
@@ -140,7 +146,8 @@ class MysqlDB {
     * @param array $tableData Should contain an array of data for updating the database.
     * @return object Returns the $stmt object.
     */
-   protected function _buildQuery($numRows = NULL, $tableData = false) {
+   protected function _buildQuery($numRows = NULL, $tableData = false) 
+   {
       $hasTableData = null;
       if (gettype($tableData) === 'array') {
          $hasTableData = true;
@@ -232,7 +239,8 @@ class MysqlDB {
     * @param object $stmt Equal to the prepared statement object.
     * @return array The results of the SQL fetch.
     */
-   protected function _dynamicBindResults($stmt) {
+   protected function _dynamicBindResults($stmt) 
+   {
       $parameters = array();
       $results = array();
 
@@ -254,11 +262,23 @@ class MysqlDB {
       return $results;
    }
 
-   protected function _prepareQuery() {
+
+   /**
+   * Method attempts to prepare the SQL query
+   * and throws an error if there was a problem.
+   */
+   protected function _prepareQuery() 
+   {
       if (!$stmt = $this->_mysql->prepare($this->_query)) {
          trigger_error("Problem preparing query", E_USER_ERROR);
       }
       return $stmt;
+   }
+
+
+   public function __destruct() 
+   {
+		$this->_mysql->close();
    }
 
 }
