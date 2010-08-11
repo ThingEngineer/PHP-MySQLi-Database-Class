@@ -7,11 +7,9 @@ class MysqlDB {
    protected $_query;
    protected $_paramTypeList;
 
-
    public function __construct($host, $username, $password, $db) {
       $this->_mysql = new mysqli($host, $username, $password, $db) or die('There was a problem connecting to the database');
    }
-
 
    /**
     *
@@ -19,16 +17,14 @@ class MysqlDB {
     * @param int $numRows The number of rows total to return.
     * @return array Contains the returned rows from the query.
     */
-   public function query($query)
-   {
+   public function query($query) {
       $this->_query = filter_var($query, FILTER_SANITIZE_STRING);
-  	  
-	  $stmt = $this->_prepareQuery();
+
+      $stmt = $this->_prepareQuery();
       $stmt->execute();
       $results = $this->_dynamicBindResults($stmt);
       return $results;
    }
-
 
    /**
     * A convenient SELECT * function.
@@ -47,7 +43,6 @@ class MysqlDB {
       return $results;
    }
 
-
    /**
     *
     * @param <string $tableName The name of the table.
@@ -62,7 +57,6 @@ class MysqlDB {
       if ($stmt->affected_rows)
          return true;
    }
-
 
    /**
     * Update query. Be sure to first call the "where" method.
@@ -81,7 +75,6 @@ class MysqlDB {
          return true;
    }
 
-
    /**
     * Delete query. Call the "where" method first.
     *
@@ -98,7 +91,6 @@ class MysqlDB {
          return true;
    }
 
-
    /**
     * This method allows you to specify a WHERE statement for SQL queries.
     *
@@ -108,7 +100,6 @@ class MysqlDB {
    public function where($whereProp, $whereValue) {
       $this->_where[$whereProp] = $whereValue;
    }
-
 
    /**
     * This method is needed for prepared statements. They require
@@ -129,17 +120,16 @@ class MysqlDB {
             $param_type = 'i';
             break;
 
-	case 'blob':
+         case 'blob':
             $param_type = 'b';
             break;
 
-	case 'double':
+         case 'double':
             $param_type = 'd';
             break;
       }
       return $param_type;
    }
-
 
    /**
     * Abstraction method that will compile the WHERE statement,
@@ -151,20 +141,20 @@ class MysqlDB {
     * @return object Returns the $stmt object.
     */
    protected function _buildQuery($numRows = NULL, $tableData = false) {
-	  $hasTableData = null;
-      if ( gettype($tableData) === 'array') {
+      $hasTableData = null;
+      if (gettype($tableData) === 'array') {
          $hasTableData = true;
       }
 
       // Did the user call the "where" method?
-      if ( !empty($this->_where) ) {
+      if (!empty($this->_where)) {
          $keys = array_keys($this->_where);
          $where_prop = $keys[0];
          $where_value = $this->_where[$where_prop];
 
          // if update data was passed, filter through
          // and create the SQL query, accordingly.
-         if ( $hasTableData ) {
+         if ($hasTableData) {
             $i = 1;
             foreach ($tableData as $prop => $value) {
                // determines what data type the item is, for binding purposes.
@@ -179,20 +169,18 @@ class MysqlDB {
 
                $i++;
             }
-         }
-
-         else {
+         } else {
             // no table data was passed. Might be SELECT statement.
             $this->_paramTypeList = $this->_determineType($where_value);
-             $this->_query .= " WHERE " . $where_prop . "= ?";
+            $this->_query .= " WHERE " . $where_prop . "= ?";
          }
       }
 
       // Determine if is INSERT query
-      if ( $hasTableData ) {
+      if ($hasTableData) {
          $pos = strpos($this->_query, 'INSERT');
 
-         if ( $pos !== false  ) {
+         if ($pos !== false) {
             //is insert statement
             $keys = array_keys($tableData);
             $values = array_values($tableData);
@@ -206,7 +194,7 @@ class MysqlDB {
 
             $this->_query .= '(' . implode($keys, ', ') . ')';
             $this->_query .= ' VALUES(';
-            while ( $num !== 0 ) {
+            while ($num !== 0) {
                ($num !== 1) ? $this->_query .= '?, ' : $this->_query .= '?)';
                $num--;
             }
@@ -219,25 +207,23 @@ class MysqlDB {
       }
 
       // Prepare query
-     $stmt = $this->_prepareQuery();
+      $stmt = $this->_prepareQuery();
 
       // Bind parameters
-      if ( $hasTableData ) {
+      if ($hasTableData) {
          $args = array();
          $args[] = $this->_paramTypeList;
          foreach ($tableData as $prop => $val) {
             $args[] = &$tableData[$prop];
          }
          call_user_func_array(array($stmt, 'bind_param'), $args);
-      }
-
-      else {
-		 if ( $this->_where ) $stmt->bind_param($this->_paramTypeList, $where_value);
+      } else {
+         if ($this->_where)
+            $stmt->bind_param($this->_paramTypeList, $where_value);
       }
 
       return $stmt;
    }
-
 
    /**
     * This helper method takes care of prepared statements' "bind_result method
@@ -246,8 +232,7 @@ class MysqlDB {
     * @param object $stmt Equal to the prepared statement object.
     * @return array The results of the SQL fetch.
     */
-   protected function _dynamicBindResults($stmt)
-   {
+   protected function _dynamicBindResults($stmt) {
       $parameters = array();
       $results = array();
 
@@ -259,9 +244,9 @@ class MysqlDB {
 
       call_user_func_array(array($stmt, 'bind_result'), $parameters);
 
-      while ( $stmt->fetch() ) {
+      while ($stmt->fetch()) {
          $x = array();
-         foreach ( $row as $key => $val ) {
+         foreach ($row as $key => $val) {
             $x[$key] = $val;
          }
          $results[] = $x;
@@ -269,13 +254,11 @@ class MysqlDB {
       return $results;
    }
 
-
-	protected function _prepareQuery()
-	{
-		if ( !$stmt = $this->_mysql->prepare($this->_query) ) {
-		    trigger_error("Connection issue", E_USER_ERROR);
-		}
-		return $stmt;
-	}
+   protected function _prepareQuery() {
+      if (!$stmt = $this->_mysql->prepare($this->_query)) {
+         trigger_error("Connection issue", E_USER_ERROR);
+      }
+      return $stmt;
+   }
 
 }
