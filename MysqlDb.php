@@ -256,7 +256,7 @@ class MysqlDB {
 
    protected function _prepareQuery() {
       if (!$stmt = $this->_mysql->prepare($this->_query)) {
-         trigger_error("Connection issue", E_USER_ERROR);
+         trigger_error("Problem preparing query", E_USER_ERROR);
       }
       return $stmt;
    }
