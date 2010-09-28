@@ -119,22 +119,21 @@ class MysqlDB {
    {
       switch (gettype($item)) {
          case 'string':
-            $param_type = 's';
+            return 's';
             break;
 
          case 'integer':
-            $param_type = 'i';
+            return 'i';
             break;
 
          case 'blob':
-            $param_type = 'b';
+            return 'b';
             break;
 
          case 'double':
-            $param_type = 'd';
+            return 'd';
             break;
       }
-      return $param_type;
    }
 
    /**
@@ -163,19 +162,22 @@ class MysqlDB {
          // and create the SQL query, accordingly.
          if ($hasTableData) {
             $i = 1;
-            foreach ($tableData as $prop => $value) {
-               // determines what data type the item is, for binding purposes.
-               $this->_paramTypeList .= $this->_determineType($value);
+				$pos = strpos($this->_query, 'UPDATE');
+				if ( $pos !== false) {
+					foreach ($tableData as $prop => $value) {
+						// determines what data type the item is, for binding purposes.
+						$this->_paramTypeList .= $this->_determineType($value);
 
-               // prepares the reset of the SQL query.
-               if ($i === count($tableData)) {
-                  $this->_query .= $prop . " = ? WHERE " . $where_prop . "= " . $where_value;
-               } else {
-                  $this->_query .= $prop . ' = ?, ';
-               }
+						// prepares the reset of the SQL query.
+						if ($i === count($tableData)) {
+							$this->_query .= $prop . " = ? WHERE " . $where_prop . "= " . $where_value;
+						} else {
+							$this->_query .= $prop . ' = ?, ';
+						}
 
-               $i++;
-            }
+						$i++;
+					}
+				}
          } else {
             // no table data was passed. Might be SELECT statement.
             $this->_paramTypeList = $this->_determineType($where_value);
