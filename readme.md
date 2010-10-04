@@ -19,7 +19,7 @@ Next, prepare your data, and call the necessary methods.
 <h3> Insert Query </h3>
 <pre>
 <code>
-<?php
+
 $insertData = array(
    'title' => 'Inserted title',
     'body' => 'Inserted body'
