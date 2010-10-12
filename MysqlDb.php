@@ -6,6 +6,7 @@ class MysqlDB {
    protected $_where = array();
    protected $_query;
    protected $_paramTypeList;
+   protected $_crudType = null;
 
    public function __construct($host, $username, $password, $db) {
       $this->_mysql = new mysqli($host, $username, $password, $db) or die('There was a problem connecting to the database');
@@ -42,6 +43,7 @@ class MysqlDB {
       $stmt->execute();
 
       $results = $this->_dynamicBindResults($stmt);
+      
       return $results;
    }
 
@@ -71,10 +73,8 @@ class MysqlDB {
    public function update($tableName, $tableData) 
    {
       $this->_query = "UPDATE $tableName SET ";
-
       $stmt = $this->_buildQuery(NULL, $tableData);
       $stmt->execute();
-
       if ($stmt->affected_rows)
          return true;
    }
@@ -163,14 +163,15 @@ class MysqlDB {
          if ($hasTableData) {
             $i = 1;
 				$pos = strpos($this->_query, 'UPDATE');
-				if ( $pos !== false) {
+            if ( $pos !== false) {
+               $this->_crudType = 'update';
 					foreach ($tableData as $prop => $value) {
 						// determines what data type the item is, for binding purposes.
 						$this->_paramTypeList .= $this->_determineType($value);
 
 						// prepares the reset of the SQL query.
 						if ($i === count($tableData)) {
-							$this->_query .= $prop . " = ? WHERE " . $where_prop . "= " . $where_value;
+							$this->_query .= $prop . " = ? WHERE $where_prop = '$where_value'";
 						} else {
 							$this->_query .= $prop . ' = ?, ';
 						}
@@ -184,11 +185,9 @@ class MysqlDB {
             $this->_query .= " WHERE " . $where_prop . "= ?";
          }
       }
-
       // Determine if is INSERT query
-      if ($hasTableData) {
+      if ($hasTableData && !isset($this->_crudType)) {
          $pos = strpos($this->_query, 'INSERT');
-
          if ($pos !== false) {
             //is insert statement
             $keys = array_keys($tableData);
@@ -214,12 +213,11 @@ class MysqlDB {
       if (isset($numRows)) {
          $this->_query .= " LIMIT " . (int) $numRows;
       }
-
       // Prepare query
       $stmt = $this->_prepareQuery();
 
       // Bind parameters
-      if ($hasTableData) {
+      if ($hasTableData && $this->_crudType !== 'update') {
          $args = array();
          $args[] = $this->_paramTypeList;
          foreach ($tableData as $prop => $val) {
@@ -230,7 +228,8 @@ class MysqlDB {
          if ($this->_where)
             $stmt->bind_param($this->_paramTypeList, $where_value);
       }
-
+      // Clear where method to prevent clashes with future operations;
+      $this->_where = array();
       return $stmt;
    }
 
