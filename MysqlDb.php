@@ -43,7 +43,7 @@ class MysqlDB {
       $stmt->execute();
 
       $results = $this->_dynamicBindResults($stmt);
-      
+
       return $results;
    }
 
@@ -118,21 +118,21 @@ class MysqlDB {
    protected function _determineType($item) 
    {
       switch (gettype($item)) {
-         case 'string':
-            return 's';
-            break;
+      case 'string':
+         return 's';
+         break;
 
-         case 'integer':
-            return 'i';
-            break;
+      case 'integer':
+         return 'i';
+         break;
 
-         case 'blob':
-            return 'b';
-            break;
+      case 'blob':
+         return 'b';
+         break;
 
-         case 'double':
-            return 'd';
-            break;
+      case 'double':
+         return 'd';
+         break;
       }
    }
 
@@ -162,23 +162,23 @@ class MysqlDB {
          // and create the SQL query, accordingly.
          if ($hasTableData) {
             $i = 1;
-				$pos = strpos($this->_query, 'UPDATE');
+            $pos = strpos($this->_query, 'UPDATE');
             if ( $pos !== false) {
                $this->_crudType = 'update';
-					foreach ($tableData as $prop => $value) {
-						// determines what data type the item is, for binding purposes.
-						$this->_paramTypeList .= $this->_determineType($value);
+               foreach ($tableData as $prop => $value) {
+                  // determines what data type the item is, for binding purposes.
+                  $this->_paramTypeList .= $this->_determineType($value);
 
-						// prepares the reset of the SQL query.
-						if ($i === count($tableData)) {
-							$this->_query .= $prop . " = ? WHERE $where_prop = '$where_value'";
-						} else {
-							$this->_query .= $prop . ' = ?, ';
-						}
+                  // prepares the reset of the SQL query.
+                  if ($i === count($tableData)) {
+                     $this->_query .= $prop . " = ? WHERE $where_prop = '$where_value'";
+                  } else {
+                     $this->_query .= $prop . ' = ?, ';
+                  }
 
-						$i++;
-					}
-				}
+                  $i++;
+               }
+            }
          } else {
             // no table data was passed. Might be SELECT statement.
             $this->_paramTypeList = $this->_determineType($where_value);
@@ -265,9 +265,9 @@ class MysqlDB {
 
 
    /**
-   * Method attempts to prepare the SQL query
-   * and throws an error if there was a problem.
-   */
+    * Method attempts to prepare the SQL query
+    * and throws an error if there was a problem.
+    */
    protected function _prepareQuery() 
    {
       if (!$stmt = $this->_mysql->prepare($this->_query)) {
@@ -279,7 +279,7 @@ class MysqlDB {
 
    public function __destruct() 
    {
-		$this->_mysql->close();
+      $this->_mysql->close();
    }
 
 }
