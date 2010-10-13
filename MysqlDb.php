@@ -217,7 +217,7 @@ class MysqlDB {
       $stmt = $this->_prepareQuery();
 
       // Bind parameters
-      if ($hasTableData && $this->_crudType !== 'update') {
+      if ($hasTableData) {
          $args = array();
          $args[] = $this->_paramTypeList;
          foreach ($tableData as $prop => $val) {
