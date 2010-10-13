@@ -37,7 +37,7 @@ class MysqlDB {
     */
    public function get($tableName, $numRows = NULL) 
    {
-
+      $this->_crudType = 'read';
       $this->_query = "SELECT * FROM $tableName";
       $stmt = $this->_buildQuery($numRows);
       $stmt->execute();
@@ -55,6 +55,7 @@ class MysqlDB {
     */
    public function insert($tableName, $insertData) 
    {
+      $this->_crudType = 'insert';
       $this->_query = "INSERT into $tableName";
       $stmt = $this->_buildQuery(NULL, $insertData);
       $stmt->execute();
@@ -72,6 +73,7 @@ class MysqlDB {
     */
    public function update($tableName, $tableData) 
    {
+      $this->_crudType = 'update';
       $this->_query = "UPDATE $tableName SET ";
       $stmt = $this->_buildQuery(NULL, $tableData);
       $stmt->execute();
@@ -85,7 +87,9 @@ class MysqlDB {
     * @param string $tableName The name of the database table to work with.
     * @return boolean Indicates success. 0 or 1.
     */
-   public function delete($tableName) {
+   public function delete($tableName) 
+   {
+      $this->_crudType = 'delete';
       $this->_query = "DELETE FROM $tableName";
 
       $stmt = $this->_buildQuery();
@@ -162,9 +166,7 @@ class MysqlDB {
          // and create the SQL query, accordingly.
          if ($hasTableData) {
             $i = 1;
-            $pos = strpos($this->_query, 'UPDATE');
-            if ( $pos !== false) {
-               $this->_crudType = 'update';
+            if ( $this->_crudType == 'update' ) {
                foreach ($tableData as $prop => $value) {
                   // determines what data type the item is, for binding purposes.
                   $this->_paramTypeList .= $this->_determineType($value);
@@ -186,10 +188,8 @@ class MysqlDB {
          }
       }
       // Determine if is INSERT query
-      if ($hasTableData && !isset($this->_crudType)) {
-         $pos = strpos($this->_query, 'INSERT');
-         if ($pos !== false) {
-            //is insert statement
+      if ($hasTableData && $this->_crudType == 'insert') {
+         if ( $this->_crudType == 'insert' ) {
             $keys = array_keys($tableData);
             $values = array_values($tableData);
             $num = count($keys);
@@ -270,6 +270,7 @@ class MysqlDB {
     */
    protected function _prepareQuery() 
    {
+      echo $this->_query;
       if (!$stmt = $this->_mysql->prepare($this->_query)) {
          trigger_error("Problem preparing query", E_USER_ERROR);
       }
