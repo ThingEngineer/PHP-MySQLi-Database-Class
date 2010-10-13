@@ -189,23 +189,21 @@ class MysqlDB {
       }
       // Determine if is INSERT query
       if ($hasTableData && $this->_crudType == 'insert') {
-         if ( $this->_crudType == 'insert' ) {
-            $keys = array_keys($tableData);
-            $values = array_values($tableData);
-            $num = count($keys);
+         $keys = array_keys($tableData);
+         $values = array_values($tableData);
+         $num = count($keys);
 
-            // wrap values in quotes
-            foreach ($values as $key => $val) {
-               $values[$key] = "'{$val}'";
-               $this->_paramTypeList .= $this->_determineType($val);
-            }
+         // wrap values in quotes
+         foreach ($values as $key => $val) {
+            $values[$key] = "'{$val}'";
+            $this->_paramTypeList .= $this->_determineType($val);
+         }
 
-            $this->_query .= '(' . implode($keys, ', ') . ')';
-            $this->_query .= ' VALUES(';
-            while ($num !== 0) {
-               ($num !== 1) ? $this->_query .= '?, ' : $this->_query .= '?)';
-               $num--;
-            }
+         $this->_query .= '(' . implode($keys, ', ') . ')';
+         $this->_query .= ' VALUES(';
+         while ($num !== 0) {
+            ($num !== 1) ? $this->_query .= '?, ' : $this->_query .= '?)';
+            $num--;
          }
       }
 
