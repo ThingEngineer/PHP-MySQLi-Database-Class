@@ -1,5 +1,5 @@
 #Mac OS X files
 .DS_Store
 
-#Vim leave-behinds
+#Vim trash
 *.swp
