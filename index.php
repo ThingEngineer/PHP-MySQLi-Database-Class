@@ -1,16 +1,7 @@
 <?php
-require_once('MysqlDb.php');
+require_once('MysqliDb.php');
 
-$Db = new MysqlDb('localhost', 'root', 'root', 'db');
-
-$insertData = array(
-   'title' => 'Inserted title',
-    'body' => 'Inserted body'
-);
-
-
-$results = $Db->insert('posts', $insertData);
-print_r($results);
+$db = new MysqliDb('localhost', 'root', 'root', 'db');
 
 ?>
 <!DOCTYPE html>
@@ -21,6 +12,16 @@ print_r($results);
    <title>untitled</title>
 </head>
 <body>
+	
+<?php
+$insertData = array(
+   'title' => 'Inserted title',
+    'body' => 'Inserted body'
+);
+
+$results = $db->insert('posts', $insertData);
+print_r($results);
+?>
 
 </body>
 </html>

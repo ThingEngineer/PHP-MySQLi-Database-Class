@@ -1,15 +1,53 @@
 <?php
+/**
+ * MySqliDb Class
+ *
+ * @category Database Access
+ * @package MysqliDB
+ * @author Jeffery Way <jeffrey@jeffrey-way.com>
+ * @author Josh Campbell <josh.campbell@teslacity.com>
+ * @copyright Copyright (c) 2010 Jeffery Way
+ * @license http://opensource.org/licenses/gpl-3.0.html GNU Public License
+ * @version 1.1
+ **/
+class MysqliDB {
 
-class MysqlDB {
-
-   protected $_mysql;
-   protected $_where = array();
+   protected static $_instance;
+   protected $_mysqli;
    protected $_query;
+   protected $_where = array();
+   protected $_whereTypeList;
    protected $_paramTypeList;
-   protected $_crudType = null;
 
    public function __construct($host, $username, $password, $db) {
-      $this->_mysql = new mysqli($host, $username, $password, $db) or die('There was a problem connecting to the database');
+      $this->_mysqli = new mysqli($host, $username, $password, $db) 
+         or die('There was a problem connecting to the database');
+      self::$_instance = $this;
+   }
+
+   /**
+    * A method of returning the static instance to allow access to the 
+    * instantiated object from within another class.
+    * Inheriting this class would require reloading connection info.
+    *
+    * @return object Returns the current instance.
+    */
+   public static function getInstance()
+   {
+      return self::$_instance;
+   }
+
+   /**
+    * A method of returning the static instance.
+    *
+    * @return object Returns the current instance.
+    */
+   protected function reset()
+   {
+      $this->_where = array();
+      unset($this->_query);
+      unset($this->_whereTypeList);
+      unset($this->_paramTypeList);
    }
 
    /**
@@ -18,12 +56,13 @@ class MysqlDB {
     * @param int $numRows The number of rows total to return.
     * @return array Contains the returned rows from the query.
     */
-   public function query($query) 
+   public function query($query, $numRows = NULL) 
    {
       $this->_query = filter_var($query, FILTER_SANITIZE_STRING);
-
-      $stmt = $this->_prepareQuery();
+      $stmt = $this->_buildQuery($numRows);
       $stmt->execute();
+      $this->reset();
+
       $results = $this->_dynamicBindResults($stmt);
       return $results;
    }
@@ -37,13 +76,13 @@ class MysqlDB {
     */
    public function get($tableName, $numRows = NULL) 
    {
-      $this->_crudType = 'read';
+
       $this->_query = "SELECT * FROM $tableName";
       $stmt = $this->_buildQuery($numRows);
       $stmt->execute();
+      $this->reset();
 
       $results = $this->_dynamicBindResults($stmt);
-
       return $results;
    }
 
@@ -55,13 +94,13 @@ class MysqlDB {
     */
    public function insert($tableName, $insertData) 
    {
-      $this->_crudType = 'insert';
       $this->_query = "INSERT into $tableName";
       $stmt = $this->_buildQuery(NULL, $insertData);
       $stmt->execute();
+      $this->reset();
 
-      if ($stmt->affected_rows)
-         return true;
+      ($stmt->affected_rows) ? $result = $stmt->insert_id : $result = false;
+      return $result;
    }
 
    /**
@@ -73,10 +112,12 @@ class MysqlDB {
     */
    public function update($tableName, $tableData) 
    {
-      $this->_crudType = 'update';
       $this->_query = "UPDATE $tableName SET ";
+
       $stmt = $this->_buildQuery(NULL, $tableData);
       $stmt->execute();
+      $this->reset();
+
       if ($stmt->affected_rows)
          return true;
    }
@@ -87,23 +128,22 @@ class MysqlDB {
     * @param string $tableName The name of the database table to work with.
     * @return boolean Indicates success. 0 or 1.
     */
-   public function delete($tableName) 
-   {
-      $this->_crudType = 'delete';
+   public function delete($tableName) {
       $this->_query = "DELETE FROM $tableName";
 
       $stmt = $this->_buildQuery();
       $stmt->execute();
+      $this->reset();
 
       if ($stmt->affected_rows)
          return true;
    }
 
    /**
-    * This method allows you to specify a WHERE statement for SQL queries.
+    * This method allows you to specify multipl WHERE statements for SQL queries.
     *
-    * @param string $whereProp A string for the name of the database field to update
-    * @param mixed $whereValue The value for the field.
+    * @param string $whereProp The name of the database field.
+    * @param mixed $whereValue The value of the database field.
     */
    public function where($whereProp, $whereValue) 
    {
@@ -122,21 +162,21 @@ class MysqlDB {
    protected function _determineType($item) 
    {
       switch (gettype($item)) {
-      case 'string':
-         return 's';
-         break;
+         case 'string':
+            return 's';
+            break;
 
-      case 'integer':
-         return 'i';
-         break;
+         case 'integer':
+            return 'i';
+            break;
 
-      case 'blob':
-         return 'b';
-         break;
+         case 'blob':
+            return 'b';
+            break;
 
-      case 'double':
-         return 'd';
-         break;
+         case 'double':
+            return 'd';
+            break;
       }
    }
 
@@ -149,61 +189,79 @@ class MysqlDB {
     * @param array $tableData Should contain an array of data for updating the database.
     * @return object Returns the $stmt object.
     */
-   protected function _buildQuery($numRows = NULL, $tableData = false) 
+   protected function _buildQuery($numRows = NULL, $tableData = NULL) 
    {
-      $hasTableData = null;
-      if (gettype($tableData) === 'array') {
+      $hasTableData = false;
+      if (gettype($tableData) === 'array')
          $hasTableData = true;
-      }
 
       // Did the user call the "where" method?
-      if (!empty($this->_where)) {
-         $keys = array_keys($this->_where);
-         $where_prop = $keys[0];
-         $where_value = $this->_where[$where_prop];
+      if (!empty($this->_where))
+      {
+         
 
-         // if update data was passed, filter through
-         // and create the SQL query, accordingly.
-         if ($hasTableData) {
+         // if update data was passed, filter through and create the SQL query, accordingly.
+         if ($hasTableData)
+         {
             $i = 1;
-            if ( $this->_crudType == 'update' ) {
-               foreach ($tableData as $prop => $value) {
+            $pos = strpos($this->_query, 'UPDATE');
+            if ( $pos !== false)
+            {
+               foreach ($tableData as $prop => $value)
+               {
                   // determines what data type the item is, for binding purposes.
                   $this->_paramTypeList .= $this->_determineType($value);
 
                   // prepares the reset of the SQL query.
-                  if ($i === count($tableData)) {
-                     $this->_query .= $prop . " = ? WHERE $where_prop = '$where_value'";
-                  } else {
+                  ($i === count($tableData)) ?
+                     $this->_query .= $prop . ' = ?':
                      $this->_query .= $prop . ' = ?, ';
-                  }
 
                   $i++;
                }
             }
-         } else {
-            // no table data was passed. Might be SELECT statement.
-            $this->_paramTypeList = $this->_determineType($where_value);
-            $this->_query .= " WHERE " . $where_prop . "= ?";
          }
+         
+         //Prepair the where portion of the query
+         $this->_query .= ' WHERE ';   
+         $i = 1;
+         foreach ($this->_where as $column => $value)
+         {
+            // Determines what data type the where column is, for binding purposes.
+            $this->_whereTypeList .= $this->_determineType($value);
+
+            // Prepares the reset of the SQL query.
+            ($i === count($this->_where)) ?
+               $this->_query .= $column . ' = ?':
+               $this->_query .= $column . ' = ? AND ';
+
+            $i++;
+         }
+         
       }
+
       // Determine if is INSERT query
-      if ($hasTableData && $this->_crudType == 'insert') {
-         $keys = array_keys($tableData);
-         $values = array_values($tableData);
-         $num = count($keys);
+      if ($hasTableData) {
+         $pos = strpos($this->_query, 'INSERT');
 
-         // wrap values in quotes
-         foreach ($values as $key => $val) {
-            $values[$key] = "'{$val}'";
-            $this->_paramTypeList .= $this->_determineType($val);
-         }
+         if ($pos !== false) {
+            //is insert statement
+            $keys = array_keys($tableData);
+            $values = array_values($tableData);
+            $num = count($keys);
 
-         $this->_query .= '(' . implode($keys, ', ') . ')';
-         $this->_query .= ' VALUES(';
-         while ($num !== 0) {
-            ($num !== 1) ? $this->_query .= '?, ' : $this->_query .= '?)';
-            $num--;
+            // wrap values in quotes
+            foreach ($values as $key => $val) {
+               $values[$key] = "'{$val}'";
+               $this->_paramTypeList .= $this->_determineType($val);
+            }
+
+            $this->_query .= '(' . implode($keys, ', ') . ')';
+            $this->_query .= ' VALUES(';
+            while ($num !== 0) {
+               ($num !== 1) ? $this->_query .= '?, ' : $this->_query .= '?)';
+               $num--;
+            }
          }
       }
 
@@ -211,6 +269,7 @@ class MysqlDB {
       if (isset($numRows)) {
          $this->_query .= " LIMIT " . (int) $numRows;
       }
+
       // Prepare query
       $stmt = $this->_prepareQuery();
 
@@ -221,13 +280,21 @@ class MysqlDB {
          foreach ($tableData as $prop => $val) {
             $args[] = &$tableData[$prop];
          }
+
          call_user_func_array(array($stmt, 'bind_param'), $args);
       } else {
-         if ($this->_where)
-            $stmt->bind_param($this->_paramTypeList, $where_value);
+      if ($this->_where)
+      {
+         $wheres = array();
+         $wheres[] = $this->_whereTypeList;
+            foreach ($this->_where as $prop => $val) {
+               $wheres[] = &$this->_where[$prop];
+            }
+         
+         call_user_func_array(array($stmt, 'bind_param'), $wheres);
+      }  
       }
-      // Clear where method to prevent clashes with future operations;
-      $this->_where = array();
+
       return $stmt;
    }
 
@@ -263,14 +330,13 @@ class MysqlDB {
 
 
    /**
-    * Method attempts to prepare the SQL query
-    * and throws an error if there was a problem.
-    */
+   * Method attempts to prepare the SQL query
+   * and throws an error if there was a problem.
+   */
    protected function _prepareQuery() 
    {
-      echo $this->_query;
-      if (!$stmt = $this->_mysql->prepare($this->_query)) {
-         trigger_error("Problem preparing query", E_USER_ERROR);
+      if (!$stmt = $this->_mysqli->prepare($this->_query)) {
+         trigger_error("Problem preparing query ($this->_query) ".$this->_mysqli->error, E_USER_ERROR);
       }
       return $stmt;
    }
@@ -278,7 +344,7 @@ class MysqlDB {
 
    public function __destruct() 
    {
-      $this->_mysql->close();
+      $this->_mysqli->close();
    }
 
-}
+} // END class

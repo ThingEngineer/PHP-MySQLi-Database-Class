@@ -1,8 +1,8 @@
-To utilize this class, first import MysqlDb.php into your project, and require it.
+To utilize this class, first import Mysqldbi.php into your project, and require it.
 
 <pre>
 <code>
-require_once('MysqlDb.php');
+require_once('Mysqlidb.php');
 </code>
 </pre>
 
@@ -10,7 +10,7 @@ After that, create a new instance of the class.
 
 <pre>
 <code>
-$Db = new MysqlDb('host', 'username', 'password', 'databaseName');
+$db = new Mysqlidb('host', 'username', 'password', 'databaseName');
 </code>
 </pre>
 
@@ -25,7 +25,7 @@ $insertData = array(
     'body' => 'Inserted body'
 );
 
-if ( $Db->insert('posts', $insertData) ) echo 'success!';
+if ( $db->insert('posts', $insertData) ) echo 'success!';
 
 </code>
 </pre>
@@ -34,7 +34,7 @@ if ( $Db->insert('posts', $insertData) ) echo 'success!';
 
 <pre>
 <code>
-$results = $Db->get('tableName', 'numberOfRows-optional');
+$results = $db->get('tableName', 'numberOfRows-optional');
 print_r($results); // contains array of returned rows
 </code>
 </pre>
@@ -47,8 +47,8 @@ $updateData = array(
    'fieldOne' => 'fieldValue',
     'fieldTwo' => 'fieldValue'
 );
-$Db->where('id', int);
-$results = $Db->update('tableName', $updateData);
+$db->where('id', int);
+$results = $db->update('tableName', $updateData);
 </code>
 </pre>
 
@@ -56,8 +56,8 @@ $results = $Db->update('tableName', $updateData);
 
 <pre>
 <code>
-$Db->where('id', integer);
-if ( $Db->delete('posts') ) echo 'successfully deleted'; 
+$db->where('id', int);
+if ( $db->delete('posts') ) echo 'successfully deleted'; 
 </code>
 </pre>
 
@@ -65,17 +65,18 @@ if ( $Db->delete('posts') ) echo 'successfully deleted';
 
 <pre>
 <code>
-$results = $Db->query('SELECT * from posts');
+$results = $db->query('SELECT * from posts');
 print_r($results); // contains array of returned rows
 </code>
 </pre>
 
 <h3> Where Method </h3>
-<p>This method allows you to specify the parameters of the query. For now, it only accepts one key => value pair. </p>
+<p>This method allows you to specify the parameters of the query.</p>
 <pre>
 <code>
-$Db->where('id', int);
-$results = $Db->get('tableName');
+$db->where('id', int);
+$db->where('title', string);
+$results = $db->get('tableName');
 print_r($results); // contains array of returned rows
 </code>
 </pre>
