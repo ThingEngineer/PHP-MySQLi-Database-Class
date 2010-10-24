@@ -70,6 +70,28 @@ print_r($results); // contains array of returned rows
 </code>
 </pre>
 
+<h3> Raw Query Method </h3>
+
+<pre>
+<code>
+$params = array(3, 'My Title');
+$resutls = $db->rawQuery("SELECT id, title, body FROM posts WHERE id = ? AND tile = ?", $params);
+print_r($results); // contains array of returned rows
+
+// will handle any SQL query
+
+$params = array(10, 1, 10, 11, 2, 10);
+$resutls = $db->rawQuery("
+(SELECT a FROM t1 WHERE a = ? AND B = ? ORDER BY a LIMIT ?)
+UNION
+(SELECT a FROM t2 WHERE a = ? AND B = ? ORDER BY a LIMIT ?)
+", $params);
+print_r($results); // contains array of returned rows
+</code>
+</pre>
+
+
+
 <h3> Where Method </h3>
 <p>This method allows you to specify the parameters of the query.</p>
 <pre>
