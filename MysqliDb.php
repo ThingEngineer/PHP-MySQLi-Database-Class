@@ -5,7 +5,7 @@
  * @category Database Access
  * @package MysqliDB
  * @author Jeffery Way <jeffrey@jeffrey-way.com>
- * @author Josh Campbell <josh.campbell@teslacity.com>
+ * @author Josh Campbell <jcampbell@ajillion.com>
  * @copyright Copyright (c) 2010 Jeffery Way
  * @license http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @version 1.1
@@ -51,6 +51,7 @@ class MysqliDB {
    }
    
    /**
+    * Pass in a raw query and an array containing the parameters to bind to the prepaird statement.
     *
     * @param string $query Contains a user-provided query.
     * @param array $bindData All variables to bind to the SQL statment.
@@ -68,10 +69,6 @@ class MysqliDB {
             array_push($params, &$bindParams[$prop]);
          }
          
-         echo '<pre>';
-         print_r($params);
-         echo '</pre>';
-         
          call_user_func_array(array($stmt, 'bind_param'), $params);
       }
       
@@ -83,7 +80,7 @@ class MysqliDB {
    }
 
    /**
-    *
+    * 
     * @param string $query Contains a user-provided select query.
     * @param int $numRows The number of rows total to return.
     * @return array Contains the returned rows from the query.
