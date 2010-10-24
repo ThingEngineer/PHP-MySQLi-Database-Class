@@ -49,6 +49,36 @@ class MysqliDB {
       unset($this->_whereTypeList);
       unset($this->_paramTypeList);
    }
+   
+   /**
+    *
+    * @param string $query Contains a user-provided query.
+    * @param array $bindData All variables to bind to the SQL statment.
+    * @return array Contains the returned rows from the query.
+    */
+   public function rawQuery($query,$bindParams = NULL) 
+   {
+      $this->_query = filter_var($query, FILTER_SANITIZE_STRING);
+      $stmt = $this->_prepareQuery();
+      
+      if (gettype($bindParams) === 'array')
+      {
+         $params = array('');
+         foreach ($bindParams as $prop => $val)
+         {
+            $params[0] .= $this->_determineType($val);
+            array_push($params, &$bindParams[$prop]);
+         }
+         
+         call_user_func_array(array($stmt, 'bind_param'), $params);
+      }
+      
+      $stmt->execute();
+      $this->reset();
+
+      $results = $this->_dynamicBindResults($stmt);
+      return $results;
+   }
 
    /**
     *
