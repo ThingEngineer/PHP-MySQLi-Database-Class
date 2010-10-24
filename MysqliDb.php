@@ -61,14 +61,16 @@ class MysqliDB {
       $this->_query = filter_var($query, FILTER_SANITIZE_STRING);
       $stmt = $this->_prepareQuery();
       
-      if (gettype($bindParams) === 'array')
-      {
+      if (gettype($bindParams) === 'array') {
          $params = array('');
-         foreach ($bindParams as $prop => $val)
-         {
+         foreach ($bindParams as $prop => $val) {
             $params[0] .= $this->_determineType($val);
             array_push($params, &$bindParams[$prop]);
          }
+         
+         echo '<pre>';
+         print_r($params);
+         echo '</pre>';
          
          call_user_func_array(array($stmt, 'bind_param'), $params);
       }
@@ -226,19 +228,14 @@ class MysqliDB {
          $hasTableData = true;
 
       // Did the user call the "where" method?
-      if (!empty($this->_where))
-      {
-         
+      if (!empty($this->_where)) {
 
          // if update data was passed, filter through and create the SQL query, accordingly.
-         if ($hasTableData)
-         {
+         if ($hasTableData) {
             $i = 1;
             $pos = strpos($this->_query, 'UPDATE');
-            if ( $pos !== false)
-            {
-               foreach ($tableData as $prop => $value)
-               {
+            if ( $pos !== false) {
+               foreach ($tableData as $prop => $value) {
                   // determines what data type the item is, for binding purposes.
                   $this->_paramTypeList .= $this->_determineType($value);
 
@@ -255,8 +252,7 @@ class MysqliDB {
          //Prepair the where portion of the query
          $this->_query .= ' WHERE ';   
          $i = 1;
-         foreach ($this->_where as $column => $value)
-         {
+         foreach ($this->_where as $column => $value) {
             // Determines what data type the where column is, for binding purposes.
             $this->_whereTypeList .= $this->_determineType($value);
 
@@ -306,23 +302,22 @@ class MysqliDB {
       // Bind parameters
       if ($hasTableData) {
          $args = array();
-         $args[] = $this->_paramTypeList;
+         array_push($args, $this->_paramTypeList);
          foreach ($tableData as $prop => $val) {
-            $args[] = &$tableData[$prop];
+            array_push($args, &$tableData[$prop]);
          }
 
          call_user_func_array(array($stmt, 'bind_param'), $args);
       } else {
-      if ($this->_where)
-      {
-         $wheres = array();
-         $wheres[] = $this->_whereTypeList;
-            foreach ($this->_where as $prop => $val) {
-               $wheres[] = &$this->_where[$prop];
-            }
+         if ($this->_where) {
+            $wheres = array();
+            array_push($wheres, $this->_whereTypeList);
+               foreach ($this->_where as $prop => $val) {
+                  array_push($wheres, &$this->_where[$prop]);
+               }
          
-         call_user_func_array(array($stmt, 'bind_param'), $wheres);
-      }  
+            call_user_func_array(array($stmt, 'bind_param'), $wheres);
+         }  
       }
 
       return $stmt;
@@ -343,7 +338,7 @@ class MysqliDB {
       $meta = $stmt->result_metadata();
 
       while ($field = $meta->fetch_field()) {
-         $parameters[] = &$row[$field->name];
+         array_push($parameters, &$row[$field->name]);
       }
 
       call_user_func_array(array($stmt, 'bind_result'), $parameters);
@@ -353,7 +348,7 @@ class MysqliDB {
          foreach ($row as $key => $val) {
             $x[$key] = $val;
          }
-         $results[] = $x;
+         array_push($results, $x);
       }
       return $results;
    }
