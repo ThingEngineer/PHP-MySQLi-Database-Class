@@ -18,6 +18,7 @@ class MysqliDB {
    protected $_where = array();
    protected $_whereTypeList;
    protected $_paramTypeList;
+   protected $_bindParams = array('');
 
    public function __construct($host, $username, $password, $db) {
       $this->_mysqli = new mysqli($host, $username, $password, $db) 
@@ -45,6 +46,7 @@ class MysqliDB {
    protected function reset()
    {
       $this->_where = array();
+      $this->_bindParams = array('');
       unset($this->_query);
       unset($this->_whereTypeList);
       unset($this->_paramTypeList);
@@ -57,7 +59,7 @@ class MysqliDB {
     * @param array $bindData All variables to bind to the SQL statment.
     * @return array Contains the returned rows from the query.
     */
-   public function rawQuery($query,$bindParams = NULL) 
+   public function rawQuery($query, $bindParams = NULL) 
    {
       $this->_query = filter_var($query, FILTER_SANITIZE_STRING);
       $stmt = $this->_prepareQuery();
@@ -220,9 +222,8 @@ class MysqliDB {
     */
    protected function _buildQuery($numRows = NULL, $tableData = NULL) 
    {
-      $hasTableData = false;
-      if (gettype($tableData) === 'array')
-         $hasTableData = true;
+      (gettype($tableData) === 'array') ? $hasTableData = true : $hasTableData = false;   
+      (!empty($this->_where )) ? $hasConditional = true : $hasConditional = false;
 
       // Did the user call the "where" method?
       if (!empty($this->_where)) {
@@ -296,25 +297,25 @@ class MysqliDB {
       // Prepare query
       $stmt = $this->_prepareQuery();
 
-      // Bind parameters
+      // Prepare table data bind parameters
       if ($hasTableData) {
-         $args = array();
-         array_push($args, $this->_paramTypeList);
+         $this->_bindParams[0] = $this->_paramTypeList;
          foreach ($tableData as $prop => $val) {
-            array_push($args, &$tableData[$prop]);
+            array_push($this->_bindParams, &$tableData[$prop]);
          }
-
-         call_user_func_array(array($stmt, 'bind_param'), $args);
-      } else {
+      }
+      // Prepare where condition bind parameters
+      if($hasConditional) {
          if ($this->_where) {
-            $wheres = array();
-            array_push($wheres, $this->_whereTypeList);
-               foreach ($this->_where as $prop => $val) {
-                  array_push($wheres, &$this->_where[$prop]);
-               }
-         
-            call_user_func_array(array($stmt, 'bind_param'), $wheres);
+            $this->_bindParams[0] .= $this->_whereTypeList;
+            foreach ($this->_where as $prop => $val) {
+               array_push($this->_bindParams, &$this->_where[$prop]);
+            }
          }  
+      }
+      // Bind parameters to statment
+      if ($hasTableData || $hasConditional){
+         call_user_func_array(array($stmt, 'bind_param'), $this->_bindParams);
       }
 
       return $stmt;
