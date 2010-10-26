@@ -12,12 +12,47 @@
  **/
 class MysqliDB {
 
+   /**
+    * Static instance of self
+    *
+    * @var object
+    */
    protected static $_instance;
+   /**
+    * MySQLi instance
+    *
+    * @var object
+    */
    protected $_mysqli;
+   /**
+    * The SQL query to be prepared and executed
+    *
+    * @var object
+    */
    protected $_query;
+   /**
+    * An array that holds where conditions 'fieldname' => 'value'
+    *
+    * @var array
+    */
    protected $_where = array();
+   /**
+    * Dynamic type list for where condition values
+    *
+    * @var array
+    */
    protected $_whereTypeList;
+   /**
+    * Dynamic type list for table data values
+    *
+    * @var array
+    */
    protected $_paramTypeList;
+   /**
+    * Dynamic array that holds a combination of where condition/table data value types and parameter referances
+    *
+    * @var array
+    */
    protected $_bindParams = array('');
 
    public function __construct($host, $username, $password, $db) {
@@ -31,6 +66,8 @@ class MysqliDB {
     * instantiated object from within another class.
     * Inheriting this class would require reloading connection info.
     *
+    * @uses $db = MySqliDb::getInstance();
+    *
     * @return object Returns the current instance.
     */
    public static function getInstance()
@@ -39,7 +76,7 @@ class MysqliDB {
    }
 
    /**
-    * A method of returning the static instance.
+    * Reset states after an execution
     *
     * @return object Returns the current instance.
     */
