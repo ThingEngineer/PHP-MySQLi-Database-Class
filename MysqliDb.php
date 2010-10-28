@@ -139,7 +139,7 @@ class MysqliDB {
     * A convenient SELECT * function.
     *
     * @param string $tableName The name of the database table to work with.
-    * @param int $numRows The number of rows total to return.
+    * @param integer $numRows The number of rows total to return.
     * @return array Contains the returned rows from the select query.
     */
    public function get($tableName, $numRows = NULL) 
@@ -194,12 +194,13 @@ class MysqliDB {
     * Delete query. Call the "where" method first.
     *
     * @param string $tableName The name of the database table to work with.
+    * @param integer $numRows The number of rows to delete.
     * @return boolean Indicates success. 0 or 1.
     */
-   public function delete($tableName) {
+   public function delete($tableName, $numRows = NULL) {
       $this->_query = "DELETE FROM $tableName";
 
-      $stmt = $this->_buildQuery();
+      $stmt = $this->_buildQuery($numRows);
       $stmt->execute();
       $this->reset();
 
