@@ -186,8 +186,8 @@ class MysqliDB {
       $stmt->execute();
       $this->reset();
 
-      if ($stmt->affected_rows)
-         return true;
+      ($stmt->affected_rows) ? $result = true : $result = false;
+      return $result;
    }
 
    /**
@@ -203,8 +203,8 @@ class MysqliDB {
       $stmt->execute();
       $this->reset();
 
-      if ($stmt->affected_rows)
-         return true;
+      ($stmt->affected_rows) ? $result = true : $result = false;
+      return $result;
    }
 
    /**
