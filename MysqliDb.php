@@ -231,6 +231,7 @@ class MysqliDB {
    protected function _determineType($item) 
    {
       switch (gettype($item)) {
+         case 'NULL':
          case 'string':
             return 's';
             break;
@@ -349,7 +350,7 @@ class MysqliDB {
             foreach ($this->_where as $prop => $val) {
                array_push($this->_bindParams, &$this->_where[$prop]);
             }
-         }  
+         }
       }
       // Bind parameters to statment
       if ($hasTableData || $hasConditional){
