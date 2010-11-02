@@ -6,7 +6,7 @@
  * @package MysqliDB
  * @author Jeffery Way <jeffrey@jeffrey-way.com>
  * @author Josh Campbell <jcampbell@ajillion.com>
- * @copyright Copyright (c) 2010 Jeffery Way
+ * @copyright Copyright (c) 2010
  * @license http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @version 1.1
  **/
@@ -53,7 +53,7 @@ class MysqliDB {
     *
     * @var array
     */
-   protected $_bindParams = array('');
+   protected $_bindParams = array('');    // Create the empty 0 index
 
    public function __construct($host, $username, $password, $db) {
       $this->_mysqli = new mysqli($host, $username, $password, $db) 
@@ -83,7 +83,7 @@ class MysqliDB {
    protected function reset()
    {
       $this->_where = array();
-      $this->_bindParams = array('');
+      $this->_bindParams = array('');     // Create the empty 0 index
       unset($this->_query);
       unset($this->_whereTypeList);
       unset($this->_paramTypeList);
@@ -102,7 +102,7 @@ class MysqliDB {
       $stmt = $this->_prepareQuery();
       
       if (gettype($bindParams) === 'array') {
-         $params = array('');
+         $params = array('');    // Create the empty 0 index
          foreach ($bindParams as $prop => $val) {
             $params[0] .= $this->_determineType($val);
             array_push($params, &$bindParams[$prop]);
@@ -350,7 +350,7 @@ class MysqliDB {
             foreach ($this->_where as $prop => $val) {
                array_push($this->_bindParams, &$this->_where[$prop]);
             }
-         }
+         }  
       }
       // Bind parameters to statment
       if ($hasTableData || $hasConditional){
@@ -390,7 +390,6 @@ class MysqliDB {
       return $results;
    }
 
-
    /**
    * Method attempts to prepare the SQL query
    * and throws an error if there was a problem.
@@ -402,7 +401,6 @@ class MysqliDB {
       }
       return $stmt;
    }
-
 
    public function __destruct() 
    {
