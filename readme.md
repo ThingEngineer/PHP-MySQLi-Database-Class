@@ -102,7 +102,8 @@ $results = $db->get('tableName');
 print_r($results); // contains array of returned rows
 
 Optionaly you can use method chaining to call where multiple times without calling referancing your object over an over:
-$results = $db->where('id', 1)
+$results = $db
+	->where('id', 1)
 	->where('title', 'MyTitle')
 	->get('tableName');
 print_r($results); // contains array of returned rows
