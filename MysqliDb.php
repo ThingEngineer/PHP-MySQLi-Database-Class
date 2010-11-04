@@ -209,7 +209,9 @@ class MysqliDB {
    }
 
    /**
-    * This method allows you to specify multipl WHERE statements for SQL queries.
+    * This method allows you to specify multipl (method chaining optional) WHERE statements for SQL queries.
+    *
+    * @uses $MySqliDb->where('id', 7)->where('title', 'MyTitle');
     *
     * @param string $whereProp The name of the database field.
     * @param mixed $whereValue The value of the database field.
@@ -217,6 +219,7 @@ class MysqliDB {
    public function where($whereProp, $whereValue) 
    {
       $this->_where[$whereProp] = $whereValue;
+      return $this;
    }
 
    /**
