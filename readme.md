@@ -21,8 +21,8 @@ Next, prepare your data, and call the necessary methods.
 <code>
 
 $insertData = array(
-   'title' => 'Inserted title',
-    'body' => 'Inserted body'
+	'title' => 'Inserted title',
+	'body' => 'Inserted body'
 );
 
 if ( $db->insert('posts', $insertData) ) echo 'success!';
@@ -44,8 +44,8 @@ print_r($results); // contains array of returned rows
 <pre>
 <code>
 $updateData = array(
-   'fieldOne' => 'fieldValue',
-    'fieldTwo' => 'fieldValue'
+	'fieldOne' => 'fieldValue',
+	'fieldTwo' => 'fieldValue'
 );
 $db->where('id', int);
 $results = $db->update('tableName', $updateData);

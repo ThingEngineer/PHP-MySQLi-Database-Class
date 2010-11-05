@@ -8,15 +8,15 @@ $db = new MysqliDb('localhost', 'root', 'root', 'db');
 
 <html lang="en">
 <head>
-   <meta charset="utf-8">
-   <title>untitled</title>
+	<meta charset="utf-8">
+	<title>untitled</title>
 </head>
 <body>
 	
 <?php
 $insertData = array(
-   'title' => 'Inserted title',
-    'body' => 'Inserted body'
+	'title' => 'Inserted title',
+	'body' => 'Inserted body'
 );
 
 $results = $db->insert('posts', $insertData);
