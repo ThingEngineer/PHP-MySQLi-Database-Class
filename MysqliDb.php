@@ -221,6 +221,17 @@ class MysqliDB {
 		$this->_where[$whereProp] = $whereValue;
 		return $this;
 	}
+	
+	
+        /**
+	 * This methods returns the ID of the last inserted item
+	 *
+	 * @return integer The last inserted item ID.
+	 */
+	public function getInsertId()
+	{
+        	return $this->_mysqli->insert_id;
+    	}
 
 	/**
 	 * This method is needed for prepared statements. They require
