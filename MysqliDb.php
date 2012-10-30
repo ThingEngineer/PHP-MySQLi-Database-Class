@@ -105,10 +105,11 @@ class MysqliDB {
 			$params = array('');		// Create the empty 0 index
 			foreach ($bindParams as $prop => $val) {
 				$params[0] .= $this->_determineType($val);
-				array_push($params, &$bindParams[$prop]);
+				array_push($params, $bindParams[$prop]);
 			}
 			
-			call_user_func_array(array($stmt, 'bind_param'), $params);
+                	call_user_func_array(array($stmt, "bind_param"),$this->refValues($params));
+
 		}
 		
 		$stmt->execute();
@@ -354,7 +355,7 @@ class MysqliDB {
 		if ($hasTableData) {
 			$this->_bindParams[0] = $this->_paramTypeList;
 			foreach ($tableData as $prop => $val) {
-				array_push($this->_bindParams, &$tableData[$prop]);
+				array_push($this->_bindParams, $tableData[$prop]);
 			}
 		}
 		// Prepare where condition bind parameters
@@ -362,13 +363,13 @@ class MysqliDB {
 			if ($this->_where) {
 				$this->_bindParams[0] .= $this->_whereTypeList;
 				foreach ($this->_where as $prop => $val) {
-					array_push($this->_bindParams, &$this->_where[$prop]);
+					array_push($this->_bindParams, $this->_where[$prop]);
 				}
 			}	
 		}
 		// Bind parameters to statment
 		if ($hasTableData || $hasConditional){
-			call_user_func_array(array($stmt, 'bind_param'), $this->_bindParams);
+			call_user_func_array(array($stmt, "bind_param"),$this->refValues($this->_bindParams));
 		}
 
 		return $stmt;
@@ -389,10 +390,10 @@ class MysqliDB {
 		$meta = $stmt->result_metadata();
 
 		while ($field = $meta->fetch_field()) {
-			array_push($parameters, &$row[$field->name]);
+			array_push($parameters, $row[$field->name]);
 		}
 
-		call_user_func_array(array($stmt, 'bind_result'), $parameters);
+                call_user_func_array(array($stmt, "bind_result"),$this->refValues($parameters));
 
 		while ($stmt->fetch()) {
 			$x = array();
@@ -419,6 +420,18 @@ class MysqliDB {
 	public function __destruct() 
 	{
 		$this->_mysqli->close();
+	}
+
+	function refValues($arr)
+	{
+		//Reference is required for PHP 5.3+
+		if (strnatcmp(phpversion(),'5.3') >= 0) {
+	        	$refs = array();
+	        	foreach($arr as $key => $value)
+	            		$refs[$key] = &$arr[$key];
+	        	return $refs;
+	    	}
+	   	return $arr;
 	}
 
 } // END class
