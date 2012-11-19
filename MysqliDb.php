@@ -88,7 +88,7 @@ class MysqliDB {
 		unset($this->_whereTypeList);
 		unset($this->_paramTypeList);
 	}
-	
+
 	/**
 	 * Pass in a raw query and an array containing the parameters to bind to the prepaird statement.
 	 *
@@ -100,18 +100,18 @@ class MysqliDB {
 	{
 		$this->_query = filter_var($query, FILTER_SANITIZE_STRING);
 		$stmt = $this->_prepareQuery();
-		
+
 		if (gettype($bindParams) === 'array') {
 			$params = array('');		// Create the empty 0 index
 			foreach ($bindParams as $prop => $val) {
 				$params[0] .= $this->_determineType($val);
 				array_push($params, $bindParams[$prop]);
 			}
-			
+
                 	call_user_func_array(array($stmt, "bind_param"),$this->refValues($params));
 
 		}
-		
+
 		$stmt->execute();
 		$this->reset();
 
@@ -222,8 +222,8 @@ class MysqliDB {
 		$this->_where[$whereProp] = $whereValue;
 		return $this;
 	}
-	
-	
+
+
         /**
 	 * This methods returns the ID of the last inserted item
 	 *
@@ -233,6 +233,17 @@ class MysqliDB {
 	{
         	return $this->_mysqli->insert_id;
     	}
+
+	/**
+	 * Escape harmful characters which might affect a query.
+	 *
+	 * @param string $str The string to escape.
+	 * @return string The escaped string.
+	*/
+	public function escape ( $str )
+	{
+		return $this->_mysqli->real_escape_string ( $str );
+	}
 
 	/**
 	 * This method is needed for prepared statements. They require
@@ -300,7 +311,7 @@ class MysqliDB {
 					}
 				}
 			}
-			
+
 			//Prepair the where portion of the query
 			$this->_query .= ' WHERE ';	
 			$i = 1;
@@ -315,7 +326,7 @@ class MysqliDB {
 
 				$i++;
 			}
-			
+
 		}
 
 		// Determine if is INSERT query
@@ -389,11 +400,13 @@ class MysqliDB {
 
 		$meta = $stmt->result_metadata();
 
+		$row = array();
 		while ($field = $meta->fetch_field()) {
-			array_push($parameters, $row[$field->name]);
+			$row[$field->name] = NULL;
+			$parameters[] = &$row[$field->name];
 		}
 
-                call_user_func_array(array($stmt, "bind_result"),$this->refValues($parameters));
+        call_user_func_array(array($stmt, "bind_result"),$parameters);
 
 		while ($stmt->fetch()) {
 			$x = array();
