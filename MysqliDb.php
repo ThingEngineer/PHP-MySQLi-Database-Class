@@ -65,6 +65,9 @@ class MysqliDb
     {
         $this->_mysqli = new mysqli($host, $username, $password, $db)
             or die('There was a problem connecting to the database');
+
+        $this->_mysqli->set_charset('utf8');
+
         self::$_instance = $this;
     }
 
