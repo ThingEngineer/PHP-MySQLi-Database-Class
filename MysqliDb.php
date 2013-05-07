@@ -60,10 +60,14 @@ class MysqliDb
      * @param string $username
      * @param string $password
      * @param string $db
+     * @param int $port
      */
-    public function __construct($host, $username, $password, $db)
+    public function __construct($host, $username, $password, $db, $port = NULL)
     {
-        $this->_mysqli = new mysqli($host, $username, $password, $db)
+        if($port == NULL)
+            $port = ini_get('mysqli.default_port');
+        
+        $this->_mysqli = new mysqli($host, $username, $password, $db, $port)
             or die('There was a problem connecting to the database');
 
         $this->_mysqli->set_charset('utf8');
