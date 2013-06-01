@@ -400,36 +400,45 @@ class MysqliDb
     }
 
     /**
-     * This helper method takes care of prepared statements' "bind_result method
-     * , when the number of variables to pass is unknown.
+     * This helper method takes care of prepared statements bind_result method 
+     * when the number of variables to pass is unknown. It first determines the 
+     * query type, and returns an array of results (for a SELECT query) or number 
+     * of affected rows (for an INSERT/UPDATE/DELETE query).
      *
      * @param mysqli_stmt $stmt Equal to the prepared statement object.
      *
-     * @return array The results of the SQL fetch.
+     * @return array or int.
      */
     protected function _dynamicBindResults(mysqli_stmt $stmt)
     {
-        $parameters = array();
-        $results = array();
+        // If it's a SELECT query
+        if ($stmt->affected_rows === -1) {
+            $parameters = array();
+            $results = array();
 
-        $meta = $stmt->result_metadata();
+            $meta = $stmt->result_metadata();
 
-        $row = array();
-        while ($field = $meta->fetch_field()) {
-            $row[$field->name] = null;
-            $parameters[] = & $row[$field->name];
-        }
-
-        call_user_func_array(array($stmt, 'bind_result'), $parameters);
-
-        while ($stmt->fetch()) {
-            $x = array();
-            foreach ($row as $key => $val) {
-                $x[$key] = $val;
+            $row = array();
+            while ($field = $meta->fetch_field()) {
+                $row[$field->name] = null;
+                $parameters[] = & $row[$field->name];
             }
-            array_push($results, $x);
+
+            call_user_func_array(array($stmt, 'bind_result'), $parameters);
+
+            while ($stmt->fetch()) {
+                $x = array();
+                foreach ($row as $key => $val) {
+                    $x[$key] = $val;
+                }
+                array_push($results, $x);
+            }
+            return $results;
         }
-        return $results;
+        // It's an INSERT/UPDATE/DELETE query
+        else {
+            return $stmt->affected_rows;
+        }
     }
 
     /**
