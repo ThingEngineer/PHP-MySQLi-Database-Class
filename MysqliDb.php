@@ -41,6 +41,12 @@ class MysqliDb
      *
      * @var array
      */
+    protected $_orderby = array();
+    /**
+     * Dynamic type list for order by condition value
+     *
+     * @var array
+     */
     protected $_whereTypeList;
     /**
      * Dynamic type list for table data values
@@ -224,7 +230,7 @@ class MysqliDb
     }
 
     /**
-     * This method allows you to specify multipl (method chaining optional) WHERE statements for SQL queries.
+     * This method allows you to specify multiple (method chaining optional) WHERE statements for SQL queries.
      *
      * @uses $MySqliDb->where('id', 7)->where('title', 'MyTitle');
      *
@@ -236,6 +242,23 @@ class MysqliDb
     public function where($whereProp, $whereValue)
     {
         $this->_where[$whereProp] = $whereValue;
+        return $this;
+    }
+    
+    /**
+     * This method allows you to specify one ORDER BY statement for the SQL query.
+     *
+     * @uses $MySqliDb->orderby('position', 'ASC');
+     *
+     * @param string $what  The name of the database field to order by.
+     * @param string  $direction The direction of ordering.
+     *
+     * @return MysqliDb
+     */
+    public function orderby($whatProp, $directionValue)
+    {
+        $this->_orderby["what"] = $whatProp;
+        $this->_orderby["direction"] = $directionValue;
         return $this;
     }
 
@@ -309,6 +332,7 @@ class MysqliDb
     {
         $hasTableData = is_array($tableData);
         $hasConditional = !empty($this->_where);
+        $hasOrderBy = !empty($this->_orderby);
 
         // Did the user call the "where" method?
         if (!empty($this->_where)) {
@@ -370,6 +394,17 @@ class MysqliDb
         // Did the user set a limit
         if (isset($numRows)) {
             $this->_query .= ' LIMIT ' . (int)$numRows;
+        }
+        
+         // Did the user set an order
+        if (isset($hasOrderBy)) {
+        	
+        	if ($this->_orderby) :
+				
+				$this->_query .= ' ORDER BY ' . $this->_orderby["what"] . ' ' . $this->_orderby["direction"];
+        	
+        	endif;
+        	
         }
 
         // Prepare query
