@@ -1,7 +1,7 @@
-To utilize this class, first import Mysqldbi.php into your project, and require it.
+To utilize this class, first import MysqliDb.php into your project, and require it.
 
 ```php
-require_once('Mysqlidb.php');
+require_once('MysqliDb.php');
 ```
 
 After that, create a new instance of the class.
@@ -20,7 +20,7 @@ $insertData = array(
 	'body' => 'Inserted body'
 );
 
-if($db->insert('posts', $insertData)) echo 'success!';
+if($insert_id = $db->insert('posts', $insertData)) echo 'success! insert_id = '.$insert_id;
 ```
 
 ### Select Query
@@ -59,13 +59,13 @@ print_r($results); // contains array of returned rows
 
 ```php
 $params = array(3, 'My Title');
-$resutls = $db->rawQuery("SELECT id, title, body FROM posts WHERE id = ? AND tile = ?", $params);
+$results = $db->rawQuery("SELECT id, title, body FROM posts WHERE id = ? AND tile = ?", $params);
 print_r($results); // contains array of returned rows
 
 // will handle any SQL query
 
 $params = array(10, 1, 10, 11, 2, 10);
-$resutls = $db->rawQuery("(SELECT a FROM t1 WHERE a = ? AND B = ? ORDER BY a LIMIT ?) UNION(SELECT a FROM t2 WHERE a = ? AND B = ? ORDER BY a LIMIT ?)", $params);
+$results = $db->rawQuery("(SELECT a FROM t1 WHERE a = ? AND B = ? ORDER BY a LIMIT ?) UNION(SELECT a FROM t2 WHERE a = ? AND B = ? ORDER BY a LIMIT ?)", $params);
 print_r($results); // contains array of returned rows
 ```
 
