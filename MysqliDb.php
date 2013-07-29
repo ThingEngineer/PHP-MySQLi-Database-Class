@@ -103,6 +103,7 @@ class MysqliDb
     protected function reset()
     {
         $this->_where = array();
+        $this->_orderby = array();
         $this->_bindParams = array(''); // Create the empty 0 index
         unset($this->_query);
         unset($this->_whereTypeList);
@@ -132,7 +133,7 @@ class MysqliDb
             call_user_func_array(array($stmt, 'bind_param'), $this->refValues($params));
 
         }
-
+        
         $stmt->execute();
         $this->reset();
 
@@ -255,7 +256,7 @@ class MysqliDb
      *
      * @return MysqliDb
      */
-    public function orderby($whatProp, $directionValue)
+    public function orderby($whatProp = 'position', $directionValue = 'ASC')
     {
         $this->_orderby["what"] = $whatProp;
         $this->_orderby["direction"] = $directionValue;
@@ -397,7 +398,7 @@ class MysqliDb
         }
         
          // Did the user set an order
-        if (isset($hasOrderBy)) {
+        if ($hasOrderBy) {
         	
         	if ($this->_orderby) :
 				
@@ -478,6 +479,7 @@ class MysqliDb
         if (!$stmt = $this->_mysqli->prepare($this->_query)) {
             trigger_error("Problem preparing query ($this->_query) " . $this->_mysqli->error, E_USER_ERROR);
         }
+        
         return $stmt;
     }
 
