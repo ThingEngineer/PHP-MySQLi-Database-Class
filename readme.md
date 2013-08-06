@@ -26,7 +26,12 @@ if($db->insert('posts', $insertData)) echo 'success!';
 ### Select Query
 
 ```php
-$results = $db->get('tableName', 'numberOfRows-optional');
+// Name of Columns of table ( optional )
+// $neededColumnNames = 'fieldone'; // variable can be string
+// $neededColumnNames = array( 'fieldone', 'fieldtwo', 'fieldthree' ); // variable can be Array if mulitple field
+// Or if you need to define only limited number of Rows then pass $neededColumnNames = '*';
+
+$results = $db->get('tableName', 'columnsNames-Optional', 'numberOfRows-optional');
 print_r($results); // contains array of returned rows
 ```
 
