@@ -175,9 +175,13 @@ class MysqliDb
      *
      * @return array Contains the returned rows from the select query.
      */
-    public function get($tableName, $numRows = null)
+    public function get($tableName, $numRows = null, $columns = '*')
     {
-        $this->_query = "SELECT * FROM $tableName";
+        if (empty ($columns))
+            $columns = '*';
+
+        $column = is_array($columns) ? implode(', ', $columns) : $columns; 
+        $this->_query = "SELECT $column FROM $tableName";
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
         $this->reset();
@@ -192,9 +196,9 @@ class MysqliDb
      *
      * @return array Contains the returned rows from the select query.
      */
-     public function getOne($tableName) 
+     public function getOne($tableName, $columns = '*') 
      {
-         $res = $this->get ($tableName, 1);
+         $res = $this->get ($tableName, 1, $columns);
          return $res[0];
      }
 
@@ -283,13 +287,14 @@ class MysqliDb
      public function join($joinTable, $joinCondition, $joinType = '')
      {
         $allowedTypes = array('LEFT', 'RIGHT', 'OUTER', 'INNER', 'LEFT OUTER', 'RIGHT OUTER');
+        $joinType = strtoupper (trim ($joinType));
+        $joinTable = filter_var($joinTable, FILTER_SANITIZE_STRING);
 
-        if ($joinType && in_array ($joinType, $allowedTypes))
-            $joinType = strtoupper (trim ($joinType));
-        else
-            $joinType = '';
+        if ($joinType && !in_array ($joinType, $allowedTypes))
+            die ('Wrong JOIN type: '.$joinType);
 
         $this->_join[$joinType . " JOIN " . $joinTable] = $joinCondition;
+
         return $this;
     }
     /**
@@ -304,6 +309,13 @@ class MysqliDb
      */
     public function orderBy($orderByField, $orderbyDirection)
     {
+        $allowedDirection = Array ("ASC", "DESC");
+        $orderbyDirection = strtoupper (trim ($orderbyDirection));
+        $orderByField = filter_var($orderByField, FILTER_SANITIZE_STRING);
+
+        if (empty($orderbyDirection) || !in_array ($orderbyDirection, $allowedDirection))
+            die ('Wrong order direction: '.$orderbyDirection);
+
         $this->_orderBy[$orderByField] = $orderbyDirection;
         return $this;
     } 
@@ -319,6 +331,8 @@ class MysqliDb
      */
     public function groupBy($groupByField)
     {
+        $groupByField = filter_var($groupByField, FILTER_SANITIZE_STRING);
+
         $this->_groupBy[] = $groupByField;
         return $this;
     } 
