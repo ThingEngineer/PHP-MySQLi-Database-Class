@@ -125,3 +125,9 @@ $db->orderBy("id","asc");
 $db->orderBy("name","Desc");
 $results = $db->get('tableName');
 ```
+
+### Grouping method
+```php
+$db->groupBy("name");
+$results = $db->get('tableName');
+```

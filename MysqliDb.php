@@ -47,6 +47,10 @@ class MysqliDb
      */
     protected $_orderBy = array(); 
     /**
+     * Dynamic type list for group by condition value
+     */
+    protected $_groupBy = array(); 
+    /**
      * Dynamic type list for table data values
      *
      * @var array
@@ -262,14 +266,29 @@ class MysqliDb
      *
      * @uses $MySqliDb->orderBy('id', 'desc')->orderBy('name', 'desc');
      *
-     * @param string $whereProp  The name of the database field.
-     * @param mixed  $whereValue The value of the database field.
+     * @param string $orderByField The name of the database field.
+     * @param mixed  $orderByDirection Order direction.
      *
      * @return MysqliDb
      */
     public function orderBy($orderByField, $orderbyDirection)
     {
         $this->_orderBy[$orderByField] = $orderbyDirection;
+        return $this;
+    } 
+
+    /**
+     * This method allows you to specify multiple (method chaining optional) GROUP BY statements for SQL queries.
+     *
+     * @uses $MySqliDb->orderBy('id', 'desc')->groupBy('name', 'desc');
+     *
+     * @param string $groupByField The name of the database field.
+     *
+     * @return MysqliDb
+     */
+    public function groupBy($groupByField)
+    {
+        $this->_groupBy[] = $groupByField;
         return $this;
     } 
 
@@ -399,9 +418,19 @@ class MysqliDb
             $this->_query = rtrim($this->_query, ' AND ');
         }
 
+        // Did the user call the "groupBy" method?
+        if (!empty($this->_groupBy)) {
+            $this->_query .= " GROUP BY ";
+            foreach ($this->_groupBy as $key => $value) {
+                // prepares the reset of the SQL query.
+                $this->_query .= $value . ", ";
+            }
+            $this->_query = rtrim($this->_query, ', ') . " ";
+        }
+
         // Did the user call the "orderBy" method?
         if (!empty ($this->_orderBy)) {
-            $this->_query .= " order by ";
+            $this->_query .= " ORDER BY ";
             foreach ($this->_orderBy as $prop => $value) {
                 // prepares the reset of the SQL query.
                 $this->_query .= $prop . " " . $value . ", ";
