@@ -169,6 +169,19 @@ class MysqliDb
     }
 
     /**
+     * A convenient SELECT * function to get one record.
+     *
+     * @param string  $tableName The name of the database table to work with.
+     *
+     * @return array Contains the returned rows from the select query.
+     */
+     public function getOne($tableName) 
+     {
+         $res = $this->get ($tableName, 1);
+         return $res[0];
+     }
+
+    /**
      *
      * @param <string $tableName The name of the table.
      * @param array $insertData Data containing information for inserting into the DB.

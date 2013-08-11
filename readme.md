@@ -30,6 +30,14 @@ $results = $db->get('tableName', 'numberOfRows-optional');
 print_r($results); // contains array of returned rows
 ```
 
+or select just one row
+
+```php
+$db->where (id,"10");
+$results = $db->getOne ("tableName");
+print_r($results);
+```
+
 ### Update Query
 
 ```php
@@ -96,7 +104,7 @@ $results = $db->get('tableName');
 ```
 
 IN:
-``php
+```php
 $db->where('id', array( 'in' => array(1, 5, 27, -1, 'd') ) );
 $results = $db->get('tableName');
 // Gives: SELECT * FROM tableName WHERE id IN ( ?, ?, ?, ?, ? )
