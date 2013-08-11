@@ -270,13 +270,13 @@ class MysqliDb
     }
 
     /**
-     * This method allows you to concatenates joins for the final SQL statement. Simple as a pimple.
+     * This method allows you to concatenate joins for the final SQL statement.
      *
      * @uses $MySqliDb->join('table1', 'field1 <> field2', 'LEFT')
      *
      * @param string $joinTable The name of the table.
-     * @param string  $joinCondition the condition.
-     * @param string  $joinType 'LEFT', 'INNER' etc.
+     * @param string $joinCondition the condition.
+     * @param string $joinType 'LEFT', 'INNER' etc.
      *
      * @return MysqliDb
      */
@@ -298,7 +298,7 @@ class MysqliDb
      * @uses $MySqliDb->orderBy('id', 'desc')->orderBy('name', 'desc');
      *
      * @param string $orderByField The name of the database field.
-     * @param mixed  $orderByDirection Order direction.
+     * @param string $orderByDirection Order direction.
      *
      * @return MysqliDb
      */
@@ -311,7 +311,7 @@ class MysqliDb
     /**
      * This method allows you to specify multiple (method chaining optional) GROUP BY statements for SQL queries.
      *
-     * @uses $MySqliDb->orderBy('id', 'desc')->groupBy('name', 'desc');
+     * @uses $MySqliDb->groupBy('name');
      *
      * @param string $groupByField The name of the database field.
      *
