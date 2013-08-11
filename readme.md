@@ -83,21 +83,21 @@ print_r($results); // contains array of returned rows
 
 Custom Operators:
 ```php
-$db->where( 'id', array( '>=' => 50 ) );
+$db->where('id', array('>=' => 50));
 $results = $db->get('tableName');
 // Gives: SELECT * FROM tableName WHERE id >= ?
 ```
 
 BETWEEN:
 ```php
-$db->where( 'id', array( 'between' => array(4, 20) ) );
+$db->where('id', array('between' => array(4, 20) ) );
 $results = $db->get('tableName');
 // Gives: SELECT * FROM tableName WHERE id BETWEEN ? AND ?
 ```
 
 IN:
 ``php
-$db->where( 'id', array( 'in' => array(1, 5, 27, -1, 'd') ) );
+$db->where('id', array( 'in' => array(1, 5, 27, -1, 'd') ) );
 $results = $db->get('tableName');
 // Gives: SELECT * FROM tableName WHERE id IN ( ?, ?, ?, ?, ? )
 ```
