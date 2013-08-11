@@ -31,6 +31,12 @@ class MysqliDb
      */
     protected $_query;
     /**
+     * An array that holds where joins
+     *
+     * @var array
+     */
+    protected $_join = array(); 
+    /**
      * An array that holds where conditions 'fieldname' => 'value'
      *
      * @var array
@@ -105,7 +111,9 @@ class MysqliDb
     protected function reset()
     {
         $this->_where = array();
-        $this->_orderBy = array(); 
+        $this->_join = array();
+        $this->_orderBy = array();
+        $this->groupBy = array(); 
         $this->_bindParams = array(''); // Create the empty 0 index
         unset($this->_query);
         unset($this->_whereTypeList);
@@ -262,6 +270,29 @@ class MysqliDb
     }
 
     /**
+     * This method allows you to concatenates joins for the final SQL statement. Simple as a pimple.
+     *
+     * @uses $MySqliDb->join('table1', 'field1 <> field2', 'LEFT')
+     *
+     * @param string $joinTable The name of the table.
+     * @param string  $joinCondition the condition.
+     * @param string  $joinType 'LEFT', 'INNER' etc.
+     *
+     * @return MysqliDb
+     */
+     public function join($joinTable, $joinCondition, $joinType = '')
+     {
+        $allowedTypes = array('LEFT', 'RIGHT', 'OUTER', 'INNER', 'LEFT OUTER', 'RIGHT OUTER');
+
+        if ($joinType && in_array ($joinType, $allowedTypes))
+            $joinType = strtoupper (trim ($joinType));
+        else
+            $joinType = '';
+
+        $this->_join[$joinType . " JOIN " . $joinTable] = $joinCondition;
+        return $this;
+    }
+    /**
      * This method allows you to specify multiple (method chaining optional) ORDER BY statements for SQL queries.
      *
      * @uses $MySqliDb->orderBy('id', 'desc')->orderBy('name', 'desc');
@@ -361,6 +392,13 @@ class MysqliDb
     {
         $hasTableData = is_array($tableData);
         $hasConditional = !empty($this->_where);
+
+        // Did the user call the "join" method? 
+        if (!empty($this->_join)) {
+            foreach ($this->_join as $prop => $value) {
+                $this->_query .= " " . $prop . " on " . $value;
+            } 
+        }
 
         // Did the user call the "where" method?
         if (!empty($this->_where)) {

@@ -131,3 +131,9 @@ $results = $db->get('tableName');
 $db->groupBy("name");
 $results = $db->get('tableName');
 ```
+
+### JOIN method
+```php
+$db->join('table2Name', 'field1 <> field2', 'LEFT')
+$results = $db-get('tableName');
+```
