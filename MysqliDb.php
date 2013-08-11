@@ -331,11 +331,37 @@ class MysqliDb
             //Prepair the where portion of the query
             $this->_query .= ' WHERE ';
             foreach ($this->_where as $column => $value) {
-                // Determines what data type the where column is, for binding purposes.
-                $this->_whereTypeList .= $this->_determineType($value);
-
+                $comparison = ' = ? ';
+                if( is_array( $value ) ) {
+                    // if the value is an array, then this isn't a basic = comparison
+                    $key = key( $value );
+                    $val = $value[$key];
+                    switch( strtolower($key) ) {
+                        case 'in':
+                            $comparison = ' IN (';
+                            foreach($val as $v){
+                                $comparison .= ' ?,';
+                                $this->_whereTypeList .= $this->_determineType( $v );
+                            }
+                            $comparison = rtrim($comparison, ',').' ) ';
+                            break;
+                        case 'between':
+                            $comparison = ' BETWEEN ? AND ? ';
+                            $this->_whereTypeList .= $this->_determineType( $val[0] );
+                            $this->_whereTypeList .= $this->_determineType( $val[1] );
+                            break;
+                        default:
+                            // We are using a comparison operator with only one parameter after it
+                            $comparison = ' '.$key.' ? ';
+                            // Determines what data type the where column is, for binding purposes.
+                            $this->_whereTypeList .= $this->_determineType( $val );
+                    }
+                } else {
+                    // Determines what data type the where column is, for binding purposes.
+                    $this->_whereTypeList .= $this->_determineType($value);
+                }
                 // Prepares the reset of the SQL query.
-                $this->_query .= ($column . ' = ? AND ');
+                $this->_query .= ($column.$comparison.' AND ');
             }
             $this->_query = rtrim($this->_query, ' AND ');
         }
@@ -387,7 +413,22 @@ class MysqliDb
             if ($this->_where) {
                 $this->_bindParams[0] .= $this->_whereTypeList;
                 foreach ($this->_where as $prop => $val) {
-                    array_push($this->_bindParams, $this->_where[$prop]);
+                    if (!is_array ($val)) {
+                        array_push ($this->_bindParams, $this->_where[$prop]);
+                        continue;
+                    }
+                    // if val is an array, this is not a basic = comparison operator
+                    $key = key($val);
+                    $vals = $val[$key];
+                    if (is_array($vals)) {
+                        // if vals is an array, this comparison operator takes more than one parameter
+                        foreach ($vals as $k => $v) {
+                            array_push($this->_bindParams, $this->_where[$prop][$key][$k]);
+                        }
+                    } else {
+                        // otherwise this comparison operator takes only one parameter
+                        array_push ($this->_bindParams, $this->_where[$prop][$key]);
+                    }
                 }
             }
         }

@@ -73,11 +73,33 @@ print_r($results); // contains array of returned rows
 ### Where Method
 This method allows you to specify the parameters of the query.
 
+Regular == operator:
 ```php
 $db->where('id', int);
 $db->where('title', string);
 $results = $db->get('tableName');
 print_r($results); // contains array of returned rows
+```
+
+Custom Operators:
+```php
+$db->where( 'id', array( '>=' => 50 ) );
+$results = $db->get('tableName');
+// Gives: SELECT * FROM tableName WHERE id >= ?
+```
+
+BETWEEN:
+```php
+$db->where( 'id', array( 'between' => array(4, 20) ) );
+$results = $db->get('tableName');
+// Gives: SELECT * FROM tableName WHERE id BETWEEN ? AND ?
+```
+
+IN:
+``php
+$db->where( 'id', array( 'in' => array(1, 5, 27, -1, 'd') ) );
+$results = $db->get('tableName');
+// Gives: SELECT * FROM tableName WHERE id IN ( ?, ?, ?, ?, ? )
 ```
 
 Optionally you can use method chaining to call where multiple times without referencing your object over an over:
