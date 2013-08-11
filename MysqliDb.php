@@ -623,4 +623,13 @@ class MysqliDb
         return $arr;
     }
 
+    /**
+     * Method returns mysql error
+     * 
+     * @return string
+     */
+    public function getLastError () {
+        return $this->_mysqli->error;
+    }
+
 } // END class
