@@ -307,7 +307,7 @@ class MysqliDb
      *
      * @return MysqliDb
      */
-    public function orderBy($orderByField, $orderbyDirection)
+    public function orderBy($orderByField, $orderbyDirection = "DESC")
     {
         $allowedDirection = Array ("ASC", "DESC");
         $orderbyDirection = strtoupper (trim ($orderbyDirection));
