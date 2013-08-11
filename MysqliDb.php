@@ -43,6 +43,10 @@ class MysqliDb
      */
     protected $_whereTypeList;
     /**
+     * Dynamic type list for order by condition value
+     */
+    protected $_orderBy = array(); 
+    /**
      * Dynamic type list for table data values
      *
      * @var array
@@ -97,6 +101,7 @@ class MysqliDb
     protected function reset()
     {
         $this->_where = array();
+        $this->_orderBy = array(); 
         $this->_bindParams = array(''); // Create the empty 0 index
         unset($this->_query);
         unset($this->_whereTypeList);
@@ -252,6 +257,21 @@ class MysqliDb
         return $this;
     }
 
+    /**
+     * This method allows you to specify multiple (method chaining optional) ORDER BY statements for SQL queries.
+     *
+     * @uses $MySqliDb->orderBy('id', 'desc')->orderBy('name', 'desc');
+     *
+     * @param string $whereProp  The name of the database field.
+     * @param mixed  $whereValue The value of the database field.
+     *
+     * @return MysqliDb
+     */
+    public function orderBy($orderByField, $orderbyDirection)
+    {
+        $this->_orderBy[$orderByField] = $orderbyDirection;
+        return $this;
+    } 
 
     /**
      * This methods returns the ID of the last inserted item
@@ -378,6 +398,16 @@ class MysqliDb
             }
             $this->_query = rtrim($this->_query, ' AND ');
         }
+
+        // Did the user call the "orderBy" method?
+        if (!empty ($this->_orderBy)) {
+            $this->_query .= " order by ";
+            foreach ($this->_orderBy as $prop => $value) {
+                // prepares the reset of the SQL query.
+                $this->_query .= $prop . " " . $value . ", ";
+            }
+            $this->_query = rtrim ($this->_query, ', ') . " ";
+        } 
 
         // Determine if is INSERT query
         if ($hasTableData) {

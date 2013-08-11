@@ -118,3 +118,10 @@ $results = $db
 	->where('title', 'MyTitle')
 	->get('tableName');
 ```
+
+### Ordering method
+```php
+$db->orderBy("id","asc");
+$db->orderBy("name","Desc");
+$results = $db->get('tableName');
+```
