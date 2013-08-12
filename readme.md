@@ -30,6 +30,16 @@ $results = $db->get('tableName', 'numberOfRows-optional');
 print_r($results); // contains array of returned rows
 ```
 
+or select with custom columns set
+```php
+$res = $db->get ("users",null,"sum(id), count(*) as cnt");
+print_r ($res);
+
+$cols = Array ("id, name, email");
+$res = $db->get ("users",null,$cols);
+print_r ($res);
+```
+
 or select just one row
 
 ```php
