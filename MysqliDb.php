@@ -579,6 +579,12 @@ class MysqliDb
 
         $meta = $stmt->result_metadata();
 
+        // if $meta is false yet sqlstate is true, there's no sql error but the query is
+        // most likely an update/insert/delete which doesn't produce any results
+        if(!$meta && $stmt->sqlstate) { 
+            return array();
+        }
+
         $row = array();
         while ($field = $meta->fetch_field()) {
             $row[$field->name] = null;
