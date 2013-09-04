@@ -98,9 +98,9 @@ class MysqliDb
     {
         $this->_where = array();
         $this->_bindParams = array(''); // Create the empty 0 index
-        unset($this->_query);
-        unset($this->_whereTypeList);
-        unset($this->_paramTypeList);
+        $this->_query = '';
+        $this->_whereTypeList = '';
+        $this->_paramTypeList = '';
     }
 
     /**
