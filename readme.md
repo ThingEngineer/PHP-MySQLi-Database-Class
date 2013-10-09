@@ -1,26 +1,26 @@
-To utilize this class, first import Mysqldbi.php into your project, and require it.
+Invocas a la clase
 
 ```php
 require_once('Mysqlidb.php');
 ```
 
-After that, create a new instance of the class.
+Primero que nada establece los parametros de coneccion. 
 
 ```php
 $db = new Mysqlidb('host', 'username', 'password', 'databaseName');
 ```
 
-Next, prepare your data, and call the necessary methods. 
+Ok, vamso a agregar data
 
 ### Insert Query
 
 ```php
-$insertData = array(
+$nuevo = array(
 	'title' => 'Inserted title',
 	'body' => 'Inserted body'
 );
 
-if($db->insert('posts', $insertData)) echo 'success!';
+if($db->insert('posts', $nuevo)) echo 'ingreso!';
 ```
 
 ### Select Query
