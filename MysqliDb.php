@@ -115,9 +115,9 @@ class MysqliDb
         $this->_orderBy = array();
         $this->groupBy = array(); 
         $this->_bindParams = array(''); // Create the empty 0 index
-        unset($this->_query);
-        unset($this->_whereTypeList);
-        unset($this->_paramTypeList);
+        $this->_query = null;
+        $this->_whereTypeList = null;
+        $this->_paramTypeList = null;
     }
 
     /**
