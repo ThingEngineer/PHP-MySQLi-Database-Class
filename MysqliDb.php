@@ -472,4 +472,16 @@ class MysqliDb
         return $arr;
     }
 
+    /**
+     * Simple addition to allow mysqli->ping() to keep unused connections open on
+     * long-running scripts, or to reconnect timed out connections (if php.ini has 
+     * global mysqli.reconnect set to true). Can't do this directly using object 
+     * since _mysqli is protected.
+     * 
+     * @return bool True if connection is up
+     */
+    public function ping()
+    {
+        return $this->_mysqli->ping();
+    }
 } // END class
