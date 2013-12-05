@@ -53,6 +53,13 @@ class MysqliDb
      *
      * @var array
      */
+     
+     
+     /**
+	  * This variable stores the number of affected rows after a get() call
+	  */
+     public $affected_rows = 0 ; 
+     
     protected $_bindParams = array(''); // Create the empty 0 index
 
     /**
@@ -164,8 +171,10 @@ class MysqliDb
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
         $this->reset();
-
-        return $this->_dynamicBindResults($stmt);
+		
+		$return = $this->_dynamicBindResults($stmt);
+		$this->affected_rows = count($return ) ;
+		return $return;
     }
 
     /**
