@@ -28,6 +28,7 @@ if($db->insert('posts', $insertData)) echo 'success!';
 ```php
 $results = $db->get('tableName', 'numberOfRows-optional');
 print_r($results); // contains array of returned rows
+echo $db->affected_rows ; // echo the total number of affected rows
 ```
 
 ### Update Query
