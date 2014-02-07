@@ -21,7 +21,9 @@ $data = array(
 	'lastName' => 'Doe',
 );
 
-if($db->insert('users', $data)) echo 'success!';
+$id = $db->insert('users', $data)
+if($id)
+    echo 'user was created. Id='.$id;
 ```
 
 ### Select Query
