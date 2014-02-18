@@ -261,15 +261,28 @@ class MysqliDb
      * This method allows you to specify multipl (method chaining optional) WHERE statements for SQL queries.
      *
      * @uses $MySqliDb->where('id', 7)->where('title', 'MyTitle');
+     * @uses $MySqliDb->where( array('id' => 7, 'title' => 'MyTitle') );
      *
-     * @param string $whereProp  The name of the database field.
+     * @param mixed  $whereProp  The name of the database field. Can also be an array of key/value pairs.
      * @param mixed  $whereValue The value of the database field.
      *
      * @return MysqliDb
      */
-    public function where($whereProp, $whereValue)
+    public function where($whereProp, $whereValue = null)
     {
-        $this->_where[$whereProp] = $whereValue;
+        // Process an array if given
+        if ( is_array( $whereProp ) AND is_null( $whereValue ) )
+        {
+            foreach ( $whereProp as $key => $val ) {
+                $this->where($key, $val);
+            }
+        }
+        
+        // Otherwise, process single key/value arguments.
+        else {
+            $this->_where[$whereProp] = $whereValue;
+        }
+        
         return $this;
     }
 
