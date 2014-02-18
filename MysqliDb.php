@@ -81,7 +81,7 @@ class MysqliDb
         if($port == NULL)
             $port = ini_get('mysqli.default_port');
         
-        $this->_mysqli = new mysqli($host, $username, $password, $db, $port)
+        $this->_mysqli = new \mysqli($host, $username, $password, $db, $port)
             or die('There was a problem connecting to the database');
 
         $this->_mysqli->set_charset('utf8');
@@ -572,7 +572,7 @@ class MysqliDb
      *
      * @return array The results of the SQL fetch.
      */
-    protected function _dynamicBindResults(mysqli_stmt $stmt)
+    protected function _dynamicBindResults(\mysqli_stmt $stmt)
     {
         $parameters = array();
         $results = array();
