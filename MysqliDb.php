@@ -68,11 +68,11 @@ class MysqliDb
      * @var array
      */
     protected $_bindParams = array(''); // Create the empty 0 index
-	/**
-	 * Holds last num_rows & resets to 0 on new query
-	 * @return (int)
-	 */
-	public $num_rows = NULL;
+    /**
+     * Holds last num_rows & resets to 0 on new query
+     * @return (int)
+     */
+    public $num_rows = NULL;
 	
     /**
      * @param string $host
@@ -133,7 +133,7 @@ class MysqliDb
      */
     protected function pre_reset()
     {
-		$this->num_rows = NULL;
+	$this->num_rows = NULL;
     }	
 	
 	
@@ -147,7 +147,7 @@ class MysqliDb
      */
     public function rawQuery($query, $bindParams = null)
     {
-		$this->pre_reset();
+	$this->pre_reset();
 		
         $this->_query = filter_var($query, FILTER_SANITIZE_STRING);
         $stmt = $this->_prepareQuery();
@@ -178,7 +178,7 @@ class MysqliDb
      */
     public function query($query, $numRows = null)
     {
-		$this->pre_reset();
+	$this->pre_reset();
 		
         $this->_query = filter_var($query, FILTER_SANITIZE_STRING);
         $stmt = $this->_buildQuery($numRows);
@@ -198,7 +198,7 @@ class MysqliDb
      */
     public function get($tableName, $numRows = null, $columns = '*')
     {
-		$this->pre_reset();
+	$this->pre_reset();
 		
         if (empty ($columns))
             $columns = '*';
@@ -234,9 +234,9 @@ class MysqliDb
      */
     public function insert($tableName, $insertData)
     {
-		$this->pre_reset();
+	$this->pre_reset();
        
-		$this->_query = "INSERT into $tableName";
+	$this->_query = "INSERT into $tableName";
         $stmt = $this->_buildQuery(null, $insertData);
         $stmt->execute();
         $this->reset();
@@ -254,7 +254,7 @@ class MysqliDb
      */
     public function update($tableName, $tableData)
     {
-		$this->pre_reset();
+	$this->pre_reset();
 		
         $this->_query = "UPDATE $tableName SET ";
 
@@ -275,7 +275,7 @@ class MysqliDb
      */
     public function delete($tableName, $numRows = null)
     {
-		$this->pre_reset();
+	$this->pre_reset();
 		
         $this->_query = "DELETE FROM $tableName";
 
@@ -629,7 +629,7 @@ class MysqliDb
             }
             array_push($results, $x);
         }
-		$this->num_rows = $stmt->num_rows;
+	$this->num_rows = $stmt->num_rows;
         return $results;
     }
 
