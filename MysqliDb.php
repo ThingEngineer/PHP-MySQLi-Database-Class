@@ -68,7 +68,12 @@ class MysqliDb
      * @var array
      */
     protected $_bindParams = array(''); // Create the empty 0 index
-
+	/**
+	 * Holds last num_rows & resets to 0 on new query
+	 * @return (int)
+	 */
+	public $num_rows = NULL;
+	
     /**
      * @param string $host
      * @param string $username
@@ -104,7 +109,7 @@ class MysqliDb
     }
 
     /**
-     * Reset states after an execution
+     * Reset states 'After' an execution
      *
      * @return object Returns the current instance.
      */
@@ -119,7 +124,19 @@ class MysqliDb
         $this->_whereTypeList = null;
         $this->_paramTypeList = null;
     }
-
+    
+	
+	/**
+     * Pre Reset states 'Before' an execution
+     *
+     * @return void
+     */
+    protected function pre_reset()
+    {
+		$this->num_rows = NULL;
+    }	
+	
+	
     /**
      * Pass in a raw query and an array containing the parameters to bind to the prepaird statement.
      *
@@ -130,6 +147,8 @@ class MysqliDb
      */
     public function rawQuery($query, $bindParams = null)
     {
+		$this->pre_reset();
+		
         $this->_query = filter_var($query, FILTER_SANITIZE_STRING);
         $stmt = $this->_prepareQuery();
 
@@ -159,6 +178,8 @@ class MysqliDb
      */
     public function query($query, $numRows = null)
     {
+		$this->pre_reset();
+		
         $this->_query = filter_var($query, FILTER_SANITIZE_STRING);
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
@@ -177,6 +198,8 @@ class MysqliDb
      */
     public function get($tableName, $numRows = null, $columns = '*')
     {
+		$this->pre_reset();
+		
         if (empty ($columns))
             $columns = '*';
 
@@ -211,7 +234,9 @@ class MysqliDb
      */
     public function insert($tableName, $insertData)
     {
-        $this->_query = "INSERT into $tableName";
+		$this->pre_reset();
+       
+		$this->_query = "INSERT into $tableName";
         $stmt = $this->_buildQuery(null, $insertData);
         $stmt->execute();
         $this->reset();
@@ -229,6 +254,8 @@ class MysqliDb
      */
     public function update($tableName, $tableData)
     {
+		$this->pre_reset();
+		
         $this->_query = "UPDATE $tableName SET ";
 
         $stmt = $this->_buildQuery(null, $tableData);
@@ -248,6 +275,8 @@ class MysqliDb
      */
     public function delete($tableName, $numRows = null)
     {
+		$this->pre_reset();
+		
         $this->_query = "DELETE FROM $tableName";
 
         $stmt = $this->_buildQuery($numRows);
@@ -372,11 +401,6 @@ class MysqliDb
     protected function _determineType($item)
     {
         switch (gettype($item)) {
-            case 'NULL':
-            case 'string':
-                return 's';
-                break;
-
             case 'integer':
                 return 'i';
                 break;
@@ -388,8 +412,13 @@ class MysqliDb
             case 'double':
                 return 'd';
                 break;
+				
+            case 'NULL':
+            case 'string':
+			default:
+                return 's';
+                break;		
         }
-        return '';
     }
 
     /**
@@ -600,6 +629,7 @@ class MysqliDb
             }
             array_push($results, $x);
         }
+		$this->num_rows = $stmt->num_rows;
         return $results;
     }
 
