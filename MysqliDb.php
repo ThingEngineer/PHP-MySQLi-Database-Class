@@ -677,18 +677,6 @@ class MysqliDb
     }
     
     /**
-     * Return first match
-     * 
-     * @param string $tableName The name of the database table to work with.
-     * 
-     * @return array Contains the first returned ROW from the select query.
-     * */
-    public function get_first($tableName){
-        $obj = $this->get($tableName,1);
-        return $obj[0];
-    }
-    
-    /**
      * Use of begin, commit and rollback functions.
      * the __shutdown_check() routine  is called when the script bombs
      *  which is able to invoke the rollback().
