@@ -19,6 +19,9 @@ $data = array(
 	'login' => 'admin',
 	'firstName' => 'John',
 	'lastName' => 'Doe',
+	'fullName' => $db->func("CONCAT(firstName," ",lastName)"),
+	'createdAt' => $db->now(),
+	'expires' => $db->now("+1y")
 );
 
 $id = $db->insert('users', $data)
@@ -58,7 +61,8 @@ echo $user['id'];
 ```php
 $data = array (
 	'firstName' => 'Bobby',
-	'lastName' => 'Tables'
+	'lastName' => 'Tables',
+	'editCount' => $db->inc()
 );
 $db->where('id', 1);
 if($db->update('users', $data)) echo 'successfully updated'; 
