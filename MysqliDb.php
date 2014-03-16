@@ -68,6 +68,12 @@ class MysqliDb
      * @var array
      */
     protected $_bindParams = array(''); // Create the empty 0 index
+    /**
+     * Variable which holds an amount of returned rows during get/getOne/select queries
+     *
+     * @var string
+     */ 
+    public $count = 0;
 
     /**
      * @param string $host
@@ -118,6 +124,7 @@ class MysqliDb
         $this->_query = null;
         $this->_whereTypeList = null;
         $this->_paramTypeList = null;
+        $this->count = 0;
     }
 
     /**
@@ -422,11 +429,25 @@ class MysqliDb
                 $pos = strpos($this->_query, 'UPDATE');
                 if ($pos !== false) {
                     foreach ($tableData as $prop => $value) {
-                        // determines what data type the item is, for binding purposes.
-                        $this->_paramTypeList .= $this->_determineType($value);
+                        if (is_array($value)) {
+                            $this->_query .= $prop ." = ";
+                            if (!empty($value['[I]']))
+                                $this->_query .= $prop . $value['[I]'] . ", ";
+                            else {
+                                $this->_query .= $value['[F]'][0] . ", ";
+                                if (is_array ($value['[F]'][1])) {
+                                    foreach ($value['[F]'][1] as $key => $val) {
+                                        $this->_paramTypeList .= $this->_determineType($val);
+                                    }
+                                }
+                            }
+                        } else {
+                            // determines what data type the item is, for binding purposes.
+                            $this->_paramTypeList .= $this->_determineType($value);
 
-                        // prepares the reset of the SQL query.
-                        $this->_query .= ($prop . ' = ?, ');
+                            // prepares the reset of the SQL query.
+                            $this->_query .= ($prop . ' = ?, ');
+                        }
                     }
                     $this->_query = rtrim($this->_query, ', ');
                 }
@@ -498,19 +519,28 @@ class MysqliDb
                 //is insert statement
                 $keys = array_keys($tableData);
                 $values = array_values($tableData);
-                $num = count($keys);
-
-                // wrap values in quotes
-                foreach ($values as $key => $val) {
-                    $values[$key] = "'{$val}'";
-                    $this->_paramTypeList .= $this->_determineType($val);
-                }
 
                 $this->_query .= '(' . implode($keys, ', ') . ')';
                 $this->_query .= ' VALUES(';
-                while ($num !== 0) {
+                // wrap values in quotes if needed
+                foreach ($values as $key => $val) {
+                    if (is_array($val)) {
+                        if (!empty($val['[I]']))
+                            $this->_query .= $keys[$key].$val['[I]'].", ";
+                        else {
+                            $this->_query .= $val['[F]'][0].", ";
+                            if (is_array ($val['[F]'][1])) {
+                                foreach ($val['[F]'][1] as $key => $value) {
+                                    $this->_paramTypeList .= $this->_determineType($value);
+                                }
+                            }
+                        }
+                        continue;
+                    }
+
+                    $values[$key] = "'{$val}'";
+                    $this->_paramTypeList .= $this->_determineType($val);
                     $this->_query .= '?, ';
-                    $num--;
                 }
                 $this->_query = rtrim($this->_query, ', ');
                 $this->_query .= ')';
@@ -529,7 +559,15 @@ class MysqliDb
         if ($hasTableData) {
             $this->_bindParams[0] = $this->_paramTypeList;
             foreach ($tableData as $prop => $val) {
-                array_push($this->_bindParams, $tableData[$prop]);
+                if (!is_array($tableData[$prop])) {
+                    array_push($this->_bindParams, $tableData[$prop]);
+                    continue;
+                }
+
+                if (is_array($tableData[$prop]['[F]'][1])) {
+                    foreach ($tableData[$prop]['[F]'][1] as $val)
+                        array_push($this->_bindParams, $val);
+                }
             }
         }
         // Prepare where condition bind parameters
@@ -600,6 +638,8 @@ class MysqliDb
             }
             array_push($results, $x);
         }
+        $this->count = $stmt->num_rows;
+
         return $results;
     }
 
@@ -650,6 +690,74 @@ class MysqliDb
      */
     public function getLastError () {
         return $this->_mysqli->error;
+    }
+
+    /* Helper functions */
+    /**
+     * Method returns generated interval function as a string
+     *
+     * @param string interval in the formats:
+     *        "1", "-1d" or "- 1 day" -- For interval - 1 day
+     *        Supported intervals [s]econd, [m]inute, [h]hour, [d]day, [M]onth, [Y]ear
+     *        Default null;
+     * @param string Initial date
+     *
+     * @return string
+    */
+    public function interval ($diff, $func = "NOW()") {
+        $types = Array ("s" => "second", "m" => "minute", "h" => "hour", "d" => "day", "M" => "month", "Y" => "year");
+        $incr = '+';
+        $items = '';
+        $type = 'd';
+
+        if ($diff && preg_match('/([+-]?) ?([0-9]+) ?([a-zA-Z]?)/',$diff, $matches)) {
+            if (!empty ($matches[1])) $incr = $matches[1];
+            if (!empty ($matches[2])) $items = $matches[2];
+            if (!empty ($matches[3])) $type = $matches[3];
+            if (!in_array($type, array_keys($types)))
+                trigger_error ("invalid interval type in '{$diff}'");
+            $func .= " ".$incr ." interval ". $items ." ".$types[$type] . " ";
+        }
+        return $func;
+
+    }
+    /**
+     * Method returns generated interval function as an insert/update function
+     *
+     * @param string interval in the formats:
+     *        "1", "-1d" or "- 1 day" -- For interval - 1 day
+     *        Supported intervals [s]econd, [m]inute, [h]hour, [d]day, [M]onth, [Y]ear
+     *        Default null;
+     * @param string Initial date
+     *
+     * @return array
+    */
+    public function now ($diff = null, $func = "NOW()") {
+        return Array ("[F]" => Array($this->interval($diff, $func)));
+    }
+
+    /**
+     * Method generates incremental function call
+     * @param int increment amount. 1 by default
+     */
+    public function inc($num = 1) {
+        return Array ("[I]" => "+" . (int)$num);
+    }
+
+    /**
+     * Method generates decrimental function call
+     * @param int increment amount. 1 by default
+     */
+    public function dec ($num = 1) {
+        return Array ("[I]" => "-" . (int)$num);
+    }
+
+    /**
+     * Method generates user defined function call
+     * @param string user function body
+     */
+    public function func ($expr, $bindParams = null) {
+        return Array ("[F]" => Array($expr, $bindParams));
     }
 
 } // END class
