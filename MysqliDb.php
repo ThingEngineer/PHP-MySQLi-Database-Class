@@ -69,6 +69,11 @@ class MysqliDb
      */
     protected $_bindParams = array(''); // Create the empty 0 index
 
+     /**
+     * $tableName variable
+     */
+    protected $tableName;
+
     /**
      * @param string $host
      * @param string $username
@@ -76,17 +81,15 @@ class MysqliDb
      * @param string $db
      * @param int $port
      */
-    public function __construct($host, $username, $password, $db, $port = NULL)
-    {
-        if($port == NULL)
-            $port = ini_get('mysqli.default_port');
-        
-        $this->_mysqli = new mysqli($host, $username, $password, $db, $port)
-            or die('There was a problem connecting to the database');
+    public function __construct($tableName = "")
+    {        
+        if (file_exists("conn.php"))
+            $this->_mysqli = include("conn.php");
 
         $this->_mysqli->set_charset('utf8');
 
         self::$_instance = $this;
+        $this->tableName = $tableName;
     }
 
     /**
@@ -170,18 +173,18 @@ class MysqliDb
     /**
      * A convenient SELECT * function.
      *
-     * @param string  $tableName The name of the database table to work with.
+     * @param string  $this->tableName The name of the database table to work with.
      * @param integer $numRows   The number of rows total to return.
      *
      * @return array Contains the returned rows from the select query.
      */
-    public function get($tableName, $numRows = null, $columns = '*')
+    public function get($numRows = null, $columns = '*')
     {
         if (empty ($columns))
             $columns = '*';
 
         $column = is_array($columns) ? implode(', ', $columns) : $columns; 
-        $this->_query = "SELECT $column FROM $tableName";
+        $this->_query = "SELECT $column FROM $this->tableName";
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
         $this->reset();
@@ -192,26 +195,26 @@ class MysqliDb
     /**
      * A convenient SELECT * function to get one record.
      *
-     * @param string  $tableName The name of the database table to work with.
+     * @param string  $this->tableName The name of the database table to work with.
      *
      * @return array Contains the returned rows from the select query.
      */
-     public function getOne($tableName, $columns = '*') 
+     public function getOne($columns = '*') 
      {
-         $res = $this->get ($tableName, 1, $columns);
+         $res = $this->get (1, $columns);
          return $res[0];
      }
 
     /**
      *
-     * @param <string $tableName The name of the table.
+     * @param <string $this->tableName The name of the table.
      * @param array $insertData Data containing information for inserting into the DB.
      *
      * @return boolean Boolean indicating whether the insert query was completed succesfully.
      */
-    public function insert($tableName, $insertData)
+    public function insert($insertData)
     {
-        $this->_query = "INSERT into $tableName";
+        $this->_query = "INSERT into $this->tableName";
         $stmt = $this->_buildQuery(null, $insertData);
         $stmt->execute();
         $this->reset();
@@ -222,14 +225,14 @@ class MysqliDb
     /**
      * Update query. Be sure to first call the "where" method.
      *
-     * @param string $tableName The name of the database table to work with.
+     * @param string $this->tableName The name of the database table to work with.
      * @param array  $tableData Array of data to update the desired row.
      *
      * @return boolean
      */
-    public function update($tableName, $tableData)
+    public function update($tableData)
     {
-        $this->_query = "UPDATE $tableName SET ";
+        $this->_query = "UPDATE $this->tableName SET ";
 
         $stmt = $this->_buildQuery(null, $tableData);
         $stmt->execute();
@@ -241,14 +244,14 @@ class MysqliDb
     /**
      * Delete query. Call the "where" method first.
      *
-     * @param string  $tableName The name of the database table to work with.
+     * @param string  $this->tableName The name of the database table to work with.
      * @param integer $numRows   The number of rows to delete.
      *
      * @return boolean Indicates success. 0 or 1.
      */
-    public function delete($tableName, $numRows = null)
+    public function delete($numRows = null)
     {
-        $this->_query = "DELETE FROM $tableName";
+        $this->_query = "DELETE FROM $this->tableName";
 
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();

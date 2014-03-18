@@ -4,10 +4,12 @@ To utilize this class, first import Mysqldbi.php into your project, and require 
 require_once('Mysqlidb.php');
 ```
 
+Make sure you have created conn.php with your Mysqli connection
+
 After that, create a new instance of the class.
 
 ```php
-$db = new Mysqlidb('host', 'username', 'password', 'databaseName');
+$db = new Mysqlidb('tableName');
 ```
 
 Next, prepare your data, and call the necessary methods. 
