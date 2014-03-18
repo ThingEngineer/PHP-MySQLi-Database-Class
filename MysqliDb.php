@@ -69,7 +69,7 @@ class MysqliDb
      */
     protected $_bindParams = array(''); // Create the empty 0 index
 
-    /**
+     /**
      * $tableName variable
      */
     protected $tableName;
@@ -82,16 +82,14 @@ class MysqliDb
      * @param int $port
      */
     public function __construct($tableName = "")
-    {
-       if($port == NULL)
-            $port = ini_get('mysqli.default_port');
-        
-        $this->_mysqli = new mysqli($host, $username, $password, $db, $port)
-            or die('There was a problem connecting to the database');
+    {        
+        if (file_exists("conn.php"))
+            $this->_mysqli = include("conn.php");
 
         $this->_mysqli->set_charset('utf8');
 
         self::$_instance = $this;
+        $this->tableName = $tableName;
     }
 
     /**
@@ -201,11 +199,11 @@ class MysqliDb
      *
      * @return array Contains the returned rows from the select query.
      */
-    public function getOne($columns = '*') 
-    {
-       $res = $this->get (1, $columns);
-       return $res[0];
-   }
+     public function getOne($columns = '*') 
+     {
+         $res = $this->get (1, $columns);
+         return $res[0];
+     }
 
     /**
      *
@@ -289,8 +287,8 @@ class MysqliDb
      *
      * @return MysqliDb
      */
-    public function join($joinTable, $joinCondition, $joinType = '')
-    {
+     public function join($joinTable, $joinCondition, $joinType = '')
+     {
         $allowedTypes = array('LEFT', 'RIGHT', 'OUTER', 'INNER', 'LEFT OUTER', 'RIGHT OUTER');
         $joinType = strtoupper (trim ($joinType));
         $joinTable = filter_var($joinTable, FILTER_SANITIZE_STRING);
@@ -379,20 +377,20 @@ class MysqliDb
         switch (gettype($item)) {
             case 'NULL':
             case 'string':
-            return 's';
-            break;
+                return 's';
+                break;
 
             case 'integer':
-            return 'i';
-            break;
+                return 'i';
+                break;
 
             case 'blob':
-            return 'b';
-            break;
+                return 'b';
+                break;
 
             case 'double':
-            return 'd';
-            break;
+                return 'd';
+                break;
         }
         return '';
     }
@@ -447,127 +445,127 @@ class MysqliDb
                     $val = $value[$key];
                     switch( strtolower($key) ) {
                         case 'in':
-                        $comparison = ' IN (';
+                            $comparison = ' IN (';
                             foreach($val as $v){
                                 $comparison .= ' ?,';
                                 $this->_whereTypeList .= $this->_determineType( $v );
                             }
                             $comparison = rtrim($comparison, ',').' ) ';
-break;
-case 'between':
-$comparison = ' BETWEEN ? AND ? ';
-$this->_whereTypeList .= $this->_determineType( $val[0] );
-$this->_whereTypeList .= $this->_determineType( $val[1] );
-break;
-default:
+                            break;
+                        case 'between':
+                            $comparison = ' BETWEEN ? AND ? ';
+                            $this->_whereTypeList .= $this->_determineType( $val[0] );
+                            $this->_whereTypeList .= $this->_determineType( $val[1] );
+                            break;
+                        default:
                             // We are using a comparison operator with only one parameter after it
-$comparison = ' '.$key.' ? ';
+                            $comparison = ' '.$key.' ? ';
                             // Determines what data type the where column is, for binding purposes.
-$this->_whereTypeList .= $this->_determineType( $val );
-}
-} else {
+                            $this->_whereTypeList .= $this->_determineType( $val );
+                    }
+                } else {
                     // Determines what data type the where column is, for binding purposes.
-    $this->_whereTypeList .= $this->_determineType($value);
-}
+                    $this->_whereTypeList .= $this->_determineType($value);
+                }
                 // Prepares the reset of the SQL query.
-$this->_query .= ($column.$comparison.' AND ');
-}
-$this->_query = rtrim($this->_query, ' AND ');
-}
+                $this->_query .= ($column.$comparison.' AND ');
+            }
+            $this->_query = rtrim($this->_query, ' AND ');
+        }
 
         // Did the user call the "groupBy" method?
-if (!empty($this->_groupBy)) {
-    $this->_query .= " GROUP BY ";
-    foreach ($this->_groupBy as $key => $value) {
+        if (!empty($this->_groupBy)) {
+            $this->_query .= " GROUP BY ";
+            foreach ($this->_groupBy as $key => $value) {
                 // prepares the reset of the SQL query.
-        $this->_query .= $value . ", ";
-    }
-    $this->_query = rtrim($this->_query, ', ') . " ";
-}
+                $this->_query .= $value . ", ";
+            }
+            $this->_query = rtrim($this->_query, ', ') . " ";
+        }
 
         // Did the user call the "orderBy" method?
-if (!empty ($this->_orderBy)) {
-    $this->_query .= " ORDER BY ";
-    foreach ($this->_orderBy as $prop => $value) {
+        if (!empty ($this->_orderBy)) {
+            $this->_query .= " ORDER BY ";
+            foreach ($this->_orderBy as $prop => $value) {
                 // prepares the reset of the SQL query.
-        $this->_query .= $prop . " " . $value . ", ";
-    }
-    $this->_query = rtrim ($this->_query, ', ') . " ";
-} 
+                $this->_query .= $prop . " " . $value . ", ";
+            }
+            $this->_query = rtrim ($this->_query, ', ') . " ";
+        } 
 
         // Determine if is INSERT query
-if ($hasTableData) {
-    $pos = strpos($this->_query, 'INSERT');
+        if ($hasTableData) {
+            $pos = strpos($this->_query, 'INSERT');
 
-    if ($pos !== false) {
+            if ($pos !== false) {
                 //is insert statement
-        $keys = array_keys($tableData);
-        $values = array_values($tableData);
-        $num = count($keys);
+                $keys = array_keys($tableData);
+                $values = array_values($tableData);
+                $num = count($keys);
 
                 // wrap values in quotes
-        foreach ($values as $key => $val) {
-            $values[$key] = "'{$val}'";
-            $this->_paramTypeList .= $this->_determineType($val);
-        }
+                foreach ($values as $key => $val) {
+                    $values[$key] = "'{$val}'";
+                    $this->_paramTypeList .= $this->_determineType($val);
+                }
 
-        $this->_query .= '(' . implode($keys, ', ') . ')';
-        $this->_query .= ' VALUES(';
-            while ($num !== 0) {
-                $this->_query .= '?, ';
-                $num--;
+                $this->_query .= '(' . implode($keys, ', ') . ')';
+                $this->_query .= ' VALUES(';
+                while ($num !== 0) {
+                    $this->_query .= '?, ';
+                    $num--;
+                }
+                $this->_query = rtrim($this->_query, ', ');
+                $this->_query .= ')';
             }
-            $this->_query = rtrim($this->_query, ', ');
-            $this->_query .= ')';
-}
-}
+        }
 
         // Did the user set a limit
-if (isset($numRows)) {
-    $this->_query .= ' LIMIT ' . (int)$numRows;
-}
+        if (isset($numRows)) {
+            $this->_query .= ' LIMIT ' . (int)$numRows;
+        }
 
         // Prepare query
-$stmt = $this->_prepareQuery();
+        $stmt = $this->_prepareQuery();
 
         // Prepare table data bind parameters
-if ($hasTableData) {
-    $this->_bindParams[0] = $this->_paramTypeList;
-    foreach ($tableData as $prop => $val) {
-        array_push($this->_bindParams, $tableData[$prop]);
-    }
-}
-        // Prepare where condition bind parameters
-if ($hasConditional) {
-    if ($this->_where) {
-        $this->_bindParams[0] .= $this->_whereTypeList;
-        foreach ($this->_where as $prop => $val) {
-            if (!is_array ($val)) {
-                array_push ($this->_bindParams, $this->_where[$prop]);
-                continue;
-            }
-                    // if val is an array, this is not a basic = comparison operator
-            $key = key($val);
-            $vals = $val[$key];
-            if (is_array($vals)) {
-                        // if vals is an array, this comparison operator takes more than one parameter
-                foreach ($vals as $k => $v) {
-                    array_push($this->_bindParams, $this->_where[$prop][$key][$k]);
-                }
-            } else {
-                        // otherwise this comparison operator takes only one parameter
-                array_push ($this->_bindParams, $this->_where[$prop][$key]);
+        if ($hasTableData) {
+            $this->_bindParams[0] = $this->_paramTypeList;
+            foreach ($tableData as $prop => $val) {
+                array_push($this->_bindParams, $tableData[$prop]);
             }
         }
-    }
-}
+        // Prepare where condition bind parameters
+        if ($hasConditional) {
+            if ($this->_where) {
+                $this->_bindParams[0] .= $this->_whereTypeList;
+                foreach ($this->_where as $prop => $val) {
+                    if (!is_array ($val)) {
+                        array_push ($this->_bindParams, $this->_where[$prop]);
+                        continue;
+                    }
+                    // if val is an array, this is not a basic = comparison operator
+                    $key = key($val);
+                    $vals = $val[$key];
+                    if (is_array($vals)) {
+                        // if vals is an array, this comparison operator takes more than one parameter
+                        foreach ($vals as $k => $v) {
+                            array_push($this->_bindParams, $this->_where[$prop][$key][$k]);
+                        }
+                    } else {
+                        // otherwise this comparison operator takes only one parameter
+                        array_push ($this->_bindParams, $this->_where[$prop][$key]);
+                    }
+                }
+            }
+        }
         // Bind parameters to statment
-if ($hasTableData || $hasConditional) {
-    call_user_func_array(array($stmt, 'bind_param'), $this->refValues($this->_bindParams));
-}
+        if ($hasTableData || $hasConditional) {
+            call_user_func_array(array($stmt, 'bind_param'), $this->refValues($this->_bindParams));
+        }
 
-return $stmt;
-}
+        return $stmt;
+    }
 
     /**
      * This helper method takes care of prepared statements' "bind_result method
