@@ -70,15 +70,20 @@ class MysqliDb
     protected $_bindParams = array(''); // Create the empty 0 index
 
     /**
+     * $tableName variable
+     */
+    protected $tableName;
+
+    /**
      * @param string $host
      * @param string $username
      * @param string $password
      * @param string $db
      * @param int $port
      */
-    public function __construct($host, $username, $password, $db, $port = NULL)
+    public function __construct($tableName = "")
     {
-        if($port == NULL)
+       if($port == NULL)
             $port = ini_get('mysqli.default_port');
         
         $this->_mysqli = new mysqli($host, $username, $password, $db, $port)
@@ -170,18 +175,18 @@ class MysqliDb
     /**
      * A convenient SELECT * function.
      *
-     * @param string  $tableName The name of the database table to work with.
+     * @param string  $this->tableName The name of the database table to work with.
      * @param integer $numRows   The number of rows total to return.
      *
      * @return array Contains the returned rows from the select query.
      */
-    public function get($tableName, $numRows = null, $columns = '*')
+    public function get($numRows = null, $columns = '*')
     {
         if (empty ($columns))
             $columns = '*';
 
         $column = is_array($columns) ? implode(', ', $columns) : $columns; 
-        $this->_query = "SELECT $column FROM $tableName";
+        $this->_query = "SELECT $column FROM $this->tableName";
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
         $this->reset();
@@ -192,26 +197,26 @@ class MysqliDb
     /**
      * A convenient SELECT * function to get one record.
      *
-     * @param string  $tableName The name of the database table to work with.
+     * @param string  $this->tableName The name of the database table to work with.
      *
      * @return array Contains the returned rows from the select query.
      */
-     public function getOne($tableName, $columns = '*') 
-     {
-         $res = $this->get ($tableName, 1, $columns);
-         return $res[0];
-     }
+    public function getOne($columns = '*') 
+    {
+       $res = $this->get (1, $columns);
+       return $res[0];
+   }
 
     /**
      *
-     * @param <string $tableName The name of the table.
+     * @param <string $this->tableName The name of the table.
      * @param array $insertData Data containing information for inserting into the DB.
      *
      * @return boolean Boolean indicating whether the insert query was completed succesfully.
      */
-    public function insert($tableName, $insertData)
+    public function insert($insertData)
     {
-        $this->_query = "INSERT into $tableName";
+        $this->_query = "INSERT into $this->tableName";
         $stmt = $this->_buildQuery(null, $insertData);
         $stmt->execute();
         $this->reset();
@@ -222,14 +227,14 @@ class MysqliDb
     /**
      * Update query. Be sure to first call the "where" method.
      *
-     * @param string $tableName The name of the database table to work with.
+     * @param string $this->tableName The name of the database table to work with.
      * @param array  $tableData Array of data to update the desired row.
      *
      * @return boolean
      */
-    public function update($tableName, $tableData)
+    public function update($tableData)
     {
-        $this->_query = "UPDATE $tableName SET ";
+        $this->_query = "UPDATE $this->tableName SET ";
 
         $stmt = $this->_buildQuery(null, $tableData);
         $stmt->execute();
@@ -241,14 +246,14 @@ class MysqliDb
     /**
      * Delete query. Call the "where" method first.
      *
-     * @param string  $tableName The name of the database table to work with.
+     * @param string  $this->tableName The name of the database table to work with.
      * @param integer $numRows   The number of rows to delete.
      *
      * @return boolean Indicates success. 0 or 1.
      */
-    public function delete($tableName, $numRows = null)
+    public function delete($numRows = null)
     {
-        $this->_query = "DELETE FROM $tableName";
+        $this->_query = "DELETE FROM $this->tableName";
 
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
@@ -284,8 +289,8 @@ class MysqliDb
      *
      * @return MysqliDb
      */
-     public function join($joinTable, $joinCondition, $joinType = '')
-     {
+    public function join($joinTable, $joinCondition, $joinType = '')
+    {
         $allowedTypes = array('LEFT', 'RIGHT', 'OUTER', 'INNER', 'LEFT OUTER', 'RIGHT OUTER');
         $joinType = strtoupper (trim ($joinType));
         $joinTable = filter_var($joinTable, FILTER_SANITIZE_STRING);
@@ -374,20 +379,20 @@ class MysqliDb
         switch (gettype($item)) {
             case 'NULL':
             case 'string':
-                return 's';
-                break;
+            return 's';
+            break;
 
             case 'integer':
-                return 'i';
-                break;
+            return 'i';
+            break;
 
             case 'blob':
-                return 'b';
-                break;
+            return 'b';
+            break;
 
             case 'double':
-                return 'd';
-                break;
+            return 'd';
+            break;
         }
         return '';
     }
@@ -442,127 +447,127 @@ class MysqliDb
                     $val = $value[$key];
                     switch( strtolower($key) ) {
                         case 'in':
-                            $comparison = ' IN (';
+                        $comparison = ' IN (';
                             foreach($val as $v){
                                 $comparison .= ' ?,';
                                 $this->_whereTypeList .= $this->_determineType( $v );
                             }
                             $comparison = rtrim($comparison, ',').' ) ';
-                            break;
-                        case 'between':
-                            $comparison = ' BETWEEN ? AND ? ';
-                            $this->_whereTypeList .= $this->_determineType( $val[0] );
-                            $this->_whereTypeList .= $this->_determineType( $val[1] );
-                            break;
-                        default:
+break;
+case 'between':
+$comparison = ' BETWEEN ? AND ? ';
+$this->_whereTypeList .= $this->_determineType( $val[0] );
+$this->_whereTypeList .= $this->_determineType( $val[1] );
+break;
+default:
                             // We are using a comparison operator with only one parameter after it
-                            $comparison = ' '.$key.' ? ';
+$comparison = ' '.$key.' ? ';
                             // Determines what data type the where column is, for binding purposes.
-                            $this->_whereTypeList .= $this->_determineType( $val );
-                    }
-                } else {
+$this->_whereTypeList .= $this->_determineType( $val );
+}
+} else {
                     // Determines what data type the where column is, for binding purposes.
-                    $this->_whereTypeList .= $this->_determineType($value);
-                }
+    $this->_whereTypeList .= $this->_determineType($value);
+}
                 // Prepares the reset of the SQL query.
-                $this->_query .= ($column.$comparison.' AND ');
-            }
-            $this->_query = rtrim($this->_query, ' AND ');
-        }
+$this->_query .= ($column.$comparison.' AND ');
+}
+$this->_query = rtrim($this->_query, ' AND ');
+}
 
         // Did the user call the "groupBy" method?
-        if (!empty($this->_groupBy)) {
-            $this->_query .= " GROUP BY ";
-            foreach ($this->_groupBy as $key => $value) {
+if (!empty($this->_groupBy)) {
+    $this->_query .= " GROUP BY ";
+    foreach ($this->_groupBy as $key => $value) {
                 // prepares the reset of the SQL query.
-                $this->_query .= $value . ", ";
-            }
-            $this->_query = rtrim($this->_query, ', ') . " ";
-        }
+        $this->_query .= $value . ", ";
+    }
+    $this->_query = rtrim($this->_query, ', ') . " ";
+}
 
         // Did the user call the "orderBy" method?
-        if (!empty ($this->_orderBy)) {
-            $this->_query .= " ORDER BY ";
-            foreach ($this->_orderBy as $prop => $value) {
+if (!empty ($this->_orderBy)) {
+    $this->_query .= " ORDER BY ";
+    foreach ($this->_orderBy as $prop => $value) {
                 // prepares the reset of the SQL query.
-                $this->_query .= $prop . " " . $value . ", ";
-            }
-            $this->_query = rtrim ($this->_query, ', ') . " ";
-        } 
+        $this->_query .= $prop . " " . $value . ", ";
+    }
+    $this->_query = rtrim ($this->_query, ', ') . " ";
+} 
 
         // Determine if is INSERT query
-        if ($hasTableData) {
-            $pos = strpos($this->_query, 'INSERT');
+if ($hasTableData) {
+    $pos = strpos($this->_query, 'INSERT');
 
-            if ($pos !== false) {
+    if ($pos !== false) {
                 //is insert statement
-                $keys = array_keys($tableData);
-                $values = array_values($tableData);
-                $num = count($keys);
+        $keys = array_keys($tableData);
+        $values = array_values($tableData);
+        $num = count($keys);
 
                 // wrap values in quotes
-                foreach ($values as $key => $val) {
-                    $values[$key] = "'{$val}'";
-                    $this->_paramTypeList .= $this->_determineType($val);
-                }
-
-                $this->_query .= '(' . implode($keys, ', ') . ')';
-                $this->_query .= ' VALUES(';
-                while ($num !== 0) {
-                    $this->_query .= '?, ';
-                    $num--;
-                }
-                $this->_query = rtrim($this->_query, ', ');
-                $this->_query .= ')';
-            }
+        foreach ($values as $key => $val) {
+            $values[$key] = "'{$val}'";
+            $this->_paramTypeList .= $this->_determineType($val);
         }
+
+        $this->_query .= '(' . implode($keys, ', ') . ')';
+        $this->_query .= ' VALUES(';
+            while ($num !== 0) {
+                $this->_query .= '?, ';
+                $num--;
+            }
+            $this->_query = rtrim($this->_query, ', ');
+            $this->_query .= ')';
+}
+}
 
         // Did the user set a limit
-        if (isset($numRows)) {
-            $this->_query .= ' LIMIT ' . (int)$numRows;
-        }
+if (isset($numRows)) {
+    $this->_query .= ' LIMIT ' . (int)$numRows;
+}
 
         // Prepare query
-        $stmt = $this->_prepareQuery();
+$stmt = $this->_prepareQuery();
 
         // Prepare table data bind parameters
-        if ($hasTableData) {
-            $this->_bindParams[0] = $this->_paramTypeList;
-            foreach ($tableData as $prop => $val) {
-                array_push($this->_bindParams, $tableData[$prop]);
-            }
-        }
-        // Prepare where condition bind parameters
-        if ($hasConditional) {
-            if ($this->_where) {
-                $this->_bindParams[0] .= $this->_whereTypeList;
-                foreach ($this->_where as $prop => $val) {
-                    if (!is_array ($val)) {
-                        array_push ($this->_bindParams, $this->_where[$prop]);
-                        continue;
-                    }
-                    // if val is an array, this is not a basic = comparison operator
-                    $key = key($val);
-                    $vals = $val[$key];
-                    if (is_array($vals)) {
-                        // if vals is an array, this comparison operator takes more than one parameter
-                        foreach ($vals as $k => $v) {
-                            array_push($this->_bindParams, $this->_where[$prop][$key][$k]);
-                        }
-                    } else {
-                        // otherwise this comparison operator takes only one parameter
-                        array_push ($this->_bindParams, $this->_where[$prop][$key]);
-                    }
-                }
-            }
-        }
-        // Bind parameters to statment
-        if ($hasTableData || $hasConditional) {
-            call_user_func_array(array($stmt, 'bind_param'), $this->refValues($this->_bindParams));
-        }
-
-        return $stmt;
+if ($hasTableData) {
+    $this->_bindParams[0] = $this->_paramTypeList;
+    foreach ($tableData as $prop => $val) {
+        array_push($this->_bindParams, $tableData[$prop]);
     }
+}
+        // Prepare where condition bind parameters
+if ($hasConditional) {
+    if ($this->_where) {
+        $this->_bindParams[0] .= $this->_whereTypeList;
+        foreach ($this->_where as $prop => $val) {
+            if (!is_array ($val)) {
+                array_push ($this->_bindParams, $this->_where[$prop]);
+                continue;
+            }
+                    // if val is an array, this is not a basic = comparison operator
+            $key = key($val);
+            $vals = $val[$key];
+            if (is_array($vals)) {
+                        // if vals is an array, this comparison operator takes more than one parameter
+                foreach ($vals as $k => $v) {
+                    array_push($this->_bindParams, $this->_where[$prop][$key][$k]);
+                }
+            } else {
+                        // otherwise this comparison operator takes only one parameter
+                array_push ($this->_bindParams, $this->_where[$prop][$key]);
+            }
+        }
+    }
+}
+        // Bind parameters to statment
+if ($hasTableData || $hasConditional) {
+    call_user_func_array(array($stmt, 'bind_param'), $this->refValues($this->_bindParams));
+}
+
+return $stmt;
+}
 
     /**
      * This helper method takes care of prepared statements' "bind_result method
