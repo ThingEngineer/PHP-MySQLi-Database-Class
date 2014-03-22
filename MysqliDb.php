@@ -10,6 +10,9 @@
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @version   1.1
  **/
+
+namespace MysqliDb;
+
 class MysqliDb
 {
     /**
@@ -81,7 +84,7 @@ class MysqliDb
         if($port == NULL)
             $port = ini_get('mysqli.default_port');
         
-        $this->_mysqli = new mysqli($host, $username, $password, $db, $port)
+        $this->_mysqli = new \mysqli($host, $username, $password, $db, $port)
             or die('There was a problem connecting to the database');
 
         $this->_mysqli->set_charset('utf8');
@@ -171,7 +174,8 @@ class MysqliDb
      * A convenient SELECT * function.
      *
      * @param string  $tableName The name of the database table to work with.
-     * @param integer $numRows   The number of rows total to return.
+     * @param integer $numRows[optional]   The number of rows total to return.
+     * @param string  $columns
      *
      * @return array Contains the returned rows from the select query.
      */
@@ -193,6 +197,7 @@ class MysqliDb
      * A convenient SELECT * function to get one record.
      *
      * @param string  $tableName The name of the database table to work with.
+     * @param string  $columns
      *
      * @return array Contains the returned rows from the select query.
      */
@@ -303,7 +308,7 @@ class MysqliDb
      * @uses $MySqliDb->orderBy('id', 'desc')->orderBy('name', 'desc');
      *
      * @param string $orderByField The name of the database field.
-     * @param string $orderByDirection Order direction.
+     * @param string $orderbyDirection Order direction.
      *
      * @return MysqliDb
      */
@@ -572,7 +577,7 @@ class MysqliDb
      *
      * @return array The results of the SQL fetch.
      */
-    protected function _dynamicBindResults(mysqli_stmt $stmt)
+    protected function _dynamicBindResults(\mysqli_stmt $stmt)
     {
         $parameters = array();
         $results = array();
