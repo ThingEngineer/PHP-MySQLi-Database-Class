@@ -30,7 +30,8 @@ if($id)
 ```
 
 ### Select Query
-
+After any select/get function calls amount or returned rows
+is stored in $count variable
 ```php
 $users = $db->get('users'); //contains an array of all users 
 $users = $db->get('users', 10); //contains an array 10 users
@@ -44,9 +45,10 @@ echo "total ".$stats['cnt']. "users found";
 
 $cols = Array ("id, name, email");
 $users = $db->get ("users", null, $cols);
-foreach ($users as $user) { 
-    print_r ($user);
-}
+if ($db->count > 0)
+    foreach ($users as $user) { 
+        print_r ($user);
+    }
 ```
 
 or select just one row

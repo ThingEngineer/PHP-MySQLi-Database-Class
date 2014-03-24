@@ -68,6 +68,12 @@ class MysqliDb
      * @var array
      */
     protected $_bindParams = array(''); // Create the empty 0 index
+    /**
+     * Variable which holds an amount of returned rows during get/getOne/select queries
+     *
+     * @var string
+     */ 
+    public $count = 0;
 
     /**
      * @param string $host
@@ -118,6 +124,7 @@ class MysqliDb
         $this->_query = null;
         $this->_whereTypeList = null;
         $this->_paramTypeList = null;
+        $this->count = 0;
     }
 
     /**
@@ -615,6 +622,8 @@ class MysqliDb
             }
             array_push($results, $x);
         }
+        $this->count = $stmt->num_rows;
+
         return $results;
     }
 
