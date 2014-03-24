@@ -464,6 +464,9 @@ class MysqliDb
                     // Determines what data type the where column is, for binding purposes.
                     $this->_whereTypeList .= $this->_determineType($value);
                 }
+                
+                if (!isset($value))
+                   $comparison = "<=> ?";
                 // Prepares the reset of the SQL query.
                 $this->_query .= ($column.$comparison.' AND ');
             }
