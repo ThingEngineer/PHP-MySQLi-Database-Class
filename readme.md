@@ -30,13 +30,13 @@ $data = Array(
 	'login' => 'admin',
 	'firstName' => 'John',
 	'lastName' => 'Doe',
-	'fullName' => $db->func('CONCAT(firstName," ",lastName)'),
-    // fullname = CONCAT(firstName,"",lastName)
+	'fullName' => $db->func('CONCAT(firstName,?,lastName)',Array (" ")),
+	// fullname = CONCAT(firstName,"",lastName)
 	'createdAt' => $db->now(),
-    // createdAt = NOW()
+	// createdAt = NOW()
 	'expires' => $db->now('+1Y')
-    // expires = NOW() + interval 1 year
-    // Supported intervals [s]econd, [m]inute, [h]hour, [d]day, [M]onth, [Y]ear
+	// expires = NOW() + interval 1 year
+	// Supported intervals [s]econd, [m]inute, [h]hour, [d]day, [M]onth, [Y]ear
 );
 
 $id = $db->insert('users', $data)
@@ -50,7 +50,7 @@ $data = Array (
 	'firstName' => 'Bobby',
 	'lastName' => 'Tables',
 	'editCount' => $db->inc(2)
-    // editCount = editCount + 2;
+	// editCount = editCount + 2;
 );
 $db->where('id', 1);
 if($db->update('users', $data)) echo 'successfully updated'; 

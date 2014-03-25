@@ -433,8 +433,14 @@ class MysqliDb
                             $this->_query .= $prop ." = ";
                             if (!empty($value['[I]']))
                                 $this->_query .= $prop . $value['[I]'] . ", ";
-                            else
-                                $this->_query .= $value['[F]'] . ", ";
+                            else {
+                                $this->_query .= $value['[F]'][0] . ", ";
+                                if (is_array ($value['[F]'][1])) {
+                                    foreach ($value['[F]'][1] as $key => $val) {
+                                        $this->_paramTypeList .= $this->_determineType($val);
+                                    }
+                                }
+                            }
                         } else {
                             // determines what data type the item is, for binding purposes.
                             $this->_paramTypeList .= $this->_determineType($value);
@@ -521,8 +527,14 @@ class MysqliDb
                     if (is_array($val)) {
                         if (!empty($val['[I]']))
                             $this->_query .= $keys[$key].$val['[I]'].", ";
-                        else
-                            $this->_query .= $val['[F]'].", ";
+                        else {
+                            $this->_query .= $val['[F]'][0].", ";
+                            if (is_array ($val['[F]'][1])) {
+                                foreach ($val['[F]'][1] as $key => $value) {
+                                    $this->_paramTypeList .= $this->_determineType($value);
+                                }
+                            }
+                        }
                         continue;
                     }
 
@@ -550,8 +562,15 @@ class MysqliDb
         if ($hasTableData) {
             $this->_bindParams[0] = $this->_paramTypeList;
             foreach ($tableData as $prop => $val) {
-                if (!is_array($tableData[$prop]))
+                if (!is_array($tableData[$prop])) {
                     array_push($this->_bindParams, $tableData[$prop]);
+                    continue;
+                }
+
+                if (is_array($tableData[$prop]['[F]'][1])) {
+                    foreach ($tableData[$prop]['[F]'][1] as $val)
+                        array_push($this->_bindParams, $val);
+                }
             }
         }
         // Prepare where condition bind parameters
@@ -717,7 +736,7 @@ class MysqliDb
      * @return array
     */
     public function now ($diff = null, $func = "NOW()") {
-        return Array ("[F]" => $this->interval($diff, $func));
+        return Array ("[F]" => Array($this->interval($diff, $func)));
     }
 
     /**
@@ -740,8 +759,8 @@ class MysqliDb
      * Method generates user defined function call
      * @param string user function body
      */
-    public function func ($expr) {
-        return Array ("[F]" => $expr);
+    public function func ($expr, $bindParams = null) {
+        return Array ("[F]" => Array($expr, $bindParams));
     }
 
 } // END class
