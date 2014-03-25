@@ -13,15 +13,30 @@ $db = new Mysqlidb('host', 'username', 'password', 'databaseName');
 Next, prepare your data, and call the necessary methods. 
 
 ### Insert Query
-
+Simple example
 ```php
-$data = array(
+$data = Array ("login" => "admin",
+               "firstName" => "John",
+               "lastName" => 'Doe'
+)
+$id = $db->insert('users', $data)
+if($id)
+    echo 'user was created. Id='.$id;
+```
+
+Insert with functions use
+```php
+$data = Array(
 	'login' => 'admin',
 	'firstName' => 'John',
 	'lastName' => 'Doe',
-	'fullName' => $db->func("CONCAT(firstName," ",lastName)"),
+	'fullName' => $db->func('CONCAT(firstName," ",lastName)'),
+    // fullname = CONCAT(firstName,"",lastName)
 	'createdAt' => $db->now(),
-	'expires' => $db->now("+1y")
+    // createdAt = NOW()
+	'expires' => $db->now('+1Y')
+    // expires = NOW() + interval 1 year
+    // Supported intervals [s]econd, [m]inute, [h]hour, [d]day, [M]onth, [Y]ear
 );
 
 $id = $db->insert('users', $data)
@@ -29,12 +44,24 @@ if($id)
     echo 'user was created. Id='.$id;
 ```
 
+### Update Query
+```php
+$data = Array (
+	'firstName' => 'Bobby',
+	'lastName' => 'Tables',
+	'editCount' => $db->inc(2)
+    // editCount = editCount + 2;
+);
+$db->where('id', 1);
+if($db->update('users', $data)) echo 'successfully updated'; 
+```
+
 ### Select Query
 After any select/get function calls amount or returned rows
 is stored in $count variable
 ```php
-$users = $db->get('users'); //contains an array of all users 
-$users = $db->get('users', 10); //contains an array 10 users
+$users = $db->get('users'); //contains an Array of all users 
+$users = $db->get('users', 10); //contains an Array 10 users
 ```
 
 or select with custom columns set. Functions also could be used
@@ -59,17 +86,6 @@ $user = $db->getOne ("users");
 echo $user['id'];
 ```
 
-### Update Query
-```php
-$data = array (
-	'firstName' => 'Bobby',
-	'lastName' => 'Tables',
-	'editCount' => $db->inc()
-);
-$db->where('id', 1);
-if($db->update('users', $data)) echo 'successfully updated'; 
-```
-
 ### Delete Query
 ```php
 $db->where('id', 1);
@@ -86,14 +102,14 @@ foreach ($users as $user) {
 
 ### Raw Query Method
 ```php
-$params = array(1, 'admin');
+$params = Array(1, 'admin');
 $users = $db->rawQuery("SELECT id, firstName, lastName FROM users WHERE id = ? AND login = ?", $params);
-print_r($users); // contains array of returned rows
+print_r($users); // contains Array of returned rows
 
 // will handle any SQL query
-$params = array(10, 1, 10, 11, 2, 10);
+$params = Array(10, 1, 10, 11, 2, 10);
 $resutls = $db->rawQuery("(SELECT a FROM t1 WHERE a = ? AND B = ? ORDER BY a LIMIT ?) UNION(SELECT a FROM t2 WHERE a = ? AND B = ? ORDER BY a LIMIT ?)", $params);
-print_r($results); // contains array of returned rows
+print_r($results); // contains Array of returned rows
 ```
 
 
@@ -110,21 +126,21 @@ $results = $db->get('users');
 
 Custom Operators:
 ```php
-$db->where('id', array('>=' => 50));
+$db->where('id', Array('>=' => 50));
 $results = $db->get('users');
 // Gives: SELECT * FROM users WHERE id >= 50;
 ```
 
 BETWEEN:
 ```php
-$db->where('id', array('between' => array(4, 20) ) );
+$db->where('id', Array('between' => Array(4, 20) ) );
 $results = $db->get('users');
 // Gives: SELECT * FROM users WHERE id BETWEEN 4 AND 20
 ```
 
 IN:
 ```php
-$db->where('id', array( 'in' => array(1, 5, 27, -1, 'd') ) );
+$db->where('id', Array( 'in' => Array(1, 5, 27, -1, 'd') ) );
 $results = $db->get('users');
 // Gives: SELECT * FROM users WHERE id IN (1, 5, 27, -1, 'd');
 ```

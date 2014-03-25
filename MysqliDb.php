@@ -432,16 +432,16 @@ class MysqliDb
                         if (is_array($value)) {
                             $this->_query .= $prop ." = ";
                             if (!empty($value['[I]']))
-                                $this->_query .= $prop.$value['[I]'].", ";
+                                $this->_query .= $prop . $value['[I]'] . ", ";
                             else
-                                $this->_query .= $value['[F]'].", ";
-                            continue;
-                        }
-                        // determines what data type the item is, for binding purposes.
-                        $this->_paramTypeList .= $this->_determineType($value);
+                                $this->_query .= $value['[F]'] . ", ";
+                        } else {
+                            // determines what data type the item is, for binding purposes.
+                            $this->_paramTypeList .= $this->_determineType($value);
 
-                        // prepares the reset of the SQL query.
-                        $this->_query .= ($prop . ' = ?, ');
+                            // prepares the reset of the SQL query.
+                            $this->_query .= ($prop . ' = ?, ');
+                        }
                     }
                     $this->_query = rtrim($this->_query, ', ');
                 }
