@@ -464,7 +464,7 @@ class MysqliDb
                     // Determines what data type the where column is, for binding purposes.
                     $this->_whereTypeList .= $this->_determineType($value);
                 }
-                
+                // Check if given value for column is null and using proper sysntax to check if is null in stmt
                 if (!isset($value))
                    $comparison = "<=> ?";
                 // Prepares the reset of the SQL query.
