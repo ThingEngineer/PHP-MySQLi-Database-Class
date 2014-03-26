@@ -80,7 +80,12 @@ class MysqliDb
      * @var string
      */ 
     public $count = 0;
-
+    /**
+     * Variable which holds last statement error
+     *
+     * @var string
+     */
+    protected $_stmtError;
     /**
      * @param string $host
      * @param string $username
@@ -158,6 +163,7 @@ class MysqliDb
         }
 
         $stmt->execute();
+        $this->_stmtError = $stmt->error;
         $this->reset();
 
         return $this->_dynamicBindResults($stmt);
@@ -175,6 +181,7 @@ class MysqliDb
         $this->_query = filter_var($query, FILTER_SANITIZE_STRING);
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
+        $this->_stmtError = $stmt->error;
         $this->reset();
 
         return $this->_dynamicBindResults($stmt);
@@ -197,6 +204,7 @@ class MysqliDb
         $this->_query = "SELECT $column FROM $tableName";
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
+        $this->_stmtError = $stmt->error;
         $this->reset();
 
         return $this->_dynamicBindResults($stmt);
@@ -227,6 +235,7 @@ class MysqliDb
         $this->_query = "INSERT into $tableName";
         $stmt = $this->_buildQuery(null, $insertData);
         $stmt->execute();
+        $this->_stmtError = $stmt->error;
         $this->reset();
 
         return ($stmt->affected_rows > 0 ? $stmt->insert_id : false);
@@ -246,6 +255,7 @@ class MysqliDb
 
         $stmt = $this->_buildQuery(null, $tableData);
         $stmt->execute();
+        $this->_stmtError = $stmt->error;
         $this->reset();
 
         return ($stmt->affected_rows > 0);
@@ -265,6 +275,7 @@ class MysqliDb
 
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
+        $this->_stmtError = $stmt->error;
         $this->reset();
 
         return ($stmt->affected_rows > 0);
@@ -720,7 +731,7 @@ class MysqliDb
      * @return string
      */
     public function getLastError () {
-        return $this->_mysqli->error;
+        return $this->_stmtError . " " . $this->_mysqli->error;
     }
 
     /* Helper functions */
