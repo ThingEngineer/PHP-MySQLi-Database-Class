@@ -31,6 +31,12 @@ class MysqliDb
      */
     protected $_query;
     /**
+     * The previously executed SQL query
+     *
+     * @var string
+     */
+    protected $_lastQuery;
+    /**
      * An array that holds where joins
      *
      * @var array
@@ -602,6 +608,7 @@ class MysqliDb
             call_user_func_array(array($stmt, 'bind_param'), $this->refValues($this->_bindParams));
         }
 
+        $this->_lastQuery = $this->replacePlaceHolders($this->_query, $this->_bindParams);
         return $stmt;
     }
 
@@ -684,6 +691,30 @@ class MysqliDb
             return $refs;
         }
         return $arr;
+    }
+
+    /**
+     * Function to replace ? with variables from bind variable
+     * @param string $str
+     * @param Array $vals
+     *
+     * @return string
+     */
+    protected function replacePlaceHolders ($str, $vals) {
+        $i = 1;
+        while ($pos = strpos ($str, "?"))
+            $str = substr ($str, 0, $pos) . $vals[$i++] . substr ($str, $pos + 1);
+
+        return $str;
+    }
+
+    /**
+     * Method returns last executed query
+     *
+     * @return string
+     */
+    public function getLastQuery () {
+        return $this->_lastQuery;
     }
 
     /**
