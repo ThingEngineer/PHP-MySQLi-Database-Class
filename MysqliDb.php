@@ -661,9 +661,9 @@ class MysqliDb
             foreach ($row as $key => $val) {
                 $x[$key] = $val;
             }
+            $this->count++;
             array_push($results, $x);
         }
-        $this->count = $stmt->num_rows;
 
         return $results;
     }
