@@ -217,15 +217,14 @@ class MysqliDb
      *
      * @return array Contains the returned rows from the select query.
      */
-     public function getOne($tableName, $columns = '*') 
-     {
-         $res = $this->get ($tableName, 1, $columns);
-         if(isset($res[0])) {
-         	return $res[0];
-		 } else {
-			 return null;
-		 }
-     }
+    public function getOne($tableName, $columns = '*') 
+    {
+        $res = $this->get ($tableName, 1, $columns);
+        if (isset($res[0]))
+            return $res[0];
+
+        return null;
+    }
 
     /**
      *
