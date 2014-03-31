@@ -459,7 +459,6 @@ class MysqliDb
 
         // Did the user call the "where" method?
         if (!empty($this->_where)) {
-
             // if update data was passed, filter through and create the SQL query, accordingly.
             if ($hasTableData) {
                 $pos = strpos($this->_query, 'UPDATE');
@@ -471,10 +470,9 @@ class MysqliDb
                                 $this->_query .= $prop . $value['[I]'] . ", ";
                             else {
                                 $this->_query .= $value['[F]'][0] . ", ";
-                                if (is_array ($value['[F]'][1])) {
-                                    foreach ($value['[F]'][1] as $key => $val) {
+                                if (!empty($val['[F]'][1]) && is_array ($value['[F]'][1])) {
+                                    foreach ($value['[F]'][1] as $val)
                                         $this->_paramTypeList .= $this->_determineType($val);
-                                    }
                                 }
                             }
                         } else {
@@ -555,33 +553,24 @@ class MysqliDb
         // Determine if is INSERT query
         if ($hasTableData) {
             $pos = strpos($this->_query, 'INSERT');
-
             if ($pos !== false) {
                 //is insert statement
-                $keys = array_keys($tableData);
-                $values = array_values($tableData);
-
-                $this->_query .= '(' . implode($keys, ', ') . ')';
+                $this->_query .= '(' . implode(array_keys($tableData), ', ') . ')';
                 $this->_query .= ' VALUES(';
-                // wrap values in quotes if needed
-                foreach ($values as $key => $val) {
-                    if (is_array($val)) {
-                        if (!empty($val['[I]']))
-                            $this->_query .= $keys[$key].$val['[I]'].", ";
-                        else {
-                            $this->_query .= $val['[F]'][0].", ";
-                            if (is_array ($val['[F]'][1])) {
-                                foreach ($val['[F]'][1] as $key => $value) {
-                                    $this->_paramTypeList .= $this->_determineType($value);
-                                }
-                            }
-                        }
-                        continue;
-                    }
 
-                    $values[$key] = "'{$val}'";
-                    $this->_paramTypeList .= $this->_determineType($val);
-                    $this->_query .= '?, ';
+                foreach ($tableData as $key => $val) {
+                    if (!is_array ($val)) {
+                        $this->_paramTypeList .= $this->_determineType($val);
+                        $this->_query .= '?, ';
+                    } else if (!empty($val['[I]'])) {
+                        $this->_query .= $key . $val['[I]'] . ", ";
+                    } else {
+                        $this->_query .= $val['[F]'][0] . ", ";
+                        if (!empty($val['[F]'][1]) && is_array ($val['[F]'][1])) {
+                            foreach ($val['[F]'][1] as $value)
+                                $this->_paramTypeList .= $this->_determineType($value);
+                        }
+                    }
                 }
                 $this->_query = rtrim($this->_query, ', ');
                 $this->_query .= ')';
@@ -602,14 +591,12 @@ class MysqliDb
         // Prepare table data bind parameters
         if ($hasTableData) {
             $this->_bindParams[0] = $this->_paramTypeList;
-            foreach ($tableData as $prop => $val) {
-                if (!is_array($tableData[$prop])) {
-                    array_push($this->_bindParams, $tableData[$prop]);
-                    continue;
-                }
-
-                if (is_array($tableData[$prop]['[F]'][1])) {
-                    foreach ($tableData[$prop]['[F]'][1] as $val)
+            foreach ($tableData as $val) {
+                if (!is_array ($val)) {
+                    array_push ($this->_bindParams, $val);
+                } else if (!empty($val['[F]'][1]) && is_array ($val['[F]'][1])) {
+                    // collect func() arguments
+                    foreach ($val['[F]'][1] as $val)
                         array_push($this->_bindParams, $val);
                 }
             }
