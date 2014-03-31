@@ -286,7 +286,7 @@ class MysqliDb
     }
 
     /**
-     * This method allows you to specify multipl (method chaining optional) WHERE statements for SQL queries.
+     * This method allows you to specify multiple (method chaining optional) AND WHERE statements for SQL queries.
      *
      * @uses $MySqliDb->where('id', 7)->where('title', 'MyTitle');
      *
@@ -297,10 +297,25 @@ class MysqliDb
      */
     public function where($whereProp, $whereValue)
     {
-        $this->_where[$whereProp] = $whereValue;
+        $this->_where[$whereProp] = Array ("AND", $whereValue);
         return $this;
     }
 
+    /**
+     * This method allows you to specify multiple (method chaining optional) OR WHERE statements for SQL queries.
+     *
+     * @uses $MySqliDb->orWhere('id', 7)->orWhere('title', 'MyTitle');
+     *
+     * @param string $whereProp  The name of the database field.
+     * @param mixed  $whereValue The value of the database field.
+     *
+     * @return MysqliDb
+     */
+    public function orWhere($whereProp, $whereValue)
+    {
+        $this->_where[$whereProp] = Array ("OR", $whereValue);
+        return $this;
+    }
     /**
      * This method allows you to concatenate joins for the final SQL statement.
      *
@@ -477,6 +492,12 @@ class MysqliDb
             //Prepair the where portion of the query
             $this->_query .= ' WHERE ';
             foreach ($this->_where as $column => $value) {
+                $andOr = '';
+                // Determine if where condition was a first one or it was AND or OR type
+                if (array_search ($column, array_keys ($this->_where)) != 0)
+                    $andOr = ' ' . $value[0]. ' ';
+
+                $value = $value[1];
                 $comparison = ' = ? ';
                 if( is_array( $value ) ) {
                     // if the value is an array, then this isn't a basic = comparison
@@ -507,9 +528,8 @@ class MysqliDb
                     $this->_whereTypeList .= $this->_determineType($value);
                 }
                 // Prepares the reset of the SQL query.
-                $this->_query .= ($column.$comparison.' AND ');
+                $this->_query .= ($andOr.$column.$comparison);
             }
-            $this->_query = rtrim($this->_query, ' AND ');
         }
 
         // Did the user call the "groupBy" method?
@@ -598,22 +618,13 @@ class MysqliDb
         if ($hasConditional) {
             if ($this->_where) {
                 $this->_bindParams[0] .= $this->_whereTypeList;
-                foreach ($this->_where as $prop => $val) {
+                foreach ($this->_where as $val) {
+                    $val = $val[1];
                     if (!is_array ($val)) {
-                        array_push ($this->_bindParams, $this->_where[$prop]);
-                        continue;
-                    }
-                    // if val is an array, this is not a basic = comparison operator
-                    $key = key($val);
-                    $vals = $val[$key];
-                    if (is_array($vals)) {
-                        // if vals is an array, this comparison operator takes more than one parameter
-                        foreach ($vals as $k => $v) {
-                            array_push($this->_bindParams, $this->_where[$prop][$key][$k]);
-                        }
+                        array_push ($this->_bindParams, $val);
                     } else {
-                        // otherwise this comparison operator takes only one parameter
-                        array_push ($this->_bindParams, $this->_where[$prop][$key]);
+                        foreach ($val as $v)
+                            array_push ($this->_bindParams, $v);
                     }
                 }
             }

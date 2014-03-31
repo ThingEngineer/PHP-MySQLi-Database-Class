@@ -145,6 +145,14 @@ $results = $db->get('users');
 // Gives: SELECT * FROM users WHERE id IN (1, 5, 27, -1, 'd');
 ```
 
+OR CASE
+```php
+$db->where('firstName','John');
+$db->orWhere('firstName','Peter');
+$results = $db->get('users');
+// Gives: SELECT * FROM users WHERE firstName='John' OR firstName='peter'
+```
+
 Optionally you can use method chaining to call where multiple times without referencing your object over an over:
 
 ```php
