@@ -449,6 +449,14 @@ class MysqliDb
                             }
                             $comparison = rtrim($comparison, ',').' ) ';
                             break;
+                        case 'not in':
+                            $comparison = ' NOT IN (';
+                            foreach($val as $v){
+                                $comparison .= ' ?,';
+                                $this->_whereTypeList .= $this->_determineType( $v );
+                            }
+                            $comparison = rtrim($comparison, ',').' ) ';
+                            break;
                         case 'between':
                             $comparison = ' BETWEEN ? AND ? ';
                             $this->_whereTypeList .= $this->_determineType( $val[0] );
