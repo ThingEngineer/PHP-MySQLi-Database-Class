@@ -113,7 +113,7 @@ class MysqliDb
         $this->_where = array();
         $this->_join = array();
         $this->_orderBy = array();
-        $this->groupBy = array(); 
+        $this->_groupBy = array(); 
         $this->_bindParams = array(''); // Create the empty 0 index
         $this->_query = null;
         $this->_whereTypeList = null;
@@ -443,6 +443,14 @@ class MysqliDb
                     switch( strtolower($key) ) {
                         case 'in':
                             $comparison = ' IN (';
+                            foreach($val as $v){
+                                $comparison .= ' ?,';
+                                $this->_whereTypeList .= $this->_determineType( $v );
+                            }
+                            $comparison = rtrim($comparison, ',').' ) ';
+                            break;
+                        case 'not in':
+                            $comparison = ' NOT IN (';
                             foreach($val as $v){
                                 $comparison .= ' ?,';
                                 $this->_whereTypeList .= $this->_determineType( $v );
