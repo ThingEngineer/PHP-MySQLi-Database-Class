@@ -1,13 +1,13 @@
 To utilize this class, first import Mysqldbi.php into your project, and require it.
 
 ```php
-require_once('Mysqlidb.php');
+require_once('MysqliDb.php');
 ```
 
 After that, create a new instance of the class.
 
 ```php
-$db = new Mysqlidb('host', 'username', 'password', 'databaseName');
+$db = new MysqliDb('host', 'username', 'password', 'databaseName');
 ```
 
 Next, prepare your data, and call the necessary methods. 
