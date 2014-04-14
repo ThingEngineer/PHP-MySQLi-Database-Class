@@ -49,12 +49,6 @@ class MysqliDb
      */
     protected $_where = array();
     /**
-     * Dynamic type list for where condition values
-     *
-     * @var array
-     */
-    protected $_whereTypeList;
-    /**
      * Dynamic type list for order by condition value
      */
     protected $_orderBy = array(); 
@@ -62,12 +56,6 @@ class MysqliDb
      * Dynamic type list for group by condition value
      */
     protected $_groupBy = array(); 
-    /**
-     * Dynamic type list for table data values
-     *
-     * @var array
-     */
-    protected $_paramTypeList;
     /**
      * Dynamic array that holds a combination of where condition/table data value types and parameter referances
      *
@@ -133,8 +121,6 @@ class MysqliDb
         $this->_groupBy = array(); 
         $this->_bindParams = array(''); // Create the empty 0 index
         $this->_query = null;
-        $this->_whereTypeList = null;
-        $this->_paramTypeList = null;
         $this->count = 0;
     }
 
@@ -472,7 +458,8 @@ class MysqliDb
                     $this->_query .= $column." = ";
 
                 if (!is_array ($value)) {
-                    $this->_paramTypeList .= $this->_determineType($value);
+                    $this->_bindParams[0] .= $this->_determineType($value);
+                    array_push ($this->_bindParams, $value);
                     $this->_query .= '?, ';
                 } else {
                     $key = key ($value);
@@ -484,8 +471,10 @@ class MysqliDb
                         case '[F]':
                             $this->_query .= $val[0] . ", ";
                             if (!empty ($val[1])) {
-                                foreach ($val[1] as $v)
-                                    $this->_paramTypeList .= $this->_determineType($v);
+                                foreach ($val[1] as $v) {
+                                    $this->_bindParams[0] .= $this->_determineType($v);
+                                    array_push ($this->_bindParams, $v);
+                                }
                             }
                             break;
                         default:
@@ -519,24 +508,29 @@ class MysqliDb
                             $comparison = ' IN (';
                             foreach($val as $v){
                                 $comparison .= ' ?,';
-                                $this->_whereTypeList .= $this->_determineType( $v );
+                                $this->_bindParams[0] .= $this->_determineType( $v );
+                                array_push ($this->_bindParams, $v);
                             }
                             $comparison = rtrim($comparison, ',').' ) ';
                             break;
                         case 'between':
                             $comparison = ' BETWEEN ? AND ? ';
-                            $this->_whereTypeList .= $this->_determineType( $val[0] );
-                            $this->_whereTypeList .= $this->_determineType( $val[1] );
+                            $this->_bindParams[0] .= $this->_determineType( $val[0] );
+                            $this->_bindParams[0] .= $this->_determineType( $val[1] );
+                            array_push ($this->_bindParams, $val[0]);
+                            array_push ($this->_bindParams, $val[1]);
                             break;
                         default:
                             // We are using a comparison operator with only one parameter after it
                             $comparison = ' '.$key.' ? ';
                             // Determines what data type the where column is, for binding purposes.
-                            $this->_whereTypeList .= $this->_determineType( $val );
+                            $this->_bindParams[0] .= $this->_determineType( $val );
+                            array_push ($this->_bindParams, $val);
                     }
                 } else {
                     // Determines what data type the where column is, for binding purposes.
-                    $this->_whereTypeList .= $this->_determineType($value);
+                    $this->_bindParams[0] .= $this->_determineType($value);
+                    array_push ($this->_bindParams, $value);
                 }
                 // Prepares the reset of the SQL query.
                 $this->_query .= ($andOr.$column.$comparison);
@@ -574,34 +568,6 @@ class MysqliDb
         // Prepare query
         $stmt = $this->_prepareQuery();
 
-        // Prepare table data bind parameters
-        if ($hasTableData) {
-            $this->_bindParams[0] = $this->_paramTypeList;
-            foreach ($tableData as $val) {
-                if (!is_array ($val)) {
-                    array_push ($this->_bindParams, $val);
-                } else if (!empty($val['[F]'][1]) && is_array ($val['[F]'][1])) {
-                    // collect func() arguments
-                    foreach ($val['[F]'][1] as $val)
-                        array_push($this->_bindParams, $val);
-                }
-            }
-        }
-        // Prepare where condition bind parameters
-        if ($hasConditional) {
-            if ($this->_where) {
-                $this->_bindParams[0] .= $this->_whereTypeList;
-                foreach ($this->_where as $val) {
-                    $val = $val[1];
-                    if (!is_array ($val)) {
-                        array_push ($this->_bindParams, $val);
-                    } else {
-                        foreach ($val as $v)
-                            array_push ($this->_bindParams, $v);
-                    }
-                }
-            }
-        }
         // Bind parameters to statment
         if ($hasTableData || $hasConditional) {
             call_user_func_array(array($stmt, 'bind_param'), $this->refValues($this->_bindParams));
