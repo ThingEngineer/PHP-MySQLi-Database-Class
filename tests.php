@@ -107,11 +107,21 @@ $upData = Array (
 );
 $db->where ("id", 1);
 $cnt = $db->update("users", $upData);
-echo "all done\n";
 
 $db->where ("id", 1);
 $db->getOne("users");
-echo "cnt=".$db->count;
+if ($db->count != 1) {
+    echo "Invalid users count on getOne()";
+    exit;
+}
+
+$db->delete("users");
+$db->get("users");
+if ($db->count != 0) {
+    echo "Invalid users count after delete"; 
+    exit;
+}
+echo "All done";
 
 //print_r($db->rawQuery("CALL simpleproc(?)",Array("test")));
 

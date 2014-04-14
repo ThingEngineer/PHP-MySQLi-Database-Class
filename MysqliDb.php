@@ -456,41 +456,55 @@ class MysqliDb
             } 
         }
 
-        // Did the user call the "where" method?
-        if (!empty($this->_where)) {
-            // if update data was passed, filter through and create the SQL query, accordingly.
-            if ($hasTableData) {
-                $pos = strpos($this->_query, 'UPDATE');
-                if ($pos !== false) {
-                    foreach ($tableData as $prop => $value) {
-                        if (is_array($value)) {
-                            $this->_query .= $prop ." = ";
-                            if (!empty($value['[I]']))
-                                $this->_query .= $prop . $value['[I]'] . ", ";
-                            else {
-                                $this->_query .= $value['[F]'][0] . ", ";
-                                if (!empty($val['[F]'][1]) && is_array ($value['[F]'][1])) {
-                                    foreach ($value['[F]'][1] as $val)
-                                        $this->_paramTypeList .= $this->_determineType($val);
-                                }
-                            }
-                        } else {
-                            // determines what data type the item is, for binding purposes.
-                            $this->_paramTypeList .= $this->_determineType($value);
+        // Determine INSERT or UPDATE query
+        if ($hasTableData) {
+            $isInsert = strpos ($this->_query, 'INSERT');
+            $isUpdate = strpos ($this->_query, 'UPDATE');
 
-                            // prepares the reset of the SQL query.
-                            $this->_query .= ($prop . ' = ?, ');
-                        }
-                    }
-                    $this->_query = rtrim($this->_query, ', ');
-                }
+            if ($isInsert !== false) {
+                //is insert statement
+                $this->_query .= '(' . implode(array_keys($tableData), ', ') . ')';
+                $this->_query .= ' VALUES(';
             }
 
+            foreach ($tableData as $column => $value) {
+                if ($isUpdate !== false)
+                    $this->_query .= $column." = ";
+
+                if (!is_array ($value)) {
+                    $this->_paramTypeList .= $this->_determineType($value);
+                    $this->_query .= '?, ';
+                } else {
+                    $key = key ($value);
+                    $val = $value[$key];
+                    switch ($key) {
+                        case '[I]':
+                            $this->_query .= $column . $val . ", ";
+                            break;
+                        case '[F]':
+                            $this->_query .= $val[0] . ", ";
+                            if (!empty ($val[1])) {
+                                foreach ($val[1] as $v)
+                                    $this->_paramTypeList .= $this->_determineType($v);
+                            }
+                            break;
+                        default:
+                            die ("Wrong operation");
+                    }
+                }
+            }
+            $this->_query = rtrim($this->_query, ', ');
+            if ($isInsert !== false)
+                $this->_query .= ')';
+        }
+
+        // Did the user call the "where" method?
+        if ($hasConditional) {
             //Prepair the where portion of the query
             $this->_query .= ' WHERE ';
             foreach ($this->_where as $column => $value) {
                 $andOr = '';
-                // Determine if where condition was a first one or it was AND or OR type
+                // if its not a first condition insert its concatenator (AND or OR)
                 if (array_search ($column, array_keys ($this->_where)) != 0)
                     $andOr = ' ' . $value[0]. ' ';
 
@@ -548,33 +562,6 @@ class MysqliDb
             }
             $this->_query = rtrim ($this->_query, ', ') . " ";
         } 
-
-        // Determine if is INSERT query
-        if ($hasTableData) {
-            $pos = strpos($this->_query, 'INSERT');
-            if ($pos !== false) {
-                //is insert statement
-                $this->_query .= '(' . implode(array_keys($tableData), ', ') . ')';
-                $this->_query .= ' VALUES(';
-
-                foreach ($tableData as $key => $val) {
-                    if (!is_array ($val)) {
-                        $this->_paramTypeList .= $this->_determineType($val);
-                        $this->_query .= '?, ';
-                    } else if (!empty($val['[I]'])) {
-                        $this->_query .= $key . $val['[I]'] . ", ";
-                    } else {
-                        $this->_query .= $val['[F]'][0] . ", ";
-                        if (!empty($val['[F]'][1]) && is_array ($val['[F]'][1])) {
-                            foreach ($val['[F]'][1] as $value)
-                                $this->_paramTypeList .= $this->_determineType($value);
-                        }
-                    }
-                }
-                $this->_query = rtrim($this->_query, ', ');
-                $this->_query .= ')';
-            }
-        }
 
         // Did the user set a limit
         if (isset($numRows)) {
