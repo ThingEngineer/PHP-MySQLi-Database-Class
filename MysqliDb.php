@@ -667,10 +667,13 @@ class MysqliDb
      */
     protected function replacePlaceHolders ($str, $vals) {
         $i = 1;
-        while ($pos = strpos ($str, "?"))
-            $str = substr ($str, 0, $pos) . $vals[$i++] . substr ($str, $pos + 1);
+        $newStr = "";
 
-        return $str;
+        while ($pos = strpos ($str, "?")) {
+            $newStr .= substr ($str, 0, $pos) . $vals[$i++];
+            $str = substr ($str, $pos + 1);
+        }
+        return $newStr;
     }
 
     /**
