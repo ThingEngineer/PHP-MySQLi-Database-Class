@@ -67,7 +67,7 @@ $users = $db->get('users', 10); //contains an Array 10 users
 or select with custom columns set. Functions also could be used
 
 ```php
-$stats = $db->getOne ("users", null, "sum(id), count(*) as cnt");
+$stats = $db->getOne ("users", "sum(id), count(*) as cnt");
 echo "total ".$stats['cnt']. "users found";
 
 $cols = Array ("id, name, email");
@@ -182,6 +182,6 @@ Join table products with table users with LEFT JOIN by tenantID
 ```php
 $db->join("users u", "p.tenantID=u.tenantID", "LEFT");
 $db->where("u.id", 6);
-$products = $db->get ("products p", "u.name, p.productName");
+$products = $db->get ("products p", null, "u.name, p.productName");
 print_r ($products);
 ```
