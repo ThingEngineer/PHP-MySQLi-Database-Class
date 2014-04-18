@@ -1,13 +1,13 @@
 To utilize this class, first import Mysqldbi.php into your project, and require it.
 
 ```php
-require_once('Mysqlidb.php');
+require_once('MysqliDb.php');
 ```
 
 After that, create a new instance of the class.
 
 ```php
-$db = new Mysqlidb('host', 'username', 'password', 'databaseName');
+$db = new MysqliDb('host', 'username', 'password', 'databaseName');
 ```
 
 Next, prepare your data, and call the necessary methods. 
@@ -152,6 +152,6 @@ Join table products with table users with LEFT JOIN by tenantID
 ```php
 $db->join("users u", "p.tenantID=u.tenantID", "LEFT");
 $db->where("u.id", 6);
-$products = $db->get ("products p", "u.name, p.productName");
+$products = $db->get ("products p", null, "u.name, p.productName");
 print_r ($products);
 ```

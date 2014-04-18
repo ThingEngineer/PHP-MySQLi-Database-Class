@@ -113,7 +113,7 @@ class MysqliDb
         $this->_where = array();
         $this->_join = array();
         $this->_orderBy = array();
-        $this->groupBy = array(); 
+        $this->_groupBy = array(); 
         $this->_bindParams = array(''); // Create the empty 0 index
         $this->_query = null;
         $this->_whereTypeList = null;
@@ -199,7 +199,7 @@ class MysqliDb
      public function getOne($tableName, $columns = '*') 
      {
          $res = $this->get ($tableName, 1, $columns);
-         return $res[0];
+         if($res) return $res[0];
      }
 
     /**
@@ -449,6 +449,14 @@ class MysqliDb
                             }
                             $comparison = rtrim($comparison, ',').' ) ';
                             break;
+                        case 'not in':
+                            $comparison = ' NOT IN (';
+                            foreach($val as $v){
+                                $comparison .= ' ?,';
+                                $this->_whereTypeList .= $this->_determineType( $v );
+                            }
+                            $comparison = rtrim($comparison, ',').' ) ';
+                            break;
                         case 'between':
                             $comparison = ' BETWEEN ? AND ? ';
                             $this->_whereTypeList .= $this->_determineType( $val[0] );
@@ -519,7 +527,10 @@ class MysqliDb
 
         // Did the user set a limit
         if (isset($numRows)) {
-            $this->_query .= ' LIMIT ' . (int)$numRows;
+            if (is_array ($numRows))
+                $this->_query .= ' LIMIT ' . (int)$numRows[0] . ', ' . (int)$numRows[1];
+            else
+                $this->_query .= ' LIMIT ' . (int)$numRows;
         }
 
         // Prepare query
