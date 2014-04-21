@@ -10,7 +10,7 @@ $tables = Array (
         'login' => 'char(10) not null',
         'customerId' => 'int(10) not null',
         'firstName' => 'char(10) not null',
-        'lastName' => 'char(10) not null',
+        'lastName' => 'char(10)',
         'password' => 'text not null',
         'createdAt' => 'datetime',
         'expires' => 'datetime',
@@ -30,7 +30,7 @@ $data = Array (
     Array ('login' => 'user2',
            'customerId' => 10,
            'firstName' => 'Mike',
-           'lastName' => 'B',
+           'lastName' => NULL,
            'password' => $db->func('SHA1(?)',Array ("secretpassword2+salt")),
            'createdAt' => $db->now(),
            'expires' => $db->now('+1Y'),
@@ -92,7 +92,6 @@ if ($db->count != 1) {
     echo $db->getLastQuery();
     exit;
 }
-// FIXME ADD IN and BETWEEN CHECKS
 
 $db->groupBy("customerId");
 $cnt = $db->get ("users", null, "customerId, count(id) as cnt");
@@ -109,9 +108,42 @@ $db->where ("id", 1);
 $cnt = $db->update("users", $upData);
 
 $db->where ("id", 1);
-$db->getOne("users");
+$r = $db->getOne("users");
 if ($db->count != 1) {
     echo "Invalid users count on getOne()";
+    exit;
+}
+if ($r['password'] != '546f98b24edfdc3b9bbe0d241bd8b29783f71b32') {
+    echo "Invalid password were set".
+    exit;
+}
+
+$db->where ("id", Array('in' => Array('1','2','3')));
+$db->get("users");
+if ($db->count != 3) {
+    echo "Invalid users count on where() with in ";
+    exit;
+}
+
+$db->where ("id", Array('between' => Array('2','3')));
+$db->get("users");
+if ($db->count != 2) {
+    echo "Invalid users count on where() with between";
+    exit;
+}
+
+$db->where ("id", 2);
+$db->orWhere ("customerId", 11);
+$r = $db->get("users");
+if ($db->count != 2) {
+    echo "Invalid users count on orWhere()";
+    exit;
+}
+
+$db->where ("lastName", Array("<=>" => NULL));
+$r = $db->get("users");
+if ($db->count != 1) {
+    echo "Invalid users count on null where()";
     exit;
 }
 
