@@ -153,6 +153,13 @@ $results = $db->get('users');
 // Gives: SELECT * FROM users WHERE firstName='John' OR firstName='peter'
 ```
 
+NULL comparison:
+```php
+$db->where ("lastName", Array("<=>" => NULL));
+$results = $db->get("users");
+// Gives: SELECT * FROM users where lastName <=> NULL
+```
+
 Optionally you can use method chaining to call where multiple times without referencing your object over an over:
 
 ```php
