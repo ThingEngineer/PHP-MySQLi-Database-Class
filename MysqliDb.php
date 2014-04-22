@@ -181,7 +181,7 @@ class MysqliDb
             $columns = '*';
 
         $column = is_array($columns) ? implode(', ', $columns) : $columns; 
-        $this->_query = "SELECT $column FROM $tableName";
+        $this->_query = "SELECT $column FROM `$tableName`";
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
         $this->reset();
@@ -211,7 +211,7 @@ class MysqliDb
      */
     public function insert($tableName, $insertData)
     {
-        $this->_query = "INSERT into $tableName";
+        $this->_query = "INSERT into `$tableName` ";
         $stmt = $this->_buildQuery(null, $insertData);
         $stmt->execute();
         $this->reset();
@@ -229,7 +229,7 @@ class MysqliDb
      */
     public function update($tableName, $tableData)
     {
-        $this->_query = "UPDATE $tableName SET ";
+        $this->_query = "UPDATE `$tableName` SET ";
 
         $stmt = $this->_buildQuery(null, $tableData);
         $stmt->execute();
@@ -248,7 +248,7 @@ class MysqliDb
      */
     public function delete($tableName, $numRows = null)
     {
-        $this->_query = "DELETE FROM $tableName";
+        $this->_query = "DELETE FROM `$tableName`";
 
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
