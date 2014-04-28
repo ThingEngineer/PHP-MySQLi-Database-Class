@@ -477,6 +477,10 @@ class MysqliDb
                                 }
                             }
                             break;
+                        case '[N]':
+							if($val == null) $this->_query .= "!" . $column . ", ";
+							else $this->_query .= "!" . $val . ", ";
+							break;
                         default:
                             die ("Wrong operation");
                     }
@@ -752,6 +756,14 @@ class MysqliDb
      */
     public function dec ($num = 1) {
         return Array ("[I]" => "-" . (int)$num);
+    }
+    
+    /**
+     * Method generates change boolean function call
+     * @param string column name. null by default
+     */
+    public function not ($col = null) {
+        return Array ("[N]" => (string)$col);
     }
 
     /**
