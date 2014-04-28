@@ -478,9 +478,9 @@ class MysqliDb
                             }
                             break;
                         case '[N]':
-							if($val == null) $this->_query .= "!" . $column . ", ";
-							else $this->_query .= "!" . $val . ", ";
-							break;
+			    if($val == null) $this->_query .= "!" . $column . ", ";
+			    else $this->_query .= "!" . $val . ", ";
+			    break;
                         default:
                             die ("Wrong operation");
                     }
