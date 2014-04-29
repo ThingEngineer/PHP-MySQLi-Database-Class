@@ -49,8 +49,10 @@ if($id)
 $data = Array (
 	'firstName' => 'Bobby',
 	'lastName' => 'Tables',
-	'editCount' => $db->inc(2)
+	'editCount' => $db->inc(2),
 	// editCount = editCount + 2;
+	'editBoolean' => $db->not()
+	// editBoolean = !editBoolean;
 );
 $db->where('id', 1);
 if($db->update('users', $data)) echo 'successfully updated'; 
