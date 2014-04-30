@@ -421,6 +421,17 @@ class MysqliDb
     }
 
     /**
+     * Helper function to add variables into bind parameters array
+     *
+     * @param string Variable value
+     */
+    protected function _bindParam($value)
+    {
+        $this->_bindParams[0] .= $this->_determineType ($value);
+        array_push ($this->_bindParams, $value);
+    }
+
+    /**
      * Abstraction method that will compile the WHERE statement,
      * any passed update data, and the desired rows.
      * It then builds the SQL query.
@@ -458,8 +469,7 @@ class MysqliDb
                     $this->_query .= $column." = ";
 
                 if (!is_array ($value)) {
-                    $this->_bindParams[0] .= $this->_determineType($value);
-                    array_push ($this->_bindParams, $value);
+                    $this->_bindParam ($value);
                     $this->_query .= '?, ';
                 } else {
                     $key = key ($value);
@@ -471,10 +481,8 @@ class MysqliDb
                         case '[F]':
                             $this->_query .= $val[0] . ", ";
                             if (!empty ($val[1])) {
-                                foreach ($val[1] as $v) {
-                                    $this->_bindParams[0] .= $this->_determineType($v);
-                                    array_push ($this->_bindParams, $v);
-                                }
+                                foreach ($val[1] as $v)
+                                    $this->_bindParam ($v);
                             }
                             break;
                         case '[N]':
@@ -512,29 +520,24 @@ class MysqliDb
                             $comparison = ' IN (';
                             foreach($val as $v){
                                 $comparison .= ' ?,';
-                                $this->_bindParams[0] .= $this->_determineType( $v );
-                                array_push ($this->_bindParams, $v);
+                                $this->_bindParam ($v);
                             }
                             $comparison = rtrim($comparison, ',').' ) ';
                             break;
                         case 'between':
                             $comparison = ' BETWEEN ? AND ? ';
-                            $this->_bindParams[0] .= $this->_determineType( $val[0] );
-                            $this->_bindParams[0] .= $this->_determineType( $val[1] );
-                            array_push ($this->_bindParams, $val[0]);
-                            array_push ($this->_bindParams, $val[1]);
+                            $this->_bindParam ($val[0]);
+                            $this->_bindParam ($val[1]);
                             break;
                         default:
                             // We are using a comparison operator with only one parameter after it
                             $comparison = ' '.$key.' ? ';
                             // Determines what data type the where column is, for binding purposes.
-                            $this->_bindParams[0] .= $this->_determineType( $val );
-                            array_push ($this->_bindParams, $val);
+                            $this->_bindParam ($val);
                     }
                 } else {
                     // Determines what data type the where column is, for binding purposes.
-                    $this->_bindParams[0] .= $this->_determineType($value);
-                    array_push ($this->_bindParams, $value);
+                    $this->_bindParam ($value);
                 }
                 // Prepares the reset of the SQL query.
                 $this->_query .= ($andOr.$column.$comparison);
