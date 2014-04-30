@@ -36,7 +36,7 @@ $users = $db->get('users', 10); //contains an array 10 users
 or select with custom columns set. Functions also could be used
 
 ```php
-$stats = $db->getOne ("users", null, "sum(id), count(*) as cnt");
+$stats = $db->getOne ("users", "sum(id), count(*) as cnt");
 echo "total ".$stats['cnt']. "users found";
 
 $cols = Array ("id, name, email");
