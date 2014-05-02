@@ -19,7 +19,7 @@ $data = Array ("login" => "admin",
                "firstName" => "John",
                "lastName" => 'Doe'
 )
-$id = $db->insert('users', $data)
+$id = $db->insert('users', $data);
 if($id)
     echo 'user was created. Id='.$id;
 ```
@@ -39,7 +39,7 @@ $data = Array(
 	// Supported intervals [s]econd, [m]inute, [h]hour, [d]day, [M]onth, [Y]ear
 );
 
-$id = $db->insert('users', $data)
+$id = $db->insert('users', $data);
 if($id)
     echo 'user was created. Id='.$id;
 ```
@@ -91,7 +91,7 @@ echo $user['id'];
 ### Delete Query
 ```php
 $db->where('id', 1);
-if($db->delete('posts')) echo 'successfully deleted'; 
+if($db->delete('users')) echo 'successfully deleted';
 ```
 
 ### Generic Query Method
