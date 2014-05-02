@@ -167,7 +167,7 @@ Optionally you can use method chaining to call where multiple times without refe
 ```php
 $results = $db
 	->where('id', 1)
-	->where('title', 'MyTitle')
+	->where('login', 'admin')
 	->get('users');
 ```
 
