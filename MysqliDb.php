@@ -512,10 +512,15 @@ class MysqliDb
                     $this->_query .= ' ' . $value[0]. ' ';
 
                 if (is_array ($value[1])) {
+                    //value[0] -- AND/OR, value[1] -- condition array
                     // if the value is an array, then this isn't a basic = comparison
                     $key = key($value[1]);
                     $val = $value[1][$key];
                     switch( strtolower($key) ) {
+                        case '0':
+                            foreach ($value[1] as $v)
+                                $this->_bindParam ($v);
+                            break;
                         case 'in':
                             $comparison = ' IN (';
                             foreach($val as $v){

@@ -128,6 +128,12 @@ $results = $db->get('users');
 
 Custom Operators:
 ```php
+$db->where("id = ? or id = ?", Array(6,2));
+$res = $db->get ("users");
+// Gives: SELECT * FROM users WERE id = 2 or id = 2;
+```
+
+```php
 $db->where('id', Array('>=' => 50));
 $results = $db->get('users');
 // Gives: SELECT * FROM users WHERE id >= 50;
