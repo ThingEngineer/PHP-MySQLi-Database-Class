@@ -518,6 +518,7 @@ class MysqliDb
                     $val = $value[1][$key];
                     switch( strtolower($key) ) {
                         case '0':
+                            $comparison = '';
                             foreach ($value[1] as $v)
                                 $this->_bindParam ($v);
                             break;
