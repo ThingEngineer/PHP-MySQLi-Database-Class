@@ -506,17 +506,15 @@ class MysqliDb
             //Prepair the where portion of the query
             $this->_query .= ' WHERE ';
             foreach ($this->_where as $column => $value) {
-                $andOr = '';
+                //value[0] -- AND/OR, value[1] -- condition array
                 // if its not a first condition insert its concatenator (AND or OR)
                 if (array_search ($column, array_keys ($this->_where)) != 0)
-                    $andOr = ' ' . $value[0]. ' ';
+                    $this->_query .= ' ' . $value[0]. ' ';
 
-                $value = $value[1];
-                $comparison = ' = ? ';
-                if( is_array( $value ) ) {
+                if (is_array ($value[1])) {
                     // if the value is an array, then this isn't a basic = comparison
-                    $key = key( $value );
-                    $val = $value[$key];
+                    $key = key($value[1]);
+                    $val = $value[1][$key];
                     switch( strtolower($key) ) {
                         case 'in':
                             $comparison = ' IN (';
@@ -539,10 +537,10 @@ class MysqliDb
                     }
                 } else {
                     // Determines what data type the where column is, for binding purposes.
-                    $this->_bindParam ($value);
+                    $comparison = ' = ? ';
+                    $this->_bindParam ($value[1]);
                 }
-                // Prepares the reset of the SQL query.
-                $this->_query .= ($andOr.$column.$comparison);
+                $this->_query .= $column.$comparison;
             }
         }
 
