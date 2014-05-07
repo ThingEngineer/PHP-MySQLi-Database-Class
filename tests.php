@@ -181,6 +181,7 @@ if ($db->count != 1) {
 
 $db->join("users u", "p.userId=u.id", "LEFT");
 $db->where("u.login",'user2');
+$db->orderBy("CONCAT(u.login, u.firstName)");
 $products = $db->get ("products p", null, "u.login, p.productName");
 if ($db->count != 2) {
     echo "Invalid products count on join ()";
