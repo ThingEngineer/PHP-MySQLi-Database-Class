@@ -339,7 +339,7 @@ class MysqliDb
     {
         $allowedDirection = Array ("ASC", "DESC");
         $orderbyDirection = strtoupper (trim ($orderbyDirection));
-        $orderByField = preg_replace ("/[^-a-z0-9\.\(\),]+/i",'', $orderByField);
+        $orderByField = preg_replace ("/[^-a-z0-9\.\(\),_]+/i",'', $orderByField);
 
         if (empty($orderbyDirection) || !in_array ($orderbyDirection, $allowedDirection))
             die ('Wrong order direction: '.$orderbyDirection);
@@ -359,7 +359,7 @@ class MysqliDb
      */
     public function groupBy($groupByField)
     {
-        $groupByField = preg_replace ("/[^-a-z0-9\.\(\),]+/i",'', $groupByField);
+        $groupByField = preg_replace ("/[^-a-z0-9\.\(\),_]+/i",'', $groupByField);
 
         $this->_groupBy[] = $groupByField;
         return $this;
