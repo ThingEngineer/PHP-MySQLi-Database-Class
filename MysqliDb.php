@@ -75,6 +75,18 @@ class MysqliDb
      * @var string
      */
     protected $_stmtError;
+
+    /**
+     * Database credentials
+     *
+     * @var string
+     */
+    protected $host;
+    protected $username;
+    protected $password;
+    protected $db;
+    protected $port;
+
     /**
      * @param string $host
      * @param string $username
@@ -84,17 +96,30 @@ class MysqliDb
      */
     public function __construct($host, $username, $password, $db, $port = NULL)
     {
+        $this->host = $host;
+        $this->username = $username;
+        $this->password = $password;
+        $this->db = $db;
         if($port == NULL)
-            $port = ini_get('mysqli.default_port');
+            $this->port = ini_get ('mysqli.default_port');
+        else
+            $this->port = $port;
         
-        $this->_mysqli = new mysqli($host, $username, $password, $db, $port)
-            or die('There was a problem connecting to the database');
-
-        $this->_mysqli->set_charset('utf8');
-
+        $this->connect();
         self::$_instance = $this;
     }
 
+    /**
+     * A method to connect to the database
+     *
+     */
+    public function connect()
+    {
+        $this->_mysqli = new mysqli ($this->host, $this->username, $this->password, $this->db, $this->port)
+            or die('There was a problem connecting to the database');
+
+        $this->_mysqli->set_charset ('utf8');
+    }
     /**
      * A method of returning the static instance to allow access to the
      * instantiated object from within another class.
@@ -386,6 +411,18 @@ class MysqliDb
     public function escape($str)
     {
         return $this->_mysqli->real_escape_string($str);
+    }
+
+    /**
+     * Method to call mysqli->ping() to keep unused connections open on
+     * long-running scripts, or to reconnect timed out connections (if php.ini has
+     * global mysqli.reconnect set to true). Can't do this directly using object
+     * since _mysqli is protected.
+     *
+     * @return bool True if connection is up
+     */
+    public function ping() {
+        return $this->_mysqli->ping();
     }
 
     /**

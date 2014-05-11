@@ -200,3 +200,15 @@ $db->where("u.id", 6);
 $products = $db->get ("products p", null, "u.name, p.productName");
 print_r ($products);
 ```
+
+### Helper commands
+Reconnect in case mysql connection died
+```php
+if (!$db->ping())
+    $db->connect()
+```
+
+Obtain an initialized instance of the class from another class
+```php
+    $db = MysqliDb::getInstance();
+```
