@@ -499,13 +499,13 @@ class MysqliDb
 
             if ($isInsert !== false) {
                 //is insert statement
-                $this->_query .= '(' . implode(array_keys($tableData), ', ') . ')';
+                $this->_query .= '(`' . implode(array_keys($tableData), '`, `') . '`)';
                 $this->_query .= ' VALUES(';
             }
 
             foreach ($tableData as $column => $value) {
                 if ($isUpdate !== false)
-                    $this->_query .= $column." = ";
+                    $this->_query .= "`" . $column . "` = ";
 
                 if (!is_array ($value)) {
                     $this->_bindParam ($value);
