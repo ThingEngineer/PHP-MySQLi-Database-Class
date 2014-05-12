@@ -620,10 +620,9 @@ class MysqliDb
         // Prepare query
         $stmt = $this->_prepareQuery();
 
-        // Bind parameters to statment
-        if ($hasTableData || $hasConditional) {
+        // Bind parameters to statement if any
+        if (count ($this->_bindParams) > 1)
             call_user_func_array(array($stmt, 'bind_param'), $this->refValues($this->_bindParams));
-        }
 
         $this->_lastQuery = $this->replacePlaceHolders($this->_query, $this->_bindParams);
         return $stmt;
