@@ -28,6 +28,7 @@ Insert with functions use
 ```php
 $data = Array(
 	'login' => 'admin',
+    'active' => true,
 	'firstName' => 'John',
 	'lastName' => 'Doe',
 	'password' => $db->func('SHA1(?)',Array ("secretpassword+salt")),
@@ -51,8 +52,8 @@ $data = Array (
 	'lastName' => 'Tables',
 	'editCount' => $db->inc(2),
 	// editCount = editCount + 2;
-	'editBoolean' => $db->not()
-	// editBoolean = !editBoolean;
+	'active' => $db->not()
+	// active = !active;
 );
 $db->where('id', 1);
 if($db->update('users', $data)) echo 'successfully updated'; 
