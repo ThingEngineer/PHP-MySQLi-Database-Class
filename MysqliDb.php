@@ -444,6 +444,7 @@ class MysqliDb
                 return 's';
                 break;
 
+            case 'boolean':
             case 'integer':
                 return 'i';
                 break;

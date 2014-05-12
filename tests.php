@@ -8,6 +8,7 @@ if(!$db) die("Database error");
 $tables = Array (
     'users' => Array (
         'login' => 'char(10) not null',
+        'active' => 'bool default 0',
         'customerId' => 'int(10) not null',
         'firstName' => 'char(10) not null',
         'lastName' => 'char(10)',
@@ -43,6 +44,7 @@ $data = Array (
                'loginCount' => $db->inc(2)
         ),
         Array ('login' => 'user3',
+               'active' => true,
                'customerId' => 11,
                'firstName' => 'Pete',
                'lastName' => 'D',
@@ -111,6 +113,23 @@ if ($db->count != 3) {
     echo "Invalid total insert count";
     exit;
 }
+$db->where ("active", true);
+$users = $db->get("users");
+if ($db->count != 1) {
+    echo "Invalid total insert count with boolean";
+    exit;
+}
+
+$db->where ("active", false);
+$db->update("users", Array ("active" => $db->not()));
+
+$db->where ("active", true);
+$users = $db->get("users");
+if ($db->count != 3) {
+    echo "Invalid total insert count with boolean";
+    exit;
+}
+
 // TODO
 //$db->where("createdAt", Array (">" => $db->interval("-1h")));
 //$users = $db->get("users");
