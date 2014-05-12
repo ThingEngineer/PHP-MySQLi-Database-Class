@@ -142,6 +142,7 @@ $results = $db->get('users');
 BETWEEN:
 ```php
 $db->where('id', Array('between' => Array(4, 20) ) );
+//$db->where('id', Array('not between' => Array(4, 20) ) );
 $results = $db->get('users');
 // Gives: SELECT * FROM users WHERE id BETWEEN 4 AND 20
 ```
@@ -149,6 +150,7 @@ $results = $db->get('users');
 IN:
 ```php
 $db->where('id', Array( 'in' => Array(1, 5, 27, -1, 'd') ) );
+//$db->where('id', Array( 'not in' => Array(1, 5, 27, -1, 'd') ) );
 $results = $db->get('users');
 // Gives: SELECT * FROM users WHERE id IN (1, 5, 27, -1, 'd');
 ```

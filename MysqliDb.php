@@ -561,27 +561,27 @@ class MysqliDb
                             foreach ($value[1] as $v)
                                 $this->_bindParam ($v);
                             break;
+                        case 'not in':
                         case 'in':
-                            $comparison = ' IN (';
+                            $comparison = ' ' . $key . ' (';
                             foreach($val as $v){
                                 $comparison .= ' ?,';
                                 $this->_bindParam ($v);
                             }
                             $comparison = rtrim($comparison, ',').' ) ';
                             break;
+                        case 'not between':
                         case 'between':
-                            $comparison = ' BETWEEN ? AND ? ';
+                            $comparison = ' ' . $key . ' ? AND ? ';
                             $this->_bindParam ($val[0]);
                             $this->_bindParam ($val[1]);
                             break;
                         default:
                             // We are using a comparison operator with only one parameter after it
                             $comparison = ' '.$key.' ? ';
-                            // Determines what data type the where column is, for binding purposes.
                             $this->_bindParam ($val);
                     }
                 } else {
-                    // Determines what data type the where column is, for binding purposes.
                     $comparison = ' = ? ';
                     $this->_bindParam ($value[1]);
                 }
