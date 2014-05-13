@@ -307,7 +307,7 @@ class MysqliDb
      *
      * @return MysqliDb
      */
-    public function where($whereProp, $whereValue)
+    public function where($whereProp, $whereValue = null)
     {
         $this->_where[$whereProp] = Array ("AND", $whereValue);
         return $this;
@@ -323,7 +323,7 @@ class MysqliDb
      *
      * @return MysqliDb
      */
-    public function orWhere($whereProp, $whereValue)
+    public function orWhere($whereProp, $whereValue = null)
     {
         $this->_where[$whereProp] = Array ("OR", $whereValue);
         return $this;
@@ -582,6 +582,8 @@ class MysqliDb
                             $comparison = ' '.$key.' ? ';
                             $this->_bindParam ($val);
                     }
+                } else if ($value[1] == null) {
+                    $comparison = '';
                 } else {
                     $comparison = ' = ? ';
                     $this->_bindParam ($value[1]);

@@ -127,13 +127,6 @@ $results = $db->get('users');
 // Gives: SELECT * FROM users WHERE id=1 AND login='admin';
 ```
 
-Custom Operators:
-```php
-$db->where("id = ? or id = ?", Array(6,2));
-$res = $db->get ("users");
-// Gives: SELECT * FROM users WERE id = 2 or id = 2;
-```
-
 ```php
 $db->where('id', Array('>=' => 50));
 $results = $db->get('users');
@@ -170,6 +163,20 @@ $db->where ("lastName", Array("<=>" => NULL));
 $results = $db->get("users");
 // Gives: SELECT * FROM users where lastName <=> NULL
 ```
+
+Also you can use raw where conditions:
+```php
+$db->where ("id != companyId");
+$results = $db->get("users");
+```
+
+Or raw condition with variables:
+```php
+$db->where("id = ? or id = ?", Array(6,2));
+$res = $db->get ("users");
+// Gives: SELECT * FROM users WERE id = 2 or id = 2;
+```
+
 
 Optionally you can use method chaining to call where multiple times without referencing your object over an over:
 
