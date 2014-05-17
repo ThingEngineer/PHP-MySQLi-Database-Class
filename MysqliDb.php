@@ -8,6 +8,7 @@
  * @author    Josh Campbell <jcampbell@ajillion.com>
  * @copyright Copyright (c) 2010
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
+ * @link      https://github.com/ajillion/PHP-MySQLi-Database-Class
  * @version   1.1
  **/
 class MysqliDb
