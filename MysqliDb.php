@@ -20,6 +20,12 @@ class MysqliDb
      */
     protected static $_instance;
     /**
+     * Table prefix
+     * 
+     * @var string
+     */
+    protected $_prefix;
+    /**
      * MySQLi instance
      *
      * @var mysqli
@@ -94,12 +100,13 @@ class MysqliDb
      * @param string $db
      * @param int $port
      */
-    public function __construct($host, $username, $password, $db, $port = NULL)
+    public function __construct($host, $username, $password, $db, $prefix = '', $port = NULL)
     {
         $this->host = $host;
         $this->username = $username;
         $this->password = $password;
         $this->db = $db;
+        $this->prefix = $prefix;
         if($port == NULL)
             $this->port = ini_get ('mysqli.default_port');
         else
@@ -214,7 +221,7 @@ class MysqliDb
             $columns = '*';
 
         $column = is_array($columns) ? implode(', ', $columns) : $columns; 
-        $this->_query = "SELECT $column FROM $tableName";
+        $this->_query = "SELECT $column FROM $this->_prefix$tableName";
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
         $this->_stmtError = $stmt->error;
@@ -248,7 +255,7 @@ class MysqliDb
      */
     public function insert($tableName, $insertData)
     {
-        $this->_query = "INSERT into $tableName";
+        $this->_query = "INSERT into $this->_prefix$tableName";
         $stmt = $this->_buildQuery(null, $insertData);
         $stmt->execute();
         $this->_stmtError = $stmt->error;
@@ -267,7 +274,7 @@ class MysqliDb
      */
     public function update($tableName, $tableData)
     {
-        $this->_query = "UPDATE $tableName SET ";
+        $this->_query = "UPDATE $this->_prefix$tableName SET ";
 
         $stmt = $this->_buildQuery(null, $tableData);
         $stmt->execute();
@@ -287,7 +294,7 @@ class MysqliDb
      */
     public function delete($tableName, $numRows = null)
     {
-        $this->_query = "DELETE FROM $tableName";
+        $this->_query = "DELETE FROM $this->_prefix$tableName";
 
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
