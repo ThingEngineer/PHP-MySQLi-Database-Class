@@ -10,9 +10,9 @@ After that, create a new instance of the class.
 $db = new Mysqlidb('host', 'username', 'password', 'databaseName');
 ```
 
-It's also possible to set a table prefix and connection port:
+It's also possible to set a table prefix:
 ```php
-$db = new Mysqlidb('host', 'username', 'password', 'databaseName', 'tablePrefix', 'port');
+$db->setPrefix('tablePrefix');
 ```
 
 Next, prepare your data, and call the necessary methods. 
