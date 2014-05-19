@@ -107,7 +107,7 @@ class MysqliDb
         $this->username = $username;
         $this->password = $password;
         $this->db = $db;
-        $this->prefix = $prefix;
+        $this->_prefix = $prefix;
         if($port == NULL)
             $this->port = ini_get ('mysqli.default_port');
         else
