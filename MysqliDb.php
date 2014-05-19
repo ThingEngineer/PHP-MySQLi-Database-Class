@@ -355,7 +355,7 @@ class MysqliDb
         if ($joinType && !in_array ($joinType, $allowedTypes))
             die ('Wrong JOIN type: '.$joinType);
 
-        $this->_join[$joinType . " JOIN " . $joinTable] = $joinCondition;
+        $this->_join[$joinType . " JOIN " . $this->_prefix.$joinTable] = $joinCondition;
 
         return $this;
     }
