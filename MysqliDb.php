@@ -100,19 +100,19 @@ class MysqliDb
      * @param string $db
      * @param int $port
      */
-    public function __construct($host, $username, $password, $db, $prefix = '', $port = NULL)
+    public function __construct($host, $username, $password, $db, $port = NULL)
     {
         $this->host = $host;
         $this->username = $username;
         $this->password = $password;
         $this->db = $db;
-        $this->_prefix = $prefix;
         if($port == NULL)
             $this->port = ini_get ('mysqli.default_port');
         else
             $this->port = $port;
         
         $this->connect();
+        $this->setPrefix();
         self::$_instance = $this;
     }
 
@@ -155,6 +155,16 @@ class MysqliDb
         $this->_bindParams = array(''); // Create the empty 0 index
         $this->_query = null;
         $this->count = 0;
+    }
+    
+    /**
+     * Method to set a prefix
+     * 
+     * @param string $prefix     Contains a tableprefix
+     */
+    public function setPrefix($prefix = '')
+    {
+        $this->_prefix = $prefix;
     }
 
     /**
