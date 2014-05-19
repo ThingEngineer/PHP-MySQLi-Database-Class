@@ -6,9 +6,10 @@
  * @package   MysqliDb
  * @author    Jeffery Way <jeffrey@jeffrey-way.com>
  * @author    Josh Campbell <jcampbell@ajillion.com>
+ * @author    Alexander V. Butenko <a.butenka@gmail.com>
  * @copyright Copyright (c) 2010
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
- * @version   1.1
+ * @version   2.0
  **/
 class MysqliDb
 {
@@ -74,6 +75,18 @@ class MysqliDb
      * @var string
      */
     protected $_stmtError;
+
+    /**
+     * Database credentials
+     *
+     * @var string
+     */
+    protected $host;
+    protected $username;
+    protected $password;
+    protected $db;
+    protected $port;
+
     /**
      * @param string $host
      * @param string $username
@@ -83,17 +96,30 @@ class MysqliDb
      */
     public function __construct($host, $username, $password, $db, $port = NULL)
     {
+        $this->host = $host;
+        $this->username = $username;
+        $this->password = $password;
+        $this->db = $db;
         if($port == NULL)
-            $port = ini_get('mysqli.default_port');
+            $this->port = ini_get ('mysqli.default_port');
+        else
+            $this->port = $port;
         
-        $this->_mysqli = new mysqli($host, $username, $password, $db, $port)
-            or die('There was a problem connecting to the database');
-
-        $this->_mysqli->set_charset('utf8');
-
+        $this->connect();
         self::$_instance = $this;
     }
 
+    /**
+     * A method to connect to the database
+     *
+     */
+    public function connect()
+    {
+        $this->_mysqli = new mysqli ($this->host, $this->username, $this->password, $this->db, $this->port)
+            or die('There was a problem connecting to the database');
+
+        $this->_mysqli->set_charset ('utf8');
+    }
     /**
      * A method of returning the static instance to allow access to the
      * instantiated object from within another class.
@@ -134,7 +160,8 @@ class MysqliDb
      */
     public function rawQuery($query, $bindParams = null)
     {
-        $this->_query = filter_var($query, FILTER_SANITIZE_STRING);
+        $this->_query = filter_var ($query, FILTER_SANITIZE_MAGIC_QUOTES,
+                                    FILTER_FLAG_NO_ENCODE_QUOTES);
         $stmt = $this->_prepareQuery();
 
         if (is_array($bindParams) === true) {
@@ -280,7 +307,7 @@ class MysqliDb
      *
      * @return MysqliDb
      */
-    public function where($whereProp, $whereValue)
+    public function where($whereProp, $whereValue = null)
     {
         $this->_where[$whereProp] = Array ("AND", $whereValue);
         return $this;
@@ -296,7 +323,7 @@ class MysqliDb
      *
      * @return MysqliDb
      */
-    public function orWhere($whereProp, $whereValue)
+    public function orWhere($whereProp, $whereValue = null)
     {
         $this->_where[$whereProp] = Array ("OR", $whereValue);
         return $this;
@@ -339,7 +366,7 @@ class MysqliDb
     {
         $allowedDirection = Array ("ASC", "DESC");
         $orderbyDirection = strtoupper (trim ($orderbyDirection));
-        $orderByField = filter_var($orderByField, FILTER_SANITIZE_STRING);
+        $orderByField = preg_replace ("/[^-a-z0-9\.\(\),_]+/i",'', $orderByField);
 
         if (empty($orderbyDirection) || !in_array ($orderbyDirection, $allowedDirection))
             die ('Wrong order direction: '.$orderbyDirection);
@@ -359,7 +386,7 @@ class MysqliDb
      */
     public function groupBy($groupByField)
     {
-        $groupByField = filter_var($groupByField, FILTER_SANITIZE_STRING);
+        $groupByField = preg_replace ("/[^-a-z0-9\.\(\),_]+/i",'', $groupByField);
 
         $this->_groupBy[] = $groupByField;
         return $this;
@@ -388,6 +415,18 @@ class MysqliDb
     }
 
     /**
+     * Method to call mysqli->ping() to keep unused connections open on
+     * long-running scripts, or to reconnect timed out connections (if php.ini has
+     * global mysqli.reconnect set to true). Can't do this directly using object
+     * since _mysqli is protected.
+     *
+     * @return bool True if connection is up
+     */
+    public function ping() {
+        return $this->_mysqli->ping();
+    }
+
+    /**
      * This method is needed for prepared statements. They require
      * the data type of the field to be bound with "i" s", etc.
      * This function takes the input, determines what type it is,
@@ -405,6 +444,7 @@ class MysqliDb
                 return 's';
                 break;
 
+            case 'boolean':
             case 'integer':
                 return 'i';
                 break;
@@ -418,6 +458,17 @@ class MysqliDb
                 break;
         }
         return '';
+    }
+
+    /**
+     * Helper function to add variables into bind parameters array
+     *
+     * @param string Variable value
+     */
+    protected function _bindParam($value)
+    {
+        $this->_bindParams[0] .= $this->_determineType ($value);
+        array_push ($this->_bindParams, $value);
     }
 
     /**
@@ -449,17 +500,16 @@ class MysqliDb
 
             if ($isInsert !== false) {
                 //is insert statement
-                $this->_query .= '(' . implode(array_keys($tableData), ', ') . ')';
+                $this->_query .= '(`' . implode(array_keys($tableData), '`, `') . '`)';
                 $this->_query .= ' VALUES(';
             }
 
             foreach ($tableData as $column => $value) {
                 if ($isUpdate !== false)
-                    $this->_query .= $column." = ";
+                    $this->_query .= "`" . $column . "` = ";
 
                 if (!is_array ($value)) {
-                    $this->_bindParams[0] .= $this->_determineType($value);
-                    array_push ($this->_bindParams, $value);
+                    $this->_bindParam ($value);
                     $this->_query .= '?, ';
                 } else {
                     $key = key ($value);
@@ -471,16 +521,16 @@ class MysqliDb
                         case '[F]':
                             $this->_query .= $val[0] . ", ";
                             if (!empty ($val[1])) {
-                                foreach ($val[1] as $v) {
-                                    $this->_bindParams[0] .= $this->_determineType($v);
-                                    array_push ($this->_bindParams, $v);
-                                }
+                                foreach ($val[1] as $v)
+                                    $this->_bindParam ($v);
                             }
                             break;
                         case '[N]':
-			    if($val == null) $this->_query .= "!" . $column . ", ";
-			    else $this->_query .= "!" . $val . ", ";
-			    break;
+                            if ($val == null)
+                                $this->_query .= "!" . $column . ", ";
+                            else
+                                $this->_query .= "!" . $val . ", ";
+                            break;
                         default:
                             die ("Wrong operation");
                     }
@@ -496,48 +546,49 @@ class MysqliDb
             //Prepair the where portion of the query
             $this->_query .= ' WHERE ';
             foreach ($this->_where as $column => $value) {
-                $andOr = '';
+                //value[0] -- AND/OR, value[1] -- condition array
                 // if its not a first condition insert its concatenator (AND or OR)
                 if (array_search ($column, array_keys ($this->_where)) != 0)
-                    $andOr = ' ' . $value[0]. ' ';
+                    $this->_query .= ' ' . $value[0]. ' ';
 
-                $value = $value[1];
-                $comparison = ' = ? ';
-                if( is_array( $value ) ) {
+                if (is_array ($value[1])) {
+                    //value[0] -- AND/OR, value[1] -- condition array
                     // if the value is an array, then this isn't a basic = comparison
-                    $key = key( $value );
-                    $val = $value[$key];
+                    $key = key($value[1]);
+                    $val = $value[1][$key];
                     switch( strtolower($key) ) {
+                        case '0':
+                            $comparison = '';
+                            foreach ($value[1] as $v)
+                                $this->_bindParam ($v);
+                            break;
+                        case 'not in':
                         case 'in':
-                            $comparison = ' IN (';
+                            $comparison = ' ' . $key . ' (';
                             foreach($val as $v){
                                 $comparison .= ' ?,';
-                                $this->_bindParams[0] .= $this->_determineType( $v );
-                                array_push ($this->_bindParams, $v);
+                                $this->_bindParam ($v);
                             }
                             $comparison = rtrim($comparison, ',').' ) ';
                             break;
+                        case 'not between':
                         case 'between':
-                            $comparison = ' BETWEEN ? AND ? ';
-                            $this->_bindParams[0] .= $this->_determineType( $val[0] );
-                            $this->_bindParams[0] .= $this->_determineType( $val[1] );
-                            array_push ($this->_bindParams, $val[0]);
-                            array_push ($this->_bindParams, $val[1]);
+                            $comparison = ' ' . $key . ' ? AND ? ';
+                            $this->_bindParam ($val[0]);
+                            $this->_bindParam ($val[1]);
                             break;
                         default:
                             // We are using a comparison operator with only one parameter after it
                             $comparison = ' '.$key.' ? ';
-                            // Determines what data type the where column is, for binding purposes.
-                            $this->_bindParams[0] .= $this->_determineType( $val );
-                            array_push ($this->_bindParams, $val);
+                            $this->_bindParam ($val);
                     }
+                } else if ($value[1] == null) {
+                    $comparison = '';
                 } else {
-                    // Determines what data type the where column is, for binding purposes.
-                    $this->_bindParams[0] .= $this->_determineType($value);
-                    array_push ($this->_bindParams, $value);
+                    $comparison = ' = ? ';
+                    $this->_bindParam ($value[1]);
                 }
-                // Prepares the reset of the SQL query.
-                $this->_query .= ($andOr.$column.$comparison);
+                $this->_query .= $column.$comparison;
             }
         }
 
@@ -572,10 +623,9 @@ class MysqliDb
         // Prepare query
         $stmt = $this->_prepareQuery();
 
-        // Bind parameters to statment
-        if ($hasTableData || $hasConditional) {
+        // Bind parameters to statement if any
+        if (count ($this->_bindParams) > 1)
             call_user_func_array(array($stmt, 'bind_param'), $this->refValues($this->_bindParams));
-        }
 
         $this->_lastQuery = $this->replacePlaceHolders($this->_query, $this->_bindParams);
         return $stmt;

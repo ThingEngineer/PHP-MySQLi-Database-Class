@@ -19,7 +19,7 @@ $data = Array ("login" => "admin",
                "firstName" => "John",
                "lastName" => 'Doe'
 )
-$id = $db->insert('users', $data)
+$id = $db->insert('users', $data);
 if($id)
     echo 'user was created. Id='.$id;
 ```
@@ -28,6 +28,7 @@ Insert with functions use
 ```php
 $data = Array(
 	'login' => 'admin',
+    'active' => true,
 	'firstName' => 'John',
 	'lastName' => 'Doe',
 	'password' => $db->func('SHA1(?)',Array ("secretpassword+salt")),
@@ -39,7 +40,7 @@ $data = Array(
 	// Supported intervals [s]econd, [m]inute, [h]hour, [d]day, [M]onth, [Y]ear
 );
 
-$id = $db->insert('users', $data)
+$id = $db->insert('users', $data);
 if($id)
     echo 'user was created. Id='.$id;
 ```
@@ -51,8 +52,8 @@ $data = Array (
 	'lastName' => 'Tables',
 	'editCount' => $db->inc(2),
 	// editCount = editCount + 2;
-	'editBoolean' => $db->not()
-	// editBoolean = !editBoolean;
+	'active' => $db->not()
+	// active = !active;
 );
 $db->where('id', 1);
 if($db->update('users', $data)) echo 'successfully updated'; 
@@ -91,7 +92,7 @@ echo $user['id'];
 ### Delete Query
 ```php
 $db->where('id', 1);
-if($db->delete('posts')) echo 'successfully deleted'; 
+if($db->delete('users')) echo 'successfully deleted';
 ```
 
 ### Generic Query Method
@@ -126,7 +127,6 @@ $results = $db->get('users');
 // Gives: SELECT * FROM users WHERE id=1 AND login='admin';
 ```
 
-Custom Operators:
 ```php
 $db->where('id', Array('>=' => 50));
 $results = $db->get('users');
@@ -136,6 +136,7 @@ $results = $db->get('users');
 BETWEEN:
 ```php
 $db->where('id', Array('between' => Array(4, 20) ) );
+//$db->where('id', Array('not between' => Array(4, 20) ) );
 $results = $db->get('users');
 // Gives: SELECT * FROM users WHERE id BETWEEN 4 AND 20
 ```
@@ -143,6 +144,7 @@ $results = $db->get('users');
 IN:
 ```php
 $db->where('id', Array( 'in' => Array(1, 5, 27, -1, 'd') ) );
+//$db->where('id', Array( 'not in' => Array(1, 5, 27, -1, 'd') ) );
 $results = $db->get('users');
 // Gives: SELECT * FROM users WHERE id IN (1, 5, 27, -1, 'd');
 ```
@@ -162,12 +164,26 @@ $results = $db->get("users");
 // Gives: SELECT * FROM users where lastName <=> NULL
 ```
 
+Also you can use raw where conditions:
+```php
+$db->where ("id != companyId");
+$results = $db->get("users");
+```
+
+Or raw condition with variables:
+```php
+$db->where("id = ? or id = ?", Array(6,2));
+$res = $db->get ("users");
+// Gives: SELECT * FROM users WERE id = 2 or id = 2;
+```
+
+
 Optionally you can use method chaining to call where multiple times without referencing your object over an over:
 
 ```php
 $results = $db
 	->where('id', 1)
-	->where('title', 'MyTitle')
+	->where('login', 'admin')
 	->get('users');
 ```
 
@@ -193,4 +209,16 @@ $db->join("users u", "p.tenantID=u.tenantID", "LEFT");
 $db->where("u.id", 6);
 $products = $db->get ("products p", null, "u.name, p.productName");
 print_r ($products);
+```
+
+### Helper commands
+Reconnect in case mysql connection died
+```php
+if (!$db->ping())
+    $db->connect()
+```
+
+Obtain an initialized instance of the class from another class
+```php
+    $db = MysqliDb::getInstance();
 ```
