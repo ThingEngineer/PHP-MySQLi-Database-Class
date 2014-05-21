@@ -5,8 +5,8 @@ error_reporting(E_ALL);
 $db = new Mysqlidb('localhost', 'root', '', 'testdb');
 if(!$db) die("Database error");
 
-$prefix = 'prefix_';
-$db->setPrefix($prefix)
+$prefix = 't_';
+$db->setPrefix($prefix);
 
 $tables = Array (
     'users' => Array (

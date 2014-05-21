@@ -599,7 +599,7 @@ class MysqliDb
                             $comparison = ' '.$key.' ? ';
                             $this->_bindParam ($val);
                     }
-                } else if ($value[1] == null) {
+                } else if ($value[1] === null) {
                     $comparison = '';
                 } else {
                     $comparison = ' = ? ';
