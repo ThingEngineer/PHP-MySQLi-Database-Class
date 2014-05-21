@@ -5,9 +5,6 @@ error_reporting(E_ALL);
 $db = new Mysqlidb('localhost', 'root', '', 'testdb');
 if(!$db) die("Database error");
 
-$prefix = 'prefix_';
-$db->setPrefix($prefix)
-
 $tables = Array (
     'users' => Array (
         'login' => 'char(10) not null',
@@ -95,7 +92,7 @@ function createTable ($name, $data) {
 
 foreach ($tables as $name => $fields) {
     $db->rawQuery("DROP TABLE $name");
-    createTable ($prefix.$name, $fields);
+    createTable ($name, $fields);
 }
 
 
