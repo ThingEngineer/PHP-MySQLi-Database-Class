@@ -20,6 +20,12 @@ class MysqliDb
      */
     protected static $_instance;
     /**
+     * Table prefix
+     * 
+     * @var string
+     */
+    protected $_prefix;
+    /**
      * MySQLi instance
      *
      * @var mysqli
@@ -106,6 +112,7 @@ class MysqliDb
             $this->port = $port;
         
         $this->connect();
+        $this->setPrefix();
         self::$_instance = $this;
     }
 
@@ -148,6 +155,16 @@ class MysqliDb
         $this->_bindParams = array(''); // Create the empty 0 index
         $this->_query = null;
         $this->count = 0;
+    }
+    
+    /**
+     * Method to set a prefix
+     * 
+     * @param string $prefix     Contains a tableprefix
+     */
+    public function setPrefix($prefix = '')
+    {
+        $this->_prefix = $prefix;
     }
 
     /**
@@ -214,7 +231,7 @@ class MysqliDb
             $columns = '*';
 
         $column = is_array($columns) ? implode(', ', $columns) : $columns; 
-        $this->_query = "SELECT $column FROM $tableName";
+        $this->_query = "SELECT $column FROM $this->_prefix$tableName";
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
         $this->_stmtError = $stmt->error;
@@ -248,7 +265,7 @@ class MysqliDb
      */
     public function insert($tableName, $insertData)
     {
-        $this->_query = "INSERT into $tableName";
+        $this->_query = "INSERT into $this->_prefix$tableName";
         $stmt = $this->_buildQuery(null, $insertData);
         $stmt->execute();
         $this->_stmtError = $stmt->error;
@@ -267,7 +284,7 @@ class MysqliDb
      */
     public function update($tableName, $tableData)
     {
-        $this->_query = "UPDATE $tableName SET ";
+        $this->_query = "UPDATE $this->_prefix$tableName SET ";
 
         $stmt = $this->_buildQuery(null, $tableData);
         $stmt->execute();
@@ -287,7 +304,7 @@ class MysqliDb
      */
     public function delete($tableName, $numRows = null)
     {
-        $this->_query = "DELETE FROM $tableName";
+        $this->_query = "DELETE FROM $this->_prefix$tableName";
 
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
@@ -348,7 +365,7 @@ class MysqliDb
         if ($joinType && !in_array ($joinType, $allowedTypes))
             die ('Wrong JOIN type: '.$joinType);
 
-        $this->_join[$joinType . " JOIN " . $joinTable] = $joinCondition;
+        $this->_join[$joinType . " JOIN " . $this->_prefix.$joinTable] = $joinCondition;
 
         return $this;
     }
