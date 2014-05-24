@@ -10,40 +10,80 @@ After that, create a new instance of the class.
 $db = new Mysqlidb('host', 'username', 'password', 'databaseName');
 ```
 
+It's also possible to set a table prefix:
+```php
+$db->setPrefix('tablePrefix');
+```
+
 Next, prepare your data, and call the necessary methods. 
 
 ### Insert Query
-
+Simple example
 ```php
-$data = array(
-	'login' => 'admin',
-	'firstName' => 'John',
-	'lastName' => 'Doe',
-);
-
-$id = $db->insert('users', $data)
+$data = Array ("login" => "admin",
+               "firstName" => "John",
+               "lastName" => 'Doe'
+)
+$id = $db->insert('users', $data);
 if($id)
     echo 'user was created. Id='.$id;
 ```
 
-### Select Query
-
+Insert with functions use
 ```php
-$users = $db->get('users'); //contains an array of all users 
-$users = $db->get('users', 10); //contains an array 10 users
+$data = Array(
+	'login' => 'admin',
+    'active' => true,
+	'firstName' => 'John',
+	'lastName' => 'Doe',
+	'password' => $db->func('SHA1(?)',Array ("secretpassword+salt")),
+	// password = SHA1('secretpassword+salt')
+	'createdAt' => $db->now(),
+	// createdAt = NOW()
+	'expires' => $db->now('+1Y')
+	// expires = NOW() + interval 1 year
+	// Supported intervals [s]econd, [m]inute, [h]hour, [d]day, [M]onth, [Y]ear
+);
+
+$id = $db->insert('users', $data);
+if($id)
+    echo 'user was created. Id='.$id;
+```
+
+### Update Query
+```php
+$data = Array (
+	'firstName' => 'Bobby',
+	'lastName' => 'Tables',
+	'editCount' => $db->inc(2),
+	// editCount = editCount + 2;
+	'active' => $db->not()
+	// active = !active;
+);
+$db->where('id', 1);
+if($db->update('users', $data)) echo 'successfully updated'; 
+```
+
+### Select Query
+After any select/get function calls amount or returned rows
+is stored in $count variable
+```php
+$users = $db->get('users'); //contains an Array of all users 
+$users = $db->get('users', 10); //contains an Array 10 users
 ```
 
 or select with custom columns set. Functions also could be used
 
 ```php
-$stats = $db->getOne ("users", null, "sum(id), count(*) as cnt");
+$stats = $db->getOne ("users", "sum(id), count(*) as cnt");
 echo "total ".$stats['cnt']. "users found";
 
 $cols = Array ("id, name, email");
 $users = $db->get ("users", null, $cols);
-foreach ($users as $user) { 
-    print_r ($user);
-}
+if ($db->count > 0)
+    foreach ($users as $user) { 
+        print_r ($user);
+    }
 ```
 
 or select just one row
@@ -54,20 +94,10 @@ $user = $db->getOne ("users");
 echo $user['id'];
 ```
 
-### Update Query
-```php
-$data = array (
-	'firstName' => 'Bobby',
-	'lastName' => 'Tables'
-);
-$db->where('id', 1);
-if($db->update('users', $data)) echo 'successfully updated'; 
-```
-
 ### Delete Query
 ```php
 $db->where('id', 1);
-if($db->delete('posts')) echo 'successfully deleted'; 
+if($db->delete('users')) echo 'successfully deleted';
 ```
 
 ### Generic Query Method
@@ -80,14 +110,14 @@ foreach ($users as $user) {
 
 ### Raw Query Method
 ```php
-$params = array(1, 'admin');
+$params = Array(1, 'admin');
 $users = $db->rawQuery("SELECT id, firstName, lastName FROM users WHERE id = ? AND login = ?", $params);
-print_r($users); // contains array of returned rows
+print_r($users); // contains Array of returned rows
 
 // will handle any SQL query
-$params = array(10, 1, 10, 11, 2, 10);
+$params = Array(10, 1, 10, 11, 2, 10);
 $resutls = $db->rawQuery("(SELECT a FROM t1 WHERE a = ? AND B = ? ORDER BY a LIMIT ?) UNION(SELECT a FROM t2 WHERE a = ? AND B = ? ORDER BY a LIMIT ?)", $params);
-print_r($results); // contains array of returned rows
+print_r($results); // contains Array of returned rows
 ```
 
 
@@ -102,33 +132,63 @@ $results = $db->get('users');
 // Gives: SELECT * FROM users WHERE id=1 AND login='admin';
 ```
 
-Custom Operators:
 ```php
-$db->where('id', array('>=' => 50));
+$db->where('id', Array('>=' => 50));
 $results = $db->get('users');
 // Gives: SELECT * FROM users WHERE id >= 50;
 ```
 
 BETWEEN:
 ```php
-$db->where('id', array('between' => array(4, 20) ) );
+$db->where('id', Array('between' => Array(4, 20) ) );
+//$db->where('id', Array('not between' => Array(4, 20) ) );
 $results = $db->get('users');
 // Gives: SELECT * FROM users WHERE id BETWEEN 4 AND 20
 ```
 
 IN:
 ```php
-$db->where('id', array( 'in' => array(1, 5, 27, -1, 'd') ) );
+$db->where('id', Array( 'in' => Array(1, 5, 27, -1, 'd') ) );
+//$db->where('id', Array( 'not in' => Array(1, 5, 27, -1, 'd') ) );
 $results = $db->get('users');
 // Gives: SELECT * FROM users WHERE id IN (1, 5, 27, -1, 'd');
 ```
+
+OR CASE
+```php
+$db->where('firstName','John');
+$db->orWhere('firstName','Peter');
+$results = $db->get('users');
+// Gives: SELECT * FROM users WHERE firstName='John' OR firstName='peter'
+```
+
+NULL comparison:
+```php
+$db->where ("lastName", Array("<=>" => NULL));
+$results = $db->get("users");
+// Gives: SELECT * FROM users where lastName <=> NULL
+```
+
+Also you can use raw where conditions:
+```php
+$db->where ("id != companyId");
+$results = $db->get("users");
+```
+
+Or raw condition with variables:
+```php
+$db->where("id = ? or id = ?", Array(6,2));
+$res = $db->get ("users");
+// Gives: SELECT * FROM users WERE id = 2 or id = 2;
+```
+
 
 Optionally you can use method chaining to call where multiple times without referencing your object over an over:
 
 ```php
 $results = $db
 	->where('id', 1)
-	->where('title', 'MyTitle')
+	->where('login', 'admin')
 	->get('users');
 ```
 
@@ -152,6 +212,18 @@ Join table products with table users with LEFT JOIN by tenantID
 ```php
 $db->join("users u", "p.tenantID=u.tenantID", "LEFT");
 $db->where("u.id", 6);
-$products = $db->get ("products p", "u.name, p.productName");
+$products = $db->get ("products p", null, "u.name, p.productName");
 print_r ($products);
+```
+
+### Helper commands
+Reconnect in case mysql connection died
+```php
+if (!$db->ping())
+    $db->connect()
+```
+
+Obtain an initialized instance of the class from another class
+```php
+    $db = MysqliDb::getInstance();
 ```
