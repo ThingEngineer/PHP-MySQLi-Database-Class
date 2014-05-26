@@ -227,3 +227,10 @@ Obtain an initialized instance of the class from another class
 ```php
     $db = MysqliDb::getInstance();
 ```
+
+Get last executed SQL query.
+Please note that function returns SQL query only for debugging purposes as its execution most likely will fail due missing quotes around char variables.
+```php
+    $db->get('users');
+    echo "Last executed query was ". $db->getLastQuery();
+```
