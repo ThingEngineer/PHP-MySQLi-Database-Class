@@ -270,7 +270,7 @@ class MysqliDb
     {
         $res = $this->get ($tableName, 1, $columns);
 
-        if (is_object($res))
+        if ($this->isSubQuery)
             return $res;
 
         if (isset($res[0]))
@@ -795,10 +795,7 @@ class MysqliDb
         $newStr = "";
 
         while ($pos = strpos ($str, "?")) {
-            $val = $vals[$i++];
-            if (is_object ($val))
-                $val = '[object]';
-            $newStr .= substr ($str, 0, $pos) . $val;
+            $newStr .= substr ($str, 0, $pos) . $vals[$i++];
             $str = substr ($str, $pos + 1);
         }
         return $newStr;
