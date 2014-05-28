@@ -217,6 +217,13 @@ if ($db->count != 2) {
     exit;
 }
 
+$db->where("id = 1 or id = 2");
+$res = $db->get ("users");
+if ($db->count != 2) {
+    echo "Invalid users count on select with multiple params";
+    exit;
+}
+
 $db->delete("users");
 $db->get("users");
 if ($db->count != 0) {
