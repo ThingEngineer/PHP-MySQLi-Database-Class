@@ -24,7 +24,7 @@ class MysqliDb
      * 
      * @var string
      */
-    protected $_prefix;
+    protected static $_prefix;
     /**
      * MySQLi instance
      *
@@ -94,13 +94,19 @@ class MysqliDb
     protected $port;
 
     /**
+     * Is Subquery object
+     *
+     */
+    protected $isSubQuery = false;
+
+    /**
      * @param string $host
      * @param string $username
      * @param string $password
      * @param string $db
      * @param int $port
      */
-    public function __construct($host, $username, $password, $db, $port = NULL)
+    public function __construct($host = NULL, $username = NULL, $password = NULL, $db = NULL, $port = NULL)
     {
         $this->host = $host;
         $this->username = $username;
@@ -110,7 +116,13 @@ class MysqliDb
             $this->port = ini_get ('mysqli.default_port');
         else
             $this->port = $port;
-        
+
+        if ($host == null && $username == null && $db == null) {
+            $this->isSubQuery = true;
+            return;
+        }
+
+        // for subqueries we do not need database connection and redefine root instance
         $this->connect();
         $this->setPrefix();
         self::$_instance = $this;
@@ -122,6 +134,9 @@ class MysqliDb
      */
     public function connect()
     {
+        if ($this->isSubQuery)
+            return;
+
         $this->_mysqli = new mysqli ($this->host, $this->username, $this->password, $this->db, $this->port)
             or die('There was a problem connecting to the database');
 
@@ -164,7 +179,8 @@ class MysqliDb
      */
     public function setPrefix($prefix = '')
     {
-        $this->_prefix = $prefix;
+        self::$_prefix = $prefix;
+        return $this;
     }
 
     /**
@@ -231,8 +247,12 @@ class MysqliDb
             $columns = '*';
 
         $column = is_array($columns) ? implode(', ', $columns) : $columns; 
-        $this->_query = "SELECT $column FROM $this->_prefix$tableName";
+        $this->_query = "SELECT $column FROM " .self::$_prefix . $tableName;
         $stmt = $this->_buildQuery($numRows);
+
+        if ($this->isSubQuery)
+            return $this;
+
         $stmt->execute();
         $this->_stmtError = $stmt->error;
         $this->reset();
@@ -250,6 +270,10 @@ class MysqliDb
     public function getOne($tableName, $columns = '*') 
     {
         $res = $this->get ($tableName, 1, $columns);
+
+        if (is_object($res))
+            return $res;
+
         if (isset($res[0]))
             return $res[0];
 
@@ -265,7 +289,10 @@ class MysqliDb
      */
     public function insert($tableName, $insertData)
     {
-        $this->_query = "INSERT into $this->_prefix$tableName";
+        if ($this->isSubQuery)
+            return;
+
+        $this->_query = "INSERT into " .self::$_prefix . $tableName;
         $stmt = $this->_buildQuery(null, $insertData);
         $stmt->execute();
         $this->_stmtError = $stmt->error;
@@ -284,7 +311,10 @@ class MysqliDb
      */
     public function update($tableName, $tableData)
     {
-        $this->_query = "UPDATE $this->_prefix$tableName SET ";
+        if ($this->isSubQuery)
+            return;
+
+        $this->_query = "UPDATE " . self::$_prefix . $tableName ." SET ";
 
         $stmt = $this->_buildQuery(null, $tableData);
         $stmt->execute();
@@ -304,7 +334,10 @@ class MysqliDb
      */
     public function delete($tableName, $numRows = null)
     {
-        $this->_query = "DELETE FROM $this->_prefix$tableName";
+        if ($this->isSubQuery)
+            return;
+
+        $this->_query = "DELETE FROM " . self::$_prefix . $tableName;
 
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
@@ -365,7 +398,7 @@ class MysqliDb
         if ($joinType && !in_array ($joinType, $allowedTypes))
             die ('Wrong JOIN type: '.$joinType);
 
-        $this->_join[$joinType . " JOIN " . $this->_prefix.$joinTable] = $joinCondition;
+        $this->_join[$joinType . " JOIN " . self::$_prefix . $joinTable] = $joinCondition;
 
         return $this;
     }
@@ -488,6 +521,21 @@ class MysqliDb
         array_push ($this->_bindParams, $value);
     }
 
+    protected function _buildPair ($operator, $value) {
+        if (!is_object($value)) {
+            $this->_bindParam ($value);
+            $comparison = ' ' . $operator. ' ? ';
+            return $comparison;
+        }
+
+        $subQuery = $value->getSubQuery();
+        $comparison = " " . $operator . " (" . $subQuery['query'] . ")";
+        foreach ($subQuery['params'] as $v)
+            $this->_bindParam ($v);
+
+        return $comparison;
+    }
+
     /**
      * Abstraction method that will compile the WHERE statement,
      * any passed update data, and the desired rows.
@@ -525,7 +573,9 @@ class MysqliDb
                 if ($isUpdate !== false)
                     $this->_query .= "`" . $column . "` = ";
 
-                if (!is_array ($value)) {
+                if (is_object ($value)) {
+                    $this->_query .= $this->_buildPair ("", $value) . ", ";
+                } else if (!is_array ($value)) {
                     $this->_bindParam ($value);
                     $this->_query .= '?, ';
                 } else {
@@ -582,9 +632,13 @@ class MysqliDb
                         case 'not in':
                         case 'in':
                             $comparison = ' ' . $key . ' (';
-                            foreach($val as $v){
-                                $comparison .= ' ?,';
-                                $this->_bindParam ($v);
+                            if (is_object ($val)) {
+                                $comparison .= $this->_buildPair ("", $val);
+                            } else {
+                                foreach ($val as $v) {
+                                    $comparison .= ' ?,';
+                                    $this->_bindParam ($v);
+                                }
                             }
                             $comparison = rtrim($comparison, ',').' ) ';
                             break;
@@ -596,14 +650,12 @@ class MysqliDb
                             break;
                         default:
                             // We are using a comparison operator with only one parameter after it
-                            $comparison = ' '.$key.' ? ';
-                            $this->_bindParam ($val);
+                            $comparison = $this->_buildPair ($key, $val);
                     }
                 } else if ($value[1] === null) {
                     $comparison = '';
                 } else {
-                    $comparison = ' = ? ';
-                    $this->_bindParam ($value[1]);
+                    $comparison = $this->_buildPair ("=", $value[1]);
                 }
                 $this->_query .= $column.$comparison;
             }
@@ -637,6 +689,11 @@ class MysqliDb
                 $this->_query .= ' LIMIT ' . (int)$numRows;
         }
 
+        $this->_lastQuery = $this->replacePlaceHolders($this->_query, $this->_bindParams);
+
+        if ($this->isSubQuery)
+            return;
+
         // Prepare query
         $stmt = $this->_prepareQuery();
 
@@ -644,7 +701,6 @@ class MysqliDb
         if (count ($this->_bindParams) > 1)
             call_user_func_array(array($stmt, 'bind_param'), $this->refValues($this->_bindParams));
 
-        $this->_lastQuery = $this->replacePlaceHolders($this->_query, $this->_bindParams);
         return $stmt;
     }
 
@@ -708,7 +764,8 @@ class MysqliDb
      */
     public function __destruct()
     {
-        $this->_mysqli->close();
+        if (!$this->isSubQuery)
+            $this->_mysqli->close();
     }
 
     /**
@@ -741,7 +798,10 @@ class MysqliDb
         $newStr = "";
 
         while ($pos = strpos ($str, "?")) {
-            $newStr .= substr ($str, 0, $pos) . $vals[$i++];
+            $val = $vals[$i++];
+            if (is_object ($val))
+                $val = '[object]';
+            $newStr .= substr ($str, 0, $pos) . $val;
             $str = substr ($str, $pos + 1);
         }
         return $newStr;
@@ -763,6 +823,24 @@ class MysqliDb
      */
     public function getLastError () {
         return $this->_stmtError . " " . $this->_mysqli->error;
+    }
+
+    /**
+     * Mostly internal method to get query and its params out of subquery object
+     * after get() and getAll()
+     * 
+     * @return array
+     */
+    public function getSubQuery () {
+        if (!$this->isSubQuery)
+            return null;
+
+        array_shift ($this->_bindParams);
+        $val = Array ('query' => $this->_query,
+                      'params' => $this->_bindParams
+                );
+        $this->reset();
+        return $val;
     }
 
     /* Helper functions */
@@ -839,6 +917,14 @@ class MysqliDb
      */
     public function func ($expr, $bindParams = null) {
         return Array ("[F]" => Array($expr, $bindParams));
+    }
+
+    /**
+     * Method creates new mysqlidb object for a subquery generation
+     */
+    public static function subQuery()
+    {
+        return new MysqliDb();
     }
 
 } // END class

@@ -216,6 +216,13 @@ $products = $db->get ("products p", null, "u.name, p.productName");
 print_r ($products);
 ```
 
+### Subqueries
+```php
+$ids = $db->subQuery()->where("qty", 2, ">")->get("products", null, "userId");
+$db->where("id", $ids, 'in');
+$res = $db->get ("users");
+// Gives SELECT * FROM users WHERE id IN (SELECT userId FROM products WHERE qty > 2)
+```
 ### Helper commands
 Reconnect in case mysql connection died
 ```php
