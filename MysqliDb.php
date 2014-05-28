@@ -579,7 +579,9 @@ class MysqliDb
                 if ($isUpdate !== false)
                     $this->_query .= "`" . $column . "` = ";
 
-                if (!is_array ($value)) {
+                if (is_object ($value)) {
+                    $this->_query .= $this->_buildPair ("", $value) . ", ";
+                } else if (!is_array ($value)) {
                     $this->_bindParam ($value);
                     $this->_query .= '?, ';
                 } else {

@@ -218,11 +218,8 @@ print_r ($products);
 
 ### Subqueries
 ```php
-$db->where("id", $db->subQuery()
-                    ->where("qty", 2, ">")
-                    ->get("products",null,"userId"),
-            'in');
-
+$ids = $db->subQuery()->where("qty", 2, ">")->get("products", null, "userId");
+$db->where("id", $ids, 'in');
 $res = $db->get ("users");
 // Gives SELECT * FROM users WHERE id IN (SELECT userId FROM products WHERE qty > 2)
 ```
