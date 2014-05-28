@@ -357,8 +357,11 @@ class MysqliDb
      *
      * @return MysqliDb
      */
-    public function where($whereProp, $whereValue = null)
+    public function where($whereProp, $whereValue = null, $operator = null)
     {
+        if ($operator)
+            $whereValue = Array ($operator => $whereValue);
+
         $this->_where[$whereProp] = Array ("AND", $whereValue);
         return $this;
     }
@@ -373,8 +376,11 @@ class MysqliDb
      *
      * @return MysqliDb
      */
-    public function orWhere($whereProp, $whereValue = null)
+    public function orWhere($whereProp, $whereValue = null, $operator = null)
     {
+        if ($operator)
+            $whereValue = Array ($operator => $whereValue);
+
         $this->_where[$whereProp] = Array ("OR", $whereValue);
         return $this;
     }
