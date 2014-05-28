@@ -24,7 +24,7 @@ class MysqliDb
      * 
      * @var string
      */
-    protected $_prefix;
+    protected static $_prefix;
     /**
      * MySQLi instance
      *
@@ -116,14 +116,15 @@ class MysqliDb
             $this->port = ini_get ('mysqli.default_port');
         else
             $this->port = $port;
-        $this->setPrefix();
 
         if ($host == null && $username == null && $db == null) {
             $this->isSubQuery = true;
             return;
         }
+
         // for subqueries we do not need database connection and redefine root instance
         $this->connect();
+        $this->setPrefix();
         self::$_instance = $this;
     }
 
@@ -178,7 +179,7 @@ class MysqliDb
      */
     public function setPrefix($prefix = '')
     {
-        $this->_prefix = $prefix;
+        self::$_prefix = $prefix;
         return $this;
     }
 
@@ -246,7 +247,7 @@ class MysqliDb
             $columns = '*';
 
         $column = is_array($columns) ? implode(', ', $columns) : $columns; 
-        $this->_query = "SELECT $column FROM $this->_prefix$tableName";
+        $this->_query = "SELECT $column FROM " .self::$_prefix . $tableName;
         $stmt = $this->_buildQuery($numRows);
 
         if ($this->isSubQuery)
@@ -291,7 +292,7 @@ class MysqliDb
         if ($this->isSubQuery)
             return;
 
-        $this->_query = "INSERT into $this->_prefix$tableName";
+        $this->_query = "INSERT into " .self::$_prefix . $tableName;
         $stmt = $this->_buildQuery(null, $insertData);
         $stmt->execute();
         $this->_stmtError = $stmt->error;
@@ -313,7 +314,7 @@ class MysqliDb
         if ($this->isSubQuery)
             return;
 
-        $this->_query = "UPDATE $this->_prefix$tableName SET ";
+        $this->_query = "UPDATE " . self::$_prefix . $tableName ." SET ";
 
         $stmt = $this->_buildQuery(null, $tableData);
         $stmt->execute();
@@ -336,7 +337,7 @@ class MysqliDb
         if ($this->isSubQuery)
             return;
 
-        $this->_query = "DELETE FROM $this->_prefix$tableName";
+        $this->_query = "DELETE FROM " . self::$_prefix . $tableName;
 
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
@@ -397,7 +398,7 @@ class MysqliDb
         if ($joinType && !in_array ($joinType, $allowedTypes))
             die ('Wrong JOIN type: '.$joinType);
 
-        $this->_join[$joinType . " JOIN " . $this->_prefix.$joinTable] = $joinCondition;
+        $this->_join[$joinType . " JOIN " . self::$_prefix . $joinTable] = $joinCondition;
 
         return $this;
     }
