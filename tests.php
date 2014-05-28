@@ -94,7 +94,7 @@ function createTable ($name, $data) {
 }
 
 foreach ($tables as $name => $fields) {
-    $db->rawQuery("DROP TABLE $name");
+    $db->rawQuery("DROP TABLE ".$prefix.$name);
     createTable ($prefix.$name, $fields);
 }
 
