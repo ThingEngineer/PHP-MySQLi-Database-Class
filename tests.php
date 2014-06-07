@@ -224,6 +224,17 @@ if ($db->count != 2) {
     exit;
 }
 
+$usersQ = $db->subQuery();
+$usersQ->where ("login", "user2");
+$usersQ->getOne ("users", "id");
+
+$db->where ("userId", $usersQ);
+$res = $db->getOne ("products", "count(id) as cnt");
+if ($res['cnt'] != 2) {
+    echo "Invalid select result with subquery";
+    exit;
+}
+//TODO: insert test
 $db->delete("users");
 $db->get("users");
 if ($db->count != 0) {

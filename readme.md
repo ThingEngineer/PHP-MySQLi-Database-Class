@@ -10,7 +10,7 @@ After that, create a new instance of the class.
 $db = new Mysqlidb('host', 'username', 'password', 'databaseName');
 ```
 
-It's also possible to set a table prefix:
+Its also possible to set a table prefix:
 ```php
 $db->setPrefix('tablePrefix');
 ```
@@ -134,31 +134,35 @@ $results = $db->get('users');
 
 ```php
 $db->where('id', 50, ">=");
+// or $db->where('id', Array('>=' => 50));
+
 $results = $db->get('users');
 // Gives: SELECT * FROM users WHERE id >= 50;
 ```
 
-BETWEEN:
+BETWEEN / NOT BETWEEN:
 ```php
 $db->where('id', Array(4, 20), 'between');
-//$db->where('id', Array(4, 20), 'not between');
+// or $db->where('id', Array('between' => Array(4, 20) ) );
+
 $results = $db->get('users');
 // Gives: SELECT * FROM users WHERE id BETWEEN 4 AND 20
 ```
 
-IN:
+IN / NOT IN:
 ```php
 $db->where('id', Array(1, 5, 27, -1, 'd'), 'IN');
-//$db->where('id', Array(1, 5, 27, -1, 'd'), 'NOT IN');
+// or $db->where('id', Array( 'in' => Array(1, 5, 27, -1, 'd') ) );
+
 $results = $db->get('users');
 // Gives: SELECT * FROM users WHERE id IN (1, 5, 27, -1, 'd');
 ```
 
 OR CASE
 ```php
-$db->where('firstName','John');
-$db->orWhere('firstName','Peter');
-$results = $db->get('users');
+$db->where ('firstName', 'John');
+$db->orWhere ('firstName', 'Peter');
+$results = $db->get ('users');
 // Gives: SELECT * FROM users WHERE firstName='John' OR firstName='peter'
 ```
 
@@ -202,8 +206,8 @@ $results = $db->get('users');
 
 ### Grouping method
 ```php
-$db->groupBy("name");
-$results = $db->get('users');
+$db->groupBy ("name");
+$results = $db->get ('users');
 // Gives: SELECT * FROM users GROUP BY name;
 ```
 
@@ -217,12 +221,32 @@ print_r ($products);
 ```
 
 ### Subqueries
+Subquery in selects:
 ```php
-$ids = $db->subQuery()->where("qty", 2, ">")->get("products", null, "userId");
-$db->where("id", $ids, 'in');
+$ids = $db->subQuery ();
+$ids->where ("qty", 2, ">");
+$ids->get ("products", null, "userId");
+
+$db->where ("id", $ids, 'in');
 $res = $db->get ("users");
 // Gives SELECT * FROM users WHERE id IN (SELECT userId FROM products WHERE qty > 2)
 ```
+
+Subquery in inserts:
+```php
+$userIdQ = $db->subQuery ();
+$userIdQ->where ("id", 6);
+$userIdQ->getOne ("users", "name"),
+
+$data = Array (
+    "productName" => "test product",
+    "userId" => $userIdQ,
+    "lastUpdated" => $db->now()
+);
+$id = $db->insert ("products", $data);
+// Gives INSERT INTO PRODUCTS (productName, userId, lastUpdated) values ("test product", (SELECT name FROM users WHERE id = 6), NOW());
+```
+
 ### Helper commands
 Reconnect in case mysql connection died
 ```php
