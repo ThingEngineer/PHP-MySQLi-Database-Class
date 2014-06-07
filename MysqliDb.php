@@ -362,7 +362,7 @@ class MysqliDb
         if ($operator)
             $whereValue = Array ($operator => $whereValue);
 
-        $this->_where[$whereProp] = Array ("AND", $whereValue);
+        $this->_where[] = Array ("AND", $whereValue, $whereProp);
         return $this;
     }
 
@@ -381,7 +381,7 @@ class MysqliDb
         if ($operator)
             $whereValue = Array ($operator => $whereValue);
 
-        $this->_where[$whereProp] = Array ("OR", $whereValue);
+        $this->_where[] = Array ("OR", $whereValue, $whereProp);
         return $this;
     }
     /**
@@ -618,10 +618,11 @@ class MysqliDb
         if ($hasConditional) {
             //Prepair the where portion of the query
             $this->_query .= ' WHERE ';
-            foreach ($this->_where as $column => $value) {
-                //value[0] -- AND/OR, value[1] -- condition array
+            $i = 0;
+            foreach ($this->_where as $value) {
+                //value[0] -- AND/OR, value[1] -- condition array, value[2] -- key name
                 // if its not a first condition insert its concatenator (AND or OR)
-                if (array_search ($column, array_keys ($this->_where)) != 0)
+                if ($i != 0)
                     $this->_query .= ' ' . $value[0]. ' ';
 
                 if (is_array ($value[1])) {
@@ -663,7 +664,8 @@ class MysqliDb
                 } else {
                     $comparison = $this->_buildPair ("=", $value[1]);
                 }
-                $this->_query .= $column.$comparison;
+                $this->_query .= $value[2].$comparison;
+                $i++;
             }
         }
 
