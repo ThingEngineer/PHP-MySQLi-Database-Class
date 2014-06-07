@@ -619,21 +619,19 @@ class MysqliDb
             //Prepair the where portion of the query
             $this->_query .= ' WHERE ';
             $i = 0;
-            foreach ($this->_where as $value) {
-                //value[0] -- AND/OR, value[1] -- condition array, value[2] -- key name
+            foreach ($this->_where as list($concat, $wValue, $wKey)) {
                 // if its not a first condition insert its concatenator (AND or OR)
-                if ($i != 0)
-                    $this->_query .= ' ' . $value[0]. ' ';
+                if ($i++ != 0)
+                    $this->_query .= " $concat ";
+                $this->_query .= $wKey;
 
-                if (is_array ($value[1])) {
-                    //value[0] -- AND/OR, value[1] -- condition array
+                if (is_array ($wValue)) {
                     // if the value is an array, then this isn't a basic = comparison
-                    $key = key($value[1]);
-                    $val = $value[1][$key];
+                    $key = key($wValue);
+                    $val = $wValue[$key];
                     switch( strtolower($key) ) {
                         case '0':
-                            $comparison = '';
-                            foreach ($value[1] as $v)
+                            foreach ($wValue as $v)
                                 $this->_bindParam ($v);
                             break;
                         case 'not in':
@@ -647,25 +645,23 @@ class MysqliDb
                                     $this->_bindParam ($v);
                                 }
                             }
-                            $comparison = rtrim($comparison, ',').' ) ';
+                            $this->_query .= rtrim($comparison, ',').' ) ';
                             break;
                         case 'not between':
                         case 'between':
-                            $comparison = ' ' . $key . ' ? AND ? ';
+                            $this->_query .= " $key ? AND ? ";
                             $this->_bindParam ($val[0]);
                             $this->_bindParam ($val[1]);
                             break;
                         default:
                             // We are using a comparison operator with only one parameter after it
-                            $comparison = $this->_buildPair ($key, $val);
+                            $this->_query .= $this->_buildPair ($key, $val);
                     }
-                } else if ($value[1] === null) {
-                    $comparison = '';
+                } else if ($wValue === null) {
+                    //
                 } else {
-                    $comparison = $this->_buildPair ("=", $value[1]);
+                    $this->_query .= $this->_buildPair ("=", $wValue);
                 }
-                $this->_query .= $value[2].$comparison;
-                $i++;
             }
         }
 
