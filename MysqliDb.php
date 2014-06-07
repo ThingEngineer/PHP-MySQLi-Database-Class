@@ -619,21 +619,21 @@ class MysqliDb
             //Prepair the where portion of the query
             $this->_query .= ' WHERE ';
             $i = 0;
-            foreach ($this->_where as $value) {
-                //value[0] -- AND/OR, value[1] -- condition array, value[2] -- key name
+            foreach ($this->_where as $cond) {
+                //cond[0] -- AND/OR, cond[1] -- condition array, cond[2] -- key name
                 // if its not a first condition insert its concatenator (AND or OR)
                 if ($i != 0)
-                    $this->_query .= ' ' . $value[0]. ' ';
+                    $this->_query .= ' ' . $cond[0]. ' ';
 
-                if (is_array ($value[1])) {
-                    //value[0] -- AND/OR, value[1] -- condition array
+                if (is_array ($cond[1])) {
+                    //cond[0] -- AND/OR, cond[1] -- condition array
                     // if the value is an array, then this isn't a basic = comparison
-                    $key = key($value[1]);
-                    $val = $value[1][$key];
+                    $key = key($cond[1]);
+                    $val = $cond[1][$key];
                     switch( strtolower($key) ) {
                         case '0':
                             $comparison = '';
-                            foreach ($value[1] as $v)
+                            foreach ($cond[1] as $v)
                                 $this->_bindParam ($v);
                             break;
                         case 'not in':
@@ -659,12 +659,12 @@ class MysqliDb
                             // We are using a comparison operator with only one parameter after it
                             $comparison = $this->_buildPair ($key, $val);
                     }
-                } else if ($value[1] === null) {
+                } else if ($cond[1] === null) {
                     $comparison = '';
                 } else {
-                    $comparison = $this->_buildPair ("=", $value[1]);
+                    $comparison = $this->_buildPair ("=", $cond[1]);
                 }
-                $this->_query .= $value[2].$comparison;
+                $this->_query .= $cond[2].$comparison;
                 $i++;
             }
         }
