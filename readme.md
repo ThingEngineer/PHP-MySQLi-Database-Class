@@ -260,6 +260,21 @@ $data = Array (
 $id = $db->insert ("products", $data);
 // Gives INSERT INTO PRODUCTS (productName, userId, lastUpdated) values ("test product", (SELECT name FROM users WHERE id = 6), NOW());
 ```
+UNION queries
+```php
+$common = $db->subQuery();
+$common->where ("agentId", 10);
+
+$customers = $common->copy();
+$customers->get ("customers");
+
+$users = $common->copy();
+$users->get ("users");
+
+$db->orderBy ("lastModified");
+$res = $db->union (Array ($customers, $users, $companies), "ALL");
+GIVES (SELECT * FROM customers WHERE agentId = 10 ) UNION ALL (SELECT * FROM users WHERE agentId = 10 ) ORDER BY lastModified DESC
+```
 ### Helper commands
 Reconnect in case mysql connection died
 ```php
