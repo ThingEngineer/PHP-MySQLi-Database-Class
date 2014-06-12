@@ -216,48 +216,6 @@ class MysqliDb
     }
 
     /**
-     * Pass in an array of subqueries for union query construction.
-     *
-     * @param array $objects Contains a user-provided array of subqueries
-     * @param $type 'ALL', 'DISTINCT', null.
-     *
-     * @return array Contains the returned rows from the query.
-     */
-    public function union ($objects, $type = null)
-    {
-        $allowedTypes = array('ALL', 'DISTINCT');
-        $type = strtoupper (trim ($type));
-
-        if ($type && !in_array ($type, $allowedTypes))
-            die ('Wrong UNION type: '.$type);
-
-        if (!is_array ($objects))
-            return;
-
-        $this->_query = "";
-        $i = 0;
-        foreach ($objects as $obj) {
-            if (!is_object ($obj))
-                continue;
-
-            if ($i++ != 0)
-                $this->_query .= " UNION {$type} ";
-
-            $subQuery = $obj->getSubQuery();
-            $this->_query .= "(" . $subQuery['query'] . ")";
-            foreach ($subQuery['params'] as $v)
-                $this->_bindParam ($v);
-        }
-        $stmt = $this->_buildQuery (null);
-        $stmt->execute();
-        $this->_stmtError = $stmt->error;
-        $this->reset();
-
-        return $this->_dynamicBindResults($stmt);
-    }
-
-
-    /**
      *
      * @param string $query   Contains a user-provided select query.
      * @param int    $numRows The number of rows total to return.
