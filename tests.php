@@ -228,8 +228,9 @@ $usersQ = $db->subQuery();
 $usersQ->where ("login", "user2");
 $usersQ->getOne ("users", "id");
 
-$db->where ("userId", $usersQ);
-$res = $db->getOne ("products", "count(id) as cnt");
+$db2 = $db->copy();
+$db2->where ("userId", $usersQ);
+$res = $db2->getOne ("products", "count(id) as cnt");
 if ($res['cnt'] != 2) {
     echo "Invalid select result with subquery";
     exit;

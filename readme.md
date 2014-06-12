@@ -220,6 +220,20 @@ $products = $db->get ("products p", null, "u.name, p.productName");
 print_r ($products);
 ```
 
+### Properties sharing
+Its is also possible to copy properties
+```php
+$db->where ("agentId", 10);
+
+$customers = $common->copy ();
+$res = $customers->get ("customers");
+// SELECT * FROM customers where agentId = 10
+
+$db->orWhere ("agentId", 20);
+$res = $db->get ("users");
+// SELECT * FROM users where agentId = 10 or agentId = 20
+```
+
 ### Subqueries
 Subquery in selects:
 ```php
@@ -246,7 +260,6 @@ $data = Array (
 $id = $db->insert ("products", $data);
 // Gives INSERT INTO PRODUCTS (productName, userId, lastUpdated) values ("test product", (SELECT name FROM users WHERE id = 6), NOW());
 ```
-
 ### Helper commands
 Reconnect in case mysql connection died
 ```php

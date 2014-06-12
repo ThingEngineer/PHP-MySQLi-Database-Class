@@ -769,6 +769,8 @@ class MysqliDb
     public function __destruct()
     {
         if (!$this->isSubQuery)
+            return;
+        if ($this->_mysqli)
             $this->_mysqli->close();
     }
 
@@ -929,6 +931,16 @@ class MysqliDb
     public static function subQuery()
     {
         return new MysqliDb();
+    }
+
+    /**
+     * Method returns a copy of a mysqlidb subquery object
+     *
+     * @param object new mysqlidb object
+     */
+    public function copy ()
+    {
+        return clone $this;
     }
 
 } // END class
