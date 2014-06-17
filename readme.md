@@ -225,7 +225,7 @@ Its is also possible to copy properties
 ```php
 $db->where ("agentId", 10);
 
-$customers = $common->copy ();
+$customers = $db->copy ();
 $res = $customers->get ("customers");
 // SELECT * FROM customers where agentId = 10
 
