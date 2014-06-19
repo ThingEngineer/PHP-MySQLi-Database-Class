@@ -943,4 +943,53 @@ class MysqliDb
         return clone $this;
     }
 
+    /**
+     * Begin a transaction
+     *
+     * @uses mysqli->autocommit(false)
+     * @uses register_shutdown_function(array($this, "_transaction_shutdown_check"))
+     */
+    public function startTransaction () {
+        $this->_mysqli->autocommit (false);
+        $this->_transaction_in_progress = true;
+        register_shutdown_function (array ($this, "_transaction_status_check"));
+    }
+
+    /**
+     * Transaction commit
+     *
+     * @uses mysqli->commit();
+     * @uses mysqli->autocommit(true);
+     */
+    public function commit () {
+        $this->_mysqli->commit ();
+        $this->_transaction_in_progress = false;
+        $this->_mysqli->autocommit (true);
+    }
+
+    /**
+     * Transaction rollback function
+     *
+     * @uses mysqli->rollback();
+     * @uses mysqli->autocommit(true);
+     */
+    public function rollback () {
+      $this->_mysqli->rollback ();
+      $this->_transaction_in_progress = false;
+      $this->_mysqli->autocommit (true);
+    }
+
+    /**
+     * Shutdown handler to rollback uncommited operations in order to keep
+     * atomic operations sane.
+     *
+     * @uses mysqli->rollback();
+     */
+    public function _transaction_status_check () {
+        if (!$this->_transaction_in_progress)
+            return;
+
+        echo "rolling all back";
+        $this->rollback ();
+    }
 } // END class

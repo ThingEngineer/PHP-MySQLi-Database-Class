@@ -278,3 +278,18 @@ Please note that function returns SQL query only for debugging purposes as its e
     $db->get('users');
     echo "Last executed query was ". $db->getLastQuery();
 ```
+
+### Transaction helpers
+Please keep in mind that transactions are working on innoDB tables.
+Rollback transaction if insert fails:
+```php
+$db->startTransaction();
+...
+if (!$db->insert ('myTable', $insertData)) {
+    //Error while saving, cancel new record
+    $db->rollback();
+} else {
+    //OK
+    $db->commit();
+}
+```
