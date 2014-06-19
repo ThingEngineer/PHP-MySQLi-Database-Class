@@ -759,7 +759,7 @@ class MysqliDb
     /**
      * Method returns mysql error
      * 
-     * @return string
+     * @return stringr
      */
     public function getLastError () {
         return $this->_stmtError . " " . $this->_mysqli->error;
@@ -839,6 +839,80 @@ class MysqliDb
      */
     public function func ($expr, $bindParams = null) {
         return Array ("[F]" => Array($expr, $bindParams));
+    }
+
+    /**
+     * Use of real_escape_string function plus some reserverd words substitution
+     * @param string $string String to validate
+     * 
+     * @return string 
+     * */
+    public function real_escape_string($string){
+                
+        $reserverd_words = array(" SELECT "," INSERT " ," UPDATE " ," DELETE "," CREATE " ,
+        " TRUNCATE " ," DROP " ," FROM " ," SHOW " ," TABLES "," TABLE " ," WHERE " ,
+        " LIKE ","'",'"','%','*');
+        
+        //Replace reserved words on string;
+        $string = str_ireplace($reserverd_words, '' , $string);
+        
+        //if magic quotes are on, we add stripslashes
+        if(get_magic_quotes_gpc() != 0) {
+            $string = stripslashes($string);
+        }
+        
+        //return string with real_escape_string function
+        return $this->_mysqli->real_escape_string($string);
+    }
+    
+    /**
+     * Use of begin, commit and rollback functions.
+     * the __shutdown_check() routine  is called when the script bombs
+     *  which is able to invoke the rollback().
+     * */
+     
+     /**
+      * Begin a transaction
+      * @uses mysqli->autocommit(false)
+      * @uses register_shutdown_function(array($this, "__shutdown_check"))
+      * */    
+    public function begin_transaction() {
+      $this->_mysqli->autocommit(false);
+      $this->_transaction_in_progress = true;
+      register_shutdown_function(array($this, "__shutdown_check"));
+    }
+    
+    /**
+     * Verifies if php chrushes, so we do rollback in order to
+     * keep atomic operations
+     * @uses mysqli->rollback();
+     * */
+    public function __shutdown_check() {
+      if ($this->_transaction_in_progress) {
+        $this->rollback();
+      }
+    }
+    
+    /**
+     * Use function of commit function
+     * @uses mysqli->commit();
+     * @uses mysqli->autocommit(true);
+     * */
+    public function commit() {
+      $this->_mysqli->commit();
+      $this->_transaction_in_progress = false;
+      $this->_mysqli->autocommit(true);
+    }
+    
+    /**
+     * Use function of rollback function
+     * @uses mysqli->rollback();
+     * @uses mysqli->autocommit(true); 
+     * */
+    public function rollback() {
+      $this->_mysqli->rollback();      
+      $this->_transaction_in_progress = false;
+      $this->_mysqli->autocommit(true);
     }
 
 } // END class
