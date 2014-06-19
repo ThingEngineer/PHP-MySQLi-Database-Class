@@ -988,8 +988,6 @@ class MysqliDb
     public function _transaction_status_check () {
         if (!$this->_transaction_in_progress)
             return;
-
-        echo "rolling all back";
         $this->rollback ();
     }
 } // END class
