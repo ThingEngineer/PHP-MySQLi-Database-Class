@@ -94,7 +94,7 @@ function createTable ($name, $data) {
 }
 
 foreach ($tables as $name => $fields) {
-    $db->rawQuery("DROP TABLE $name");
+    $db->rawQuery("DROP TABLE ".$prefix.$name);
     createTable ($prefix.$name, $fields);
 }
 
@@ -138,7 +138,7 @@ if ($db->count != 3) {
 //$users = $db->get("users");
 //print_r ($users);
 
-$db->where("firstname", Array("LIKE" => '%John%'));
+$db->where("firstname", '%John%', 'LIKE');
 $users = $db->get("users");
 if ($db->count != 1) {
     echo "Invalid insert count in LIKE: ".$db->count;
@@ -172,14 +172,14 @@ if ($r['password'] != '546f98b24edfdc3b9bbe0d241bd8b29783f71b32') {
     exit;
 }
 
-$db->where ("id", Array('in' => Array('1','2','3')));
+$db->where ("id", Array('1','2','3'), 'IN');
 $db->get("users");
 if ($db->count != 3) {
     echo "Invalid users count on where() with in ";
     exit;
 }
 
-$db->where ("id", Array('between' => Array('2','3')));
+$db->where ("id", Array('2','3'), 'between');
 $db->get("users");
 if ($db->count != 2) {
     echo "Invalid users count on where() with between";
@@ -194,7 +194,7 @@ if ($db->count != 2) {
     exit;
 }
 
-$db->where ("lastName", Array("<=>" => NULL));
+$db->where ("lastName", NULL, '<=>');
 $r = $db->get("users");
 if ($db->count != 1) {
     echo "Invalid users count on null where()";
@@ -217,6 +217,25 @@ if ($db->count != 2) {
     exit;
 }
 
+$db->where("id = 1 or id = 2");
+$res = $db->get ("users");
+if ($db->count != 2) {
+    echo "Invalid users count on select with multiple params";
+    exit;
+}
+
+$usersQ = $db->subQuery();
+$usersQ->where ("login", "user2");
+$usersQ->getOne ("users", "id");
+
+$db2 = $db->copy();
+$db2->where ("userId", $usersQ);
+$res = $db2->getOne ("products", "count(id) as cnt");
+if ($res['cnt'] != 2) {
+    echo "Invalid select result with subquery";
+    exit;
+}
+//TODO: insert test
 $db->delete("users");
 $db->get("users");
 if ($db->count != 0) {
