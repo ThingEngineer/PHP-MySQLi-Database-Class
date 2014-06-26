@@ -193,7 +193,7 @@ class MysqliDb
      */
     public function rawQuery($query, $bindParams = null)
     {
-        $this->_query = filter_var ($query, FILTER_SANITIZE_MAGIC_QUOTES,
+        $this->_query = filter_var ($query, FILTER_SANITIZE_STRING,
                                     FILTER_FLAG_NO_ENCODE_QUOTES);
         $stmt = $this->_prepareQuery();
 
