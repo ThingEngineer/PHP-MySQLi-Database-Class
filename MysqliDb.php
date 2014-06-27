@@ -619,7 +619,9 @@ class MysqliDb
             //Prepair the where portion of the query
             $this->_query .= ' WHERE ';
             $i = 0;
-            foreach ($this->_where as list($concat, $wValue, $wKey)) {
+            foreach ($this->_where as $cond) {
+                list ($concat, $wValue, $wKey) = $cond;
+
                 // if its not a first condition insert its concatenator (AND or OR)
                 if ($i++ != 0)
                     $this->_query .= " $concat ";
