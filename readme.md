@@ -1,36 +1,36 @@
 ### Table of Contents
-**[Initialization](#initialization)**
-**[Insert Query](#insert-query)**
-**[Update Query](#update-query)**
-**[Select Query](#select-query)**
-**[Delete Query](#delete-query)**
-**[Generic Query](#generic-query-method)**
-**[Raw Query](#raw-query-method)**
-**[Where Conditions](#where-method)**
-**[Order Conditions](#ordering-method)**
-**[Group Conditions](#grouping-method)**
-**[Properties Sharing](#properties-sharing)**
-**[Joining Tables](#join-method)**
-**[Subqueries](#subqueries)**
-**[Helper Functions](#helper-commands)**
-**[Transaction Helpers](#transaction-helpers)**
+**[Initialization](#initialization)**  
+**[Insert Query](#insert-query)**  
+**[Update Query](#update-query)**  
+**[Select Query](#select-query)**  
+**[Delete Query](#delete-query)**  
+**[Generic Query](#generic-query-method)**  
+**[Raw Query](#raw-query-method)**  
+**[Where Conditions](#where-method)**  
+**[Order Conditions](#ordering-method)**  
+**[Group Conditions](#grouping-method)**  
+**[Properties Sharing](#properties-sharing)**  
+**[Joining Tables](#join-method)**  
+**[Subqueries](#subqueries)**  
+**[Helper Functions](#helper-commands)**  
+**[Transaction Helpers](#transaction-helpers)**  
 
 ### Initialization
 To utilize this class, first import MysqliDb.php into your project, and require it.
 
 ```php
-require_once('Mysqlidb.php');
+require_once ('MysqliDb.php');
 ```
 
 After that, create a new instance of the class.
 
 ```php
-$db = new Mysqlidb('host', 'username', 'password', 'databaseName');
+$db = new MysqliDb ('host', 'username', 'password', 'databaseName');
 ```
 
 Its also possible to set a table prefix:
 ```php
-$db->setPrefix('tablePrefix');
+$db->setPrefix ('my_');
 ```
 
 Next, prepare your data, and call the necessary methods. 
