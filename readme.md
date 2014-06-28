@@ -1,3 +1,5 @@
+MysqliDb -- Simple MySQLi wrapper with prepared statements
+<hr>
 ### Table of Contents
 **[Initialization](#initialization)**  
 **[Insert Query](#insert-query)**  
