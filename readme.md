@@ -1,4 +1,4 @@
-### Contents
+### Table of Contents
 **[Initialization](#initialization)**
 **[Insert Query](#insert-query)**
 **[Update Query](#update-query)**
