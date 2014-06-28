@@ -1,19 +1,19 @@
 ### Contents
-<a href="#initialization">Initialization</a>
-<a href="#insert-query">Insert Query</a>
-<a href="#update-query">Update Query</a>
-<a href="#select-query">Select Query</a>
-<a href="#delete-query">Delete Query</a>
-<a href="#generic-query-method">Generic Query Method</a>
-<a href="#raw-query-method">Raw Query Method</a>
-<a href="#where-method">Where Method</a>
-<a href="#ordering-method">Ordering method</a>
-<a href="#grouping-method">Grouping method</a>
-<a href="#join-method">JOIN method</a>
-<a href="#properties-sharing">Properties sharing</a>
-<a href="#subqueries">Subqueries</a>
-<a href="#helper-commands">Helper commands</a>
-<a href="#transaction-helpers">Transaction helpers</a>
+**[Initialization](#initialization)**
+**[Insert Query](#insert-query)**
+**[Update Query](#update-query)**
+**[Select Query](#select-query)**
+**[Delete Query](#delete-query)**
+**[Generic Query](#generic-query-method)**
+**[Raw Query](#raw-query-method)**
+**[Where Conditions](#where-method)**
+**[Order Conditions](#ordering-method)**
+**[Group Conditions](#grouping-method)**
+**[Properties Sharing](#properties-sharing)**
+**[Joining Tables](#join-method)**
+**[Subqueries](#subqueries)**
+**[Helper Functions](#helper-commands)**
+**[Transaction Helpers](#transaction-helpers)**
 
 ### Initialization
 To utilize this class, first import MysqliDb.php into your project, and require it.
