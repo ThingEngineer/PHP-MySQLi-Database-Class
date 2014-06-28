@@ -1,4 +1,22 @@
-To utilize this class, first import Mysqldbi.php into your project, and require it.
+### Contents
+<a href="#initialization">Initialization</a>
+<a href="#insert-query">Insert Query</a>
+<a href="#update-query">Update Query</a>
+<a href="#select-query">Select Query</a>
+<a href="#delete-query">Delete Query</a>
+<a href="#generic-query-method">Generic Query Method</a>
+<a href="#raw-query-method">Raw Query Method</a>
+<a href="#where-method">Where Method</a>
+<a href="#ordering-method">Ordering method</a>
+<a href="#grouping-method">Grouping method</a>
+<a href="#join-method">JOIN method</a>
+<a href="#properties-sharing">Properties sharing</a>
+<a href="#subqueries">Subqueries</a>
+<a href="#helper-commands">Helper commands</a>
+<a href="#transaction-helpers">Transaction helpers</a>
+
+### Initialization
+To utilize this class, first import MysqliDb.php into your project, and require it.
 
 ```php
 require_once('Mysqlidb.php');
@@ -122,14 +140,25 @@ print_r($results); // contains Array of returned rows
 
 
 ### Where Method
-This method allows you to specify the parameters of the query.
+This method allows you to specify where parameters of the query.
+WARNING: In order to use column to column comparisons only raw where conditions should be used as column name or functions cant be passed as a bind variable.
 
-Regular == operator:
+Regular == operator with variables:
 ```php
 $db->where('id', 1);
 $db->where('login', 'admin');
 $results = $db->get('users');
 // Gives: SELECT * FROM users WHERE id=1 AND login='admin';
+```
+
+Regular == operator with column to column comparison:
+```php
+// WRONG
+$db->where('lastLogin', 'createdAt');
+// CORRECT
+$db->where('lastLogin = createdAt');
+$results = $db->get('users');
+// Gives: SELECT * FROM users WHERE lastLogin = createdAt;
 ```
 
 ```php
