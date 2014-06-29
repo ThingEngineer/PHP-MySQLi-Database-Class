@@ -1,18 +1,38 @@
-To utilize this class, first import Mysqldbi.php into your project, and require it.
+MysqliDb -- Simple MySQLi wrapper with prepared statements
+<hr>
+### Table of Contents
+**[Initialization](#initialization)**  
+**[Insert Query](#insert-query)**  
+**[Update Query](#update-query)**  
+**[Select Query](#select-query)**  
+**[Delete Query](#delete-query)**  
+**[Generic Query](#generic-query-method)**  
+**[Raw Query](#raw-query-method)**  
+**[Where Conditions](#where-method)**  
+**[Order Conditions](#ordering-method)**  
+**[Group Conditions](#grouping-method)**  
+**[Properties Sharing](#properties-sharing)**  
+**[Joining Tables](#join-method)**  
+**[Subqueries](#subqueries)**  
+**[Helper Functions](#helper-commands)**  
+**[Transaction Helpers](#transaction-helpers)**  
+
+### Initialization
+To utilize this class, first import MysqliDb.php into your project, and require it.
 
 ```php
-require_once('Mysqlidb.php');
+require_once ('MysqliDb.php');
 ```
 
 After that, create a new instance of the class.
 
 ```php
-$db = new Mysqlidb('host', 'username', 'password', 'databaseName');
+$db = new MysqliDb ('host', 'username', 'password', 'databaseName');
 ```
 
 Its also possible to set a table prefix:
 ```php
-$db->setPrefix('tablePrefix');
+$db->setPrefix ('my_');
 ```
 
 Next, prepare your data, and call the necessary methods. 
@@ -45,9 +65,9 @@ $data = Array(
 	// Supported intervals [s]econd, [m]inute, [h]hour, [d]day, [M]onth, [Y]ear
 );
 
-$id = $db->insert('users', $data);
-if($id)
-    echo 'user was created. Id='.$id;
+$id = $db->insert ('users', $data);
+if ($id)
+    echo 'user was created. Id=' . $id;
 ```
 
 ### Update Query
@@ -60,8 +80,8 @@ $data = Array (
 	'active' => $db->not()
 	// active = !active;
 );
-$db->where('id', 1);
-if($db->update('users', $data)) echo 'successfully updated'; 
+$db->where ('id', 1);
+if($db->update ('users', $data)) echo 'successfully updated'; 
 ```
 
 ### Select Query
@@ -75,10 +95,7 @@ $users = $db->get('users', 10); //contains an Array 10 users
 or select with custom columns set. Functions also could be used
 
 ```php
-$stats = $db->getOne ("users", "sum(id), count(*) as cnt");
-echo "total ".$stats['cnt']. "users found";
-
-$cols = Array ("id, name, email");
+$cols = Array ("id", "name", "email");
 $users = $db->get ("users", null, $cols);
 if ($db->count > 0)
     foreach ($users as $user) { 
@@ -92,6 +109,9 @@ or select just one row
 $db->where ("id", 1);
 $user = $db->getOne ("users");
 echo $user['id'];
+
+$stats = $db->getOne ("users", "sum(id), count(*) as cnt");
+echo "total ".$stats['cnt']. "users found";
 ```
 
 ### Delete Query
@@ -122,28 +142,38 @@ print_r($results); // contains Array of returned rows
 
 
 ### Where Method
-This method allows you to specify the parameters of the query.
+This method allows you to specify where parameters of the query.
+WARNING: In order to use column to column comparisons only raw where conditions should be used as column name or functions cant be passed as a bind variable.
 
-Regular == operator:
+Regular == operator with variables:
 ```php
-$db->where('id', 1);
-$db->where('login', 'admin');
-$results = $db->get('users');
+$db->where ('id', 1);
+$db->where ('login', 'admin');
+$results = $db->get ('users');
 // Gives: SELECT * FROM users WHERE id=1 AND login='admin';
 ```
 
+Regular == operator with column to column comparison:
 ```php
-$db->where('id', 50, ">=");
-// or $db->where('id', Array('>=' => 50));
+// WRONG
+$db->where ('lastLogin', 'createdAt');
+// CORRECT
+$db->where ('lastLogin = createdAt');
+$results = $db->get ('users');
+// Gives: SELECT * FROM users WHERE lastLogin = createdAt;
+```
 
-$results = $db->get('users');
+```php
+$db->where ('id', 50, ">=");
+// or $db->where ('id', Array ('>=' => 50));
+$results = $db->get ('users');
 // Gives: SELECT * FROM users WHERE id >= 50;
 ```
 
 BETWEEN / NOT BETWEEN:
 ```php
-$db->where('id', Array(4, 20), 'between');
-// or $db->where('id', Array('between' => Array(4, 20) ) );
+$db->where('id', Array (4, 20), 'BETWEEN');
+// or $db->where ('id', Array ('BETWEEN' => Array(4, 20)));
 
 $results = $db->get('users');
 // Gives: SELECT * FROM users WHERE id BETWEEN 4 AND 20
@@ -152,7 +182,7 @@ $results = $db->get('users');
 IN / NOT IN:
 ```php
 $db->where('id', Array(1, 5, 27, -1, 'd'), 'IN');
-// or $db->where('id', Array( 'in' => Array(1, 5, 27, -1, 'd') ) );
+// or $db->where('id', Array( 'IN' => Array(1, 5, 27, -1, 'd') ) );
 
 $results = $db->get('users');
 // Gives: SELECT * FROM users WHERE id IN (1, 5, 27, -1, 'd');
@@ -176,14 +206,16 @@ $results = $db->get("users");
 Also you can use raw where conditions:
 ```php
 $db->where ("id != companyId");
+$db->where ("DATE(createdAt) = DATE(lastLogin)");
 $results = $db->get("users");
 ```
 
 Or raw condition with variables:
 ```php
-$db->where("id = ? or id = ?", Array(6,2));
+$db->where ("(id = ? or id = ?)", Array(6,2));
+$db->where ("login","mike")
 $res = $db->get ("users");
-// Gives: SELECT * FROM users WERE id = 2 or id = 2;
+// Gives: SELECT * FROM users WHERE (id = 2 or id = 2) and login='mike';
 ```
 
 
