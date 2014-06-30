@@ -737,6 +737,7 @@ class MysqliDb
             $parameters[] = & $row[$field->name];
         }
 
+        $stmt->store_result();
         call_user_func_array(array($stmt, 'bind_result'), $parameters);
 
         while ($stmt->fetch()) {
