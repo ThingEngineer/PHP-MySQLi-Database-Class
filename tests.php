@@ -125,6 +125,10 @@ if ($db->count != 1) {
 
 $db->where ("active", false);
 $db->update("users", Array ("active" => $db->not()));
+if ($db->count != 2) {
+    echo "Invalid update count with not()";
+    exit;
+}
 
 $db->where ("active", true);
 $users = $db->get("users");
@@ -160,6 +164,11 @@ $upData = Array (
 );
 $db->where ("id", 1);
 $cnt = $db->update("users", $upData);
+if ($db->count != 1) {
+    echo "Invalid update count with functions";
+    exit;
+}
+
 
 $db->where ("id", 1);
 $r = $db->getOne("users");
