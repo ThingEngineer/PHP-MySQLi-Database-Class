@@ -81,8 +81,11 @@ $data = Array (
 	// active = !active;
 );
 $db->where ('id', 1);
-if($db->update ('users', $data)) echo 'successfully updated'; 
+$cols = $db->update ('users', $data);
+echo $cols . ' records were updated';
 ```
+Note that update query will return 0 in case update query will fail AND also in case
+where no records were modified.
 
 ### Select Query
 After any select/get function calls amount or returned rows
