@@ -316,15 +316,16 @@ class MysqliDb
 
         $this->_query = "UPDATE " . self::$_prefix . $tableName ." SET ";
 
-        $stmt = $this->_buildQuery(null, $tableData);
+        $stmt = $this->_buildQuery (null, $tableData);
         if ($stmt->execute() == false) {
             $this->reset();
             $this->_stmtError = $stmt->error;
-            return -1;
+            return false;
         }
         $this->reset();
+        $this->count = $stmt->affected_rows;
 
-        return ($stmt->affected_rows > 0);
+        return true;
     }
 
     /**

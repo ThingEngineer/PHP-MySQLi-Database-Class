@@ -68,6 +68,9 @@ $data = Array(
 $id = $db->insert ('users', $data);
 if ($id)
     echo 'user was created. Id=' . $id;
+else
+    echo 'insert failed: ' . $db->getLastError();
+
 ```
 
 ### Update Query
@@ -81,14 +84,11 @@ $data = Array (
 	// active = !active;
 );
 $db->where ('id', 1);
-$cols = $db->update ('users', $data);
-if ($cols == -1)
-    echo 'update failed: ' . $db->getLastError();
+if ($db->update ('users', $data))
+    echo $db->count . ' records were updated';
 else
-    echo $cols . ' records were updated';
+    echo 'update failed: ' . $db->getLastError();
 ```
-Note that update query will return 0 in case update query will fail AND also in case
-where no records were modified.
 
 ### Select Query
 After any select/get function calls amount or returned rows
