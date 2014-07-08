@@ -737,6 +737,12 @@ class MysqliDb
             $parameters[] = & $row[$field->name];
         }
 
+        // avoid out of memory bug in php 5.2 and 5.3
+        // https://github.com/joshcam/PHP-MySQLi-Database-Class/pull/119
+        if (version_compare (phpversion(), '5.4', '<'))
+             $stmt->store_result();
+        }
+
         call_user_func_array(array($stmt, 'bind_result'), $parameters);
 
         while ($stmt->fetch()) {
