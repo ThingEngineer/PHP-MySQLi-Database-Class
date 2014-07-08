@@ -82,7 +82,10 @@ $data = Array (
 );
 $db->where ('id', 1);
 $cols = $db->update ('users', $data);
-echo $cols . ' records were updated';
+if ($cols == -1)
+    echo 'update failed: ' . $db->getLastError();
+else
+    echo $cols . ' records were updated';
 ```
 Note that update query will return 0 in case update query will fail AND also in case
 where no records were modified.

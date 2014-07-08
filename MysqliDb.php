@@ -317,8 +317,11 @@ class MysqliDb
         $this->_query = "UPDATE " . self::$_prefix . $tableName ." SET ";
 
         $stmt = $this->_buildQuery(null, $tableData);
-        $stmt->execute();
-        $this->_stmtError = $stmt->error;
+        if ($stmt->execute() == false) {
+            $this->reset();
+            $this->_stmtError = $stmt->error;
+            return -1;
+        }
         $this->reset();
 
         return ($stmt->affected_rows > 0);
@@ -741,7 +744,6 @@ class MysqliDb
         // https://github.com/joshcam/PHP-MySQLi-Database-Class/pull/119
         if (version_compare (phpversion(), '5.4', '<'))
              $stmt->store_result();
-        }
 
         call_user_func_array(array($stmt, 'bind_result'), $parameters);
 
