@@ -137,12 +137,19 @@ if ($db->count != 3) {
     exit;
 }
 
+$db->where ("active", true);
+$users = $db->get("users", 2);
+if ($db->count != 2) {
+    echo "Invalid total insert count with boolean";
+    exit;
+}
+
 // TODO
 //$db->where("createdAt", Array (">" => $db->interval("-1h")));
 //$users = $db->get("users");
 //print_r ($users);
 
-$db->where("firstname", '%John%', 'LIKE');
+$db->where("firstname", Array ('LIKE' => '%John%'));
 $users = $db->get("users");
 if ($db->count != 1) {
     echo "Invalid insert count in LIKE: ".$db->count;

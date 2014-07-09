@@ -522,25 +522,38 @@ class MysqliDb
      *
      * @param string Variable value
      */
-    protected function _bindParam($value)
-    {
+    protected function _bindParam($value) {
         $this->_bindParams[0] .= $this->_determineType ($value);
         array_push ($this->_bindParams, $value);
     }
 
+    /**
+     * Helper function to add variables into bind parameters array in bulk
+     *
+     * @param Array Variable with values
+     */
+    protected function _bindParams ($values) {
+        foreach ($values as $value)
+            $this->_bindParam ($value);
+    }
+
+    /**
+     * Helper function to add variables into bind parameters array and will return
+     * its SQL part of the query according to operator in ' $operator ?' or
+     * ' $operator ($subquery) ' formats
+     *
+     * @param Array Variable with values
+     */
     protected function _buildPair ($operator, $value) {
         if (!is_object($value)) {
             $this->_bindParam ($value);
-            $comparison = ' ' . $operator. ' ? ';
-            return $comparison;
+            return ' ' . $operator. ' ? ';
         }
 
-        $subQuery = $value->getSubQuery();
-        $comparison = " " . $operator . " (" . $subQuery['query'] . ")";
-        foreach ($subQuery['params'] as $v)
-            $this->_bindParam ($v);
+        $subQuery = $value->getSubQuery ();
+        $this->_bindParams ($subQuery['params']);
 
-        return $comparison;
+        return " " . $operator . " (" . $subQuery['query'] . ")";
     }
 
     /**
@@ -555,148 +568,14 @@ class MysqliDb
      */
     protected function _buildQuery($numRows = null, $tableData = null)
     {
-        $hasTableData = is_array($tableData);
-        $hasConditional = !empty($this->_where);
+        $this->_buildJoin();
+        $this->_buildTableData ($tableData);
+        $this->_buildWhere();
+        $this->_buildGroupBy();
+        $this->_buildOrderBy();
+        $this->_buildLimit ($numRows);
 
-        // Did the user call the "join" method? 
-        if (!empty($this->_join)) {
-            foreach ($this->_join as $prop => $value) {
-                $this->_query .= " " . $prop . " on " . $value;
-            } 
-        }
-
-        // Determine INSERT or UPDATE query
-        if ($hasTableData) {
-            $isInsert = strpos ($this->_query, 'INSERT');
-            $isUpdate = strpos ($this->_query, 'UPDATE');
-
-            if ($isInsert !== false) {
-                //is insert statement
-                $this->_query .= '(`' . implode(array_keys($tableData), '`, `') . '`)';
-                $this->_query .= ' VALUES(';
-            }
-
-            foreach ($tableData as $column => $value) {
-                if ($isUpdate !== false)
-                    $this->_query .= "`" . $column . "` = ";
-
-                if (is_object ($value)) {
-                    $this->_query .= $this->_buildPair ("", $value) . ", ";
-                } else if (!is_array ($value)) {
-                    $this->_bindParam ($value);
-                    $this->_query .= '?, ';
-                } else {
-                    $key = key ($value);
-                    $val = $value[$key];
-                    switch ($key) {
-                        case '[I]':
-                            $this->_query .= $column . $val . ", ";
-                            break;
-                        case '[F]':
-                            $this->_query .= $val[0] . ", ";
-                            if (!empty ($val[1])) {
-                                foreach ($val[1] as $v)
-                                    $this->_bindParam ($v);
-                            }
-                            break;
-                        case '[N]':
-                            if ($val == null)
-                                $this->_query .= "!" . $column . ", ";
-                            else
-                                $this->_query .= "!" . $val . ", ";
-                            break;
-                        default:
-                            die ("Wrong operation");
-                    }
-                }
-            }
-            $this->_query = rtrim($this->_query, ', ');
-            if ($isInsert !== false)
-                $this->_query .= ')';
-        }
-
-        // Did the user call the "where" method?
-        if ($hasConditional) {
-            //Prepair the where portion of the query
-            $this->_query .= ' WHERE ';
-            $i = 0;
-            foreach ($this->_where as $cond) {
-                list ($concat, $wValue, $wKey) = $cond;
-
-                // if its not a first condition insert its concatenator (AND or OR)
-                if ($i++ != 0)
-                    $this->_query .= " $concat ";
-                $this->_query .= $wKey;
-
-                if (is_array ($wValue)) {
-                    // if the value is an array, then this isn't a basic = comparison
-                    $key = key($wValue);
-                    $val = $wValue[$key];
-                    switch( strtolower($key) ) {
-                        case '0':
-                            foreach ($wValue as $v)
-                                $this->_bindParam ($v);
-                            break;
-                        case 'not in':
-                        case 'in':
-                            $comparison = ' ' . $key . ' (';
-                            if (is_object ($val)) {
-                                $comparison .= $this->_buildPair ("", $val);
-                            } else {
-                                foreach ($val as $v) {
-                                    $comparison .= ' ?,';
-                                    $this->_bindParam ($v);
-                                }
-                            }
-                            $this->_query .= rtrim($comparison, ',').' ) ';
-                            break;
-                        case 'not between':
-                        case 'between':
-                            $this->_query .= " $key ? AND ? ";
-                            $this->_bindParam ($val[0]);
-                            $this->_bindParam ($val[1]);
-                            break;
-                        default:
-                            // We are using a comparison operator with only one parameter after it
-                            $this->_query .= $this->_buildPair ($key, $val);
-                    }
-                } else if ($wValue === null) {
-                    //
-                } else {
-                    $this->_query .= $this->_buildPair ("=", $wValue);
-                }
-            }
-        }
-
-        // Did the user call the "groupBy" method?
-        if (!empty($this->_groupBy)) {
-            $this->_query .= " GROUP BY ";
-            foreach ($this->_groupBy as $key => $value) {
-                // prepares the reset of the SQL query.
-                $this->_query .= $value . ", ";
-            }
-            $this->_query = rtrim($this->_query, ', ') . " ";
-        }
-
-        // Did the user call the "orderBy" method?
-        if (!empty ($this->_orderBy)) {
-            $this->_query .= " ORDER BY ";
-            foreach ($this->_orderBy as $prop => $value) {
-                // prepares the reset of the SQL query.
-                $this->_query .= $prop . " " . $value . ", ";
-            }
-            $this->_query = rtrim ($this->_query, ', ') . " ";
-        } 
-
-        // Did the user set a limit
-        if (isset($numRows)) {
-            if (is_array ($numRows))
-                $this->_query .= ' LIMIT ' . (int)$numRows[0] . ', ' . (int)$numRows[1];
-            else
-                $this->_query .= ' LIMIT ' . (int)$numRows;
-        }
-
-        $this->_lastQuery = $this->replacePlaceHolders($this->_query, $this->_bindParams);
+        $this->_lastQuery = $this->replacePlaceHolders ($this->_query, $this->_bindParams);
 
         if ($this->isSubQuery)
             return;
@@ -755,6 +634,178 @@ class MysqliDb
         }
 
         return $results;
+    }
+
+
+    /**
+     * Abstraction method that will build an JOIN part of the query
+     */
+    protected function _buildJoin () {
+        if (empty ($this->_join))
+            return;
+
+        foreach ($this->_join as $prop => $value)
+            $this->_query .= " " . $prop . " on " . $value;
+    }
+
+    /**
+     * Abstraction method that will build an INSERT or UPDATE part of the query
+     */
+    protected function _buildTableData ($tableData) {
+        if (!is_array ($tableData))
+            return;
+
+        $isInsert = strpos ($this->_query, 'INSERT');
+        $isUpdate = strpos ($this->_query, 'UPDATE');
+
+        if ($isInsert !== false) {
+            $this->_query .= '(`' . implode(array_keys($tableData), '`, `') . '`)';
+            $this->_query .= ' VALUES(';
+        }
+
+        foreach ($tableData as $column => $value) {
+            if ($isUpdate !== false)
+                $this->_query .= "`" . $column . "` = ";
+
+            // Subquery value
+            if (is_object ($value)) {
+                $this->_query .= $this->_buildPair ("", $value) . ", ";
+                continue;
+            }
+
+            // Simple value
+            if (!is_array ($value)) {
+                $this->_bindParam ($value);
+                $this->_query .= '?, ';
+                continue;
+            }
+
+            // Function value
+            $key = key ($value);
+            $val = $value[$key];
+            switch ($key) {
+                case '[I]':
+                    $this->_query .= $column . $val . ", ";
+                    break;
+                case '[F]':
+                    $this->_query .= $val[0] . ", ";
+                    if (!empty ($val[1]))
+                        $this->_bindParams ($val[1]);
+                    break;
+                case '[N]':
+                    if ($val == null)
+                        $this->_query .= "!" . $column . ", ";
+                    else
+                        $this->_query .= "!" . $val . ", ";
+                    break;
+                default:
+                    die ("Wrong operation");
+            }
+        }
+        $this->_query = rtrim($this->_query, ', ');
+        if ($isInsert !== false)
+            $this->_query .= ')';
+    }
+
+    /**
+     * Abstraction method that will build the part of the WHERE conditions
+     */
+    protected function _buildWhere () {
+        if (empty ($this->_where))
+            return;
+
+        //Prepair the where portion of the query
+        $this->_query .= ' WHERE ';
+
+        // Remove first AND/OR concatenator
+        $this->_where[0][0] = '';
+        foreach ($this->_where as $cond) {
+            list ($concat, $wValue, $wKey) = $cond;
+
+            $this->_query .= " " . $concat ." " . $wKey;
+
+            // Empty value (raw where condition in wKey)
+            if ($wValue === null)
+                continue;
+
+            // Simple = comparison
+            if (!is_array ($wValue))
+                $wValue = Array ('=' => $wValue);
+
+            $key = key ($wValue);
+            $val = $wValue[$key];
+            switch (strtolower ($key)) {
+                case '0':
+                    $this->_bindParams ($wValue);
+                    break;
+                case 'not in':
+                case 'in':
+                    $comparison = ' ' . $key . ' (';
+                    if (is_object ($val)) {
+                        $comparison .= $this->_buildPair ("", $val);
+                    } else {
+                        foreach ($val as $v) {
+                            $comparison .= ' ?,';
+                            $this->_bindParam ($v);
+                        }
+                    }
+                    $this->_query .= rtrim($comparison, ',').' ) ';
+                    break;
+                case 'not between':
+                case 'between':
+                    $this->_query .= " $key ? AND ? ";
+                    $this->_bindParams ($val);
+                    break;
+                default:
+                    $this->_query .= $this->_buildPair ($key, $val);
+            }
+        }
+    }
+
+    /**
+     * Abstraction method that will build the GROUP BY part of the WHERE statement
+     *
+     */
+    protected function _buildGroupBy () {
+        if (empty ($this->_groupBy))
+            return;
+
+        $this->_query .= " GROUP BY ";
+        foreach ($this->_groupBy as $key => $value)
+            $this->_query .= $value . ", ";
+
+        $this->_query = rtrim($this->_query, ', ') . " ";
+    }
+
+    /**
+     * Abstraction method that will build the LIMIT part of the WHERE statement
+     *
+     * @param int   $numRows   The number of rows total to return.
+     */
+    protected function _buildOrderBy () {
+        if (empty ($this->_orderBy))
+            return;
+
+        $this->_query .= " ORDER BY ";
+        foreach ($this->_orderBy as $prop => $value)
+            $this->_query .= $prop . " " . $value . ", ";
+
+        $this->_query = rtrim ($this->_query, ', ') . " ";
+    }
+
+    /**
+     * Abstraction method that will build the LIMIT part of the WHERE statement
+     *
+     * @param int   $numRows   The number of rows total to return.
+     */
+    protected function _buildLimit ($numRows) {
+        if (!isset ($numRows))
+            return;
+
+        if (is_array ($numRows))
+            $this->_query .= ' LIMIT ' . (int)$numRows[0] . ', ' . (int)$numRows[1];
+        else
+            $this->_query .= ' LIMIT ' . (int)$numRows;
     }
 
     /**
