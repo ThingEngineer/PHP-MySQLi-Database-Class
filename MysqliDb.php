@@ -188,12 +188,15 @@ class MysqliDb
      *
      * @param string $query      Contains a user-provided query.
      * @param array  $bindParams All variables to bind to the SQL statment.
+     * @param bool   $sanitize   If query should be filtered before execution
      *
      * @return array Contains the returned rows from the query.
      */
-    public function rawQuery($query, $bindParams = null)
+    public function rawQuery ($query, $bindParams = null, $sanitize = true)
     {
-        $this->_query = filter_var ($query, FILTER_SANITIZE_STRING,
+        $this->_query = $query;
+        if ($sanitize)
+            $this->_query = filter_var ($query, FILTER_SANITIZE_STRING,
                                     FILTER_FLAG_NO_ENCODE_QUOTES);
         $stmt = $this->_prepareQuery();
 

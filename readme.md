@@ -127,8 +127,14 @@ if($db->delete('users')) echo 'successfully deleted';
 ```
 
 ### Generic Query Method
+By default rawQuery() will filter out special characters so if you getting problems with it
+you might try to disable filtering function. In this case make sure that all external variables are passed to the query via bind variables
+
 ```php
-$users = $db->rawQuery('SELECT * from users');
+// filtering enabled
+$users = $db->rawQuery('SELECT * from users where customerId=?', Array (10));
+// filtering disabled
+//$users = $db->rawQuery('SELECT * from users where id >= ?', Array (10), false);
 foreach ($users as $user) {
     print_r ($user);
 }
