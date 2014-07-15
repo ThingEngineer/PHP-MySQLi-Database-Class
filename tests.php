@@ -125,10 +125,21 @@ if ($db->count != 1) {
 
 $db->where ("active", false);
 $db->update("users", Array ("active" => $db->not()));
+if ($db->count != 2) {
+    echo "Invalid update count with not()";
+    exit;
+}
 
 $db->where ("active", true);
 $users = $db->get("users");
 if ($db->count != 3) {
+    echo "Invalid total insert count with boolean";
+    exit;
+}
+
+$db->where ("active", true);
+$users = $db->get("users", 2);
+if ($db->count != 2) {
     echo "Invalid total insert count with boolean";
     exit;
 }
@@ -138,7 +149,7 @@ if ($db->count != 3) {
 //$users = $db->get("users");
 //print_r ($users);
 
-$db->where("firstname", '%John%', 'LIKE');
+$db->where("firstname", Array ('LIKE' => '%John%'));
 $users = $db->get("users");
 if ($db->count != 1) {
     echo "Invalid insert count in LIKE: ".$db->count;
@@ -160,6 +171,11 @@ $upData = Array (
 );
 $db->where ("id", 1);
 $cnt = $db->update("users", $upData);
+if ($db->count != 1) {
+    echo "Invalid update count with functions";
+    exit;
+}
+
 
 $db->where ("id", 1);
 $r = $db->getOne("users");

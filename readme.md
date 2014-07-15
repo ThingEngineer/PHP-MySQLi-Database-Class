@@ -68,6 +68,9 @@ $data = Array(
 $id = $db->insert ('users', $data);
 if ($id)
     echo 'user was created. Id=' . $id;
+else
+    echo 'insert failed: ' . $db->getLastError();
+
 ```
 
 ### Update Query
@@ -81,7 +84,10 @@ $data = Array (
 	// active = !active;
 );
 $db->where ('id', 1);
-if($db->update ('users', $data)) echo 'successfully updated'; 
+if ($db->update ('users', $data))
+    echo $db->count . ' records were updated';
+else
+    echo 'update failed: ' . $db->getLastError();
 ```
 
 ### Select Query
@@ -121,14 +127,20 @@ if($db->delete('users')) echo 'successfully deleted';
 ```
 
 ### Generic Query Method
+By default rawQuery() will filter out special characters so if you getting problems with it
+you might try to disable filtering function. In this case make sure that all external variables are passed to the query via bind variables
+
 ```php
-$users = $db->rawQuery('SELECT * from users');
+// filtering enabled
+$users = $db->rawQuery('SELECT * from users where customerId=?', Array (10));
+// filtering disabled
+//$users = $db->rawQuery('SELECT * from users where id >= ?', Array (10), false);
 foreach ($users as $user) {
     print_r ($user);
 }
 ```
 
-### Raw Query Method
+More advanced examples:
 ```php
 $params = Array(1, 'admin');
 $users = $db->rawQuery("SELECT id, firstName, lastName FROM users WHERE id = ? AND login = ?", $params);
@@ -136,8 +148,17 @@ print_r($users); // contains Array of returned rows
 
 // will handle any SQL query
 $params = Array(10, 1, 10, 11, 2, 10);
-$resutls = $db->rawQuery("(SELECT a FROM t1 WHERE a = ? AND B = ? ORDER BY a LIMIT ?) UNION(SELECT a FROM t2 WHERE a = ? AND B = ? ORDER BY a LIMIT ?)", $params);
-print_r($results); // contains Array of returned rows
+$q = "(
+    SELECT a FROM t1
+        WHERE a = ? AND B = ?
+        ORDER BY a LIMIT ?
+) UNION (
+    SELECT a FROM t2 
+        WHERE a = ? AND B = ?
+        ORDER BY a LIMIT ?
+)";
+$resutls = $db->rawQuery ($q, $params);
+print_r ($results); // contains Array of returned rows
 ```
 
 
