@@ -275,16 +275,19 @@ print_r ($products);
 
 ### Properties sharing
 Its is also possible to copy properties
+
+Simple pagination example:
 ```php
 $db->where ("agentId", 10);
+$db->where ("active", true);
 
 $customers = $db->copy ();
-$res = $customers->get ("customers");
-// SELECT * FROM customers where agentId = 10
+$res = $customers->get ("customers", Array (10, 10));
+// SELECT * FROM customers where agentId = 10 and active = 1 limit 10, 10
 
-$db->orWhere ("agentId", 20);
-$res = $db->get ("users");
-// SELECT * FROM users where agentId = 10 or agentId = 20
+$res = $db->getOne ("customers", "count(id) as cnt");
+echo "total records found: " . $res['cnt'];
+// SELECT count(id) FROM users where agentId = 10 and active = 1
 ```
 
 ### Subqueries
