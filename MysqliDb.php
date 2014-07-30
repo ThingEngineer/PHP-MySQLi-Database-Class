@@ -759,6 +759,10 @@ class MysqliDb
                     $this->_query .= " $key ? AND ? ";
                     $this->_bindParams ($val);
                     break;
+                case 'not exists':
+                case 'exists':
+                    $this->_query.= $key . $this->_buildPair ("", $val);
+                    break;
                 default:
                     $this->_query .= $this->_buildPair ($key, $val);
             }
