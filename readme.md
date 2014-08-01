@@ -14,7 +14,7 @@ MysqliDb -- Simple MySQLi wrapper with prepared statements
 **[Properties Sharing](#properties-sharing)**  
 **[Joining Tables](#join-method)**  
 **[Subqueries](#subqueries)**  
-**[EXISTS / NOT EXISTS condition](exists-not-exists-condition)**
+**[EXISTS / NOT EXISTS condition](#exists--not-exists-condition)** 
 **[Helper Functions](#helper-commands)**  
 **[Transaction Helpers](#transaction-helpers)**  
 
