@@ -14,6 +14,7 @@ MysqliDb -- Simple MySQLi wrapper with prepared statements
 **[Properties Sharing](#properties-sharing)**  
 **[Joining Tables](#join-method)**  
 **[Subqueries](#subqueries)**  
+**[EXISTS / NOT EXISTS condition](exists-not-exists-condition)**
 **[Helper Functions](#helper-commands)**  
 **[Transaction Helpers](#transaction-helpers)**  
 
@@ -316,6 +317,17 @@ $data = Array (
 $id = $db->insert ("products", $data);
 // Gives INSERT INTO PRODUCTS (productName, userId, lastUpdated) values ("test product", (SELECT name FROM users WHERE id = 6), NOW());
 ```
+
+###EXISTS / NOT EXISTS condition
+```php
+$sub = $db->subQuery();
+    $sub->where("company", 'testCompany');
+    $sub->get ("users", null, 'userId');
+$db->where (null, $sub, 'exists');
+$products = $db->get ("products");
+// Gives SELECT * FROM products WHERE EXISTS (select userId from users where company='testCompany')
+```
+
 ### Helper commands
 Reconnect in case mysql connection died
 ```php
