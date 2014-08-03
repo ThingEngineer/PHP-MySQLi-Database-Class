@@ -1052,4 +1052,32 @@ class MysqliDb
             return;
         $this->rollback ();
     }
+	
+	  /**
+     * Use of real_escape_string function plus some reserved words substitution. 
+	 * In the original function, reserved words like SELECT, INSERT, an many others are 
+	 * not validated so the real_escape_string is not good enough to void injections in Mysqli querys
+	 * I just added a validation that take out some reserved words and after we use the 
+	 * normal real_escape_string function.
+     * @param string $string String to validate
+     * 
+     * @return string 
+     * */
+    public function real_escape_string($string){
+                
+        $reserverd_words = array(" SELECT "," INSERT " ," UPDATE " ," DELETE "," CREATE " ,
+        " TRUNCATE " ," DROP " ," FROM " ," SHOW " ," TABLES "," TABLE " ," WHERE " ,
+        " LIKE ","'",'"','%','*');
+        
+        //Replace reserved words on string;
+        $string = str_ireplace($reserverd_words, '' , $string);
+        
+        //if magic quotes are on, we add stripslashes
+        if(get_magic_quotes_gpc() != 0) {
+            $string = stripslashes($string);
+        }
+        
+        //return string with real_escape_string function
+        return $this->_mysqli->real_escape_string($string);
+    }
 } // END class
