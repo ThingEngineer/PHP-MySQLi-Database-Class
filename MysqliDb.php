@@ -81,6 +81,12 @@ class MysqliDb
      * @var string
      */
     protected $_stmtError;
+    /**
+     * Variable which holds the total number of rows matched, ignoring any LIMIT, for the previous query.
+     *
+     * @var string
+     */
+    protected $foundRows = 0;
 
     /**
      * Database credentials
@@ -244,13 +250,14 @@ class MysqliDb
      *
      * @return array Contains the returned rows from the select query.
      */
-    public function get($tableName, $numRows = null, $columns = '*')
+    public function get($tableName, $numRows = null, $columns = '*', $found_rows = false)
     {
         if (empty ($columns))
             $columns = '*';
 
         $column = is_array($columns) ? implode(', ', $columns) : $columns; 
-        $this->_query = "SELECT $column FROM " .self::$_prefix . $tableName;
+        $this->_query = $found_rows === true ? 'SELECT SQL_CALC_FOUND_ROWS ' : 'SELECT '; 
+        $this->_query .= "$column FROM " .self::$_prefix . $tableName;
         $stmt = $this->_buildQuery($numRows);
 
         if ($this->isSubQuery)
@@ -260,7 +267,19 @@ class MysqliDb
         $this->_stmtError = $stmt->error;
         $this->reset();
 
-        return $this->_dynamicBindResults($stmt);
+        $result = $this->_dynamicBindResults($stmt);
+        
+        if ($found_rows)
+        {
+            $stmt = $this->_mysqli->query('SELECT FOUND_ROWS();');
+
+            $found = $stmt->fetch_row();
+            $this->foundRows = $found[0];
+        }
+        else
+            $this->foundRows = 0;
+
+        return $result; 
     }
 
     /**
@@ -579,6 +598,7 @@ class MysqliDb
         $this->_buildLimit ($numRows);
 
         $this->_lastQuery = $this->replacePlaceHolders ($this->_query, $this->_bindParams);
+        $this->foundRows = 0;
 
         if ($this->isSubQuery)
             return;
@@ -909,6 +929,16 @@ class MysqliDb
                 );
         $this->reset();
         return $val;
+    }
+
+    /**
+     * Method returns the total number of rows matched for the last query
+     * ignoring any LIMIT.
+     * 
+     * @return integer
+     */
+    public function getFoundRows () {
+        return $this->foundRows;
     }
 
     /* Helper functions */
