@@ -438,17 +438,27 @@ class MysqliDb
      *
      * @param string $orderByField The name of the database field.
      * @param string $orderByDirection Order direction.
+     * @param array  $customFields List of values to order results using ORDER BY FIELD().
      *
      * @return MysqliDb
      */
-    public function orderBy($orderByField, $orderbyDirection = "DESC")
+    public function orderBy($orderByField, $orderbyDirection = "DESC", $customFields = null)
     {
         $allowedDirection = Array ("ASC", "DESC");
         $orderbyDirection = strtoupper (trim ($orderbyDirection));
-        $orderByField = preg_replace ("/[^-a-z0-9\.\(\),_]+/i",'', $orderByField);
 
         if (empty($orderbyDirection) || !in_array ($orderbyDirection, $allowedDirection))
             die ('Wrong order direction: '.$orderbyDirection);
+        
+        if(is_array($customFields))
+        {
+            foreach($customFields AS $key=>$value)
+                $customFields[$key] = preg_replace ("/[^-a-z0-9\.\(\),_]+/i",'', $value);
+
+            $orderByField = 'FIELD('.$orderByField.',"'.implode('","', $customFields).'")';
+        }
+        else
+            $orderByField = preg_replace ("/[^-a-z0-9\.\(\),_]+/i",'', $orderByField);
 
         $this->_orderBy[$orderByField] = $orderbyDirection;
         return $this;
