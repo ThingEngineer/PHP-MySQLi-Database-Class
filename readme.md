@@ -7,7 +7,6 @@ MysqliDb -- Simple MySQLi wrapper with prepared statements
 **[Select Query](#select-query)**  
 **[Delete Query](#delete-query)**  
 **[Generic Query](#generic-query-method)**  
-**[Raw Query](#raw-query-method)**  
 **[Where Conditions](#where-method)**  
 **[Order Conditions](#ordering-method)**  
 **[Group Conditions](#grouping-method)**  
