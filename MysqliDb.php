@@ -894,7 +894,7 @@ class MysqliDb
      * @return string
      */
     public function getLastError () {
-        return $this->_stmtError . " " . $this->_mysqli->error;
+        return trim ($this->_stmtError . " " . $this->_mysqli->error);
     }
 
     /**
