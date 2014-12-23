@@ -1,16 +1,16 @@
 <?php
-/**
- * MysqliDb Class
- *
- * @category  Database Access
- * @package   MysqliDb
- * @author    Jeffery Way <jeffrey@jeffrey-way.com>
- * @author    Josh Campbell <jcampbell@ajillion.com>
- * @author    Alexander V. Butenko <a.butenka@gmail.com>
- * @copyright Copyright (c) 2010
- * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
- * @version   2.0
- **/
+ /**
+- * MysqliDb Class
+- *
+- * @category Database Access
+- * @package MysqliDb
+- * @author Jeffery Way <jeffrey@jeffrey-way.com>
+- * @author Josh Campbell <jcampbell@ajillion.com>
+- * @author Alexander V. Butenko <a.butenka@gmail.com>
+- * @copyright Copyright (c) 2010
+- * @license http://opensource.org/licenses/gpl-3.0.html GNU Public License
+- * @version 2.0
+**/
 class MysqliDb
 {
     /**
@@ -284,11 +284,34 @@ class MysqliDb
     }
 
     /**
+     * To check if the table exists already.
+     *
+     * @param string $tableName The name of the database table to work with.
+     *
+     * @return boolean Boolean indicating whether the query was completed successfully.
+     *
+     * */
+
+    public function tableExists( $tableName ) {
+
+        if ($this->isSubQuery)
+            return;
+
+        $this->_query = "SHOW TABLES LIKE '" . $tableName . "'";
+        $stmt = $this->_buildQuery(null, null);
+        $stmt->execute();
+        $this->_stmtError = $stmt->error;
+        $this->reset();
+
+        return $stmt;
+    }
+
+    /**
      *
      * @param <string $tableName The name of the table.
      * @param array $insertData Data containing information for inserting into the DB.
      *
-     * @return boolean Boolean indicating whether the insert query was completed succesfully.
+     * @return boolean Boolean indicating whether the insert query was completed successfully.
      */
     public function insert($tableName, $insertData)
     {
