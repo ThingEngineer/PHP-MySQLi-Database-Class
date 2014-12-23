@@ -759,6 +759,10 @@ class MysqliDb
                     $this->_query .= " $key ? AND ? ";
                     $this->_bindParams ($val);
                     break;
+                case 'not exists':
+                case 'exists':
+                    $this->_query.= $key . $this->_buildPair ("", $val);
+                    break;
                 default:
                     $this->_query .= $this->_buildPair ($key, $val);
             }
@@ -872,6 +876,7 @@ class MysqliDb
             $newStr .= substr ($str, 0, $pos) . $val;
             $str = substr ($str, $pos + 1);
         }
+        $newStr .= $str;
         return $newStr;
     }
 
@@ -890,7 +895,7 @@ class MysqliDb
      * @return string
      */
     public function getLastError () {
-        return $this->_stmtError . " " . $this->_mysqli->error;
+        return trim ($this->_stmtError . " " . $this->_mysqli->error);
     }
 
     /**

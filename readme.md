@@ -14,6 +14,7 @@ MysqliDb -- Simple MySQLi wrapper with prepared statements
 **[Properties Sharing](#properties-sharing)**  
 **[Joining Tables](#join-method)**  
 **[Subqueries](#subqueries)**  
+**[EXISTS / NOT EXISTS condition](#exists--not-exists-condition)** 
 **[Helper Functions](#helper-commands)**  
 **[Transaction Helpers](#transaction-helpers)**  
 
@@ -275,16 +276,19 @@ print_r ($products);
 
 ### Properties sharing
 Its is also possible to copy properties
+
+Simple pagination example:
 ```php
 $db->where ("agentId", 10);
+$db->where ("active", true);
 
 $customers = $db->copy ();
-$res = $customers->get ("customers");
-// SELECT * FROM customers where agentId = 10
+$res = $customers->get ("customers", Array (10, 10));
+// SELECT * FROM customers where agentId = 10 and active = 1 limit 10, 10
 
-$db->orWhere ("agentId", 20);
-$res = $db->get ("users");
-// SELECT * FROM users where agentId = 10 or agentId = 20
+$res = $db->getOne ("customers", "count(id) as cnt");
+echo "total records found: " . $res['cnt'];
+// SELECT count(id) FROM users where agentId = 10 and active = 1
 ```
 
 ### Subqueries
@@ -313,6 +317,17 @@ $data = Array (
 $id = $db->insert ("products", $data);
 // Gives INSERT INTO PRODUCTS (productName, userId, lastUpdated) values ("test product", (SELECT name FROM users WHERE id = 6), NOW());
 ```
+
+###EXISTS / NOT EXISTS condition
+```php
+$sub = $db->subQuery();
+    $sub->where("company", 'testCompany');
+    $sub->get ("users", null, 'userId');
+$db->where (null, $sub, 'exists');
+$products = $db->get ("products");
+// Gives SELECT * FROM products WHERE EXISTS (select userId from users where company='testCompany')
+```
+
 ### Helper commands
 Reconnect in case mysql connection died
 ```php
