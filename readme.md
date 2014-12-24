@@ -7,7 +7,6 @@ MysqliDb -- Simple MySQLi wrapper with prepared statements
 **[Select Query](#select-query)**  
 **[Delete Query](#delete-query)**  
 **[Generic Query](#generic-query-method)**  
-**[Raw Query](#raw-query-method)**  
 **[Where Conditions](#where-method)**  
 **[Order Conditions](#ordering-method)**  
 **[Group Conditions](#grouping-method)**  
@@ -119,6 +118,13 @@ echo $user['id'];
 
 $stats = $db->getOne ("users", "sum(id), count(*) as cnt");
 echo "total ".$stats['cnt']. "users found";
+```
+
+Find the total number of rows matched
+
+```php
+$users = $db->get('users', 10, array('userId'), true);
+$totalUsers = $db->getFoundRows();
 ```
 
 ### Delete Query
