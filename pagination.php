@@ -6,11 +6,11 @@ ini_set('display_errors',1);  error_reporting(E_ALL);
 #
 #	File by : PetengDedet (github.com/PetengDedet)
 #   ----------------------------------------------
-#	$column 	= columnt on databse to select (String)
+#	$column 	= column on database to select (String)
 #	$table 		= Table name (String)
 #	$orderby 	= Name of table to shorted by (String)
 #	$ordertype 	= ASC or DESC (String) 
-#	$perpage 	= Numb of rows to shown every page (Int)
+#	$perpage 	= Number of rows to shown on every page (Int)
 #	$url 		= Variable name of $_GET method, 'page' will be $_GET['page'] 'no' will be $_GET['no'] (String) 
 #
 
@@ -84,7 +84,7 @@ function paginate($column = '',$table = '',$orderby = '',$ordertype = 'DESC',$pe
 <body>
 	<div class="container">
 		<div class="col-md-8">
-			<table class="table table-condensed table-hovered">
+			<table class="table table-condensed table-hover">
 				<thead>
 					<tr>
 						<th>Nama</th>
