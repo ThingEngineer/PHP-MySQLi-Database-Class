@@ -284,6 +284,23 @@ class MysqliDb
     }
 
     /**
+     * A convenient SELECT * function to get one value.
+     *
+     * @param string  $tableName The name of the database table to work with.
+     *
+     * @return array Contains the returned column from the select query.
+     */
+    public function getValue($tableName, $column) 
+    {
+        $res = $this->get ($tableName, 1, "{$column} as retval");
+
+        if (isset($res[0]["retval"]))
+            return $res[0]["retval"];
+
+        return null;
+    }
+
+    /**
      *
      * @param <string $tableName The name of the table.
      * @param array $insertData Data containing information for inserting into the DB.

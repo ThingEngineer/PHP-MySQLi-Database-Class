@@ -121,6 +121,13 @@ $stats = $db->getOne ("users", "sum(id), count(*) as cnt");
 echo "total ".$stats['cnt']. "users found";
 ```
 
+or select one column or function result
+
+```php
+$count = getValue ("users", "count(*)");
+echo "{$count} users found";
+```
+
 ### Delete Query
 ```php
 $db->where('id', 1);
