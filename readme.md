@@ -254,8 +254,9 @@ $results = $db
 ```php
 $db->orderBy("id","asc");
 $db->orderBy("login","Desc");
+$db->orderBy("RAND ()");
 $results = $db->get('users');
-// Gives: SELECT * FROM users ORDER BY id ASC,login DESC;
+// Gives: SELECT * FROM users ORDER BY id ASC,login DESC, RAND ();
 ```
 
 ### Grouping method

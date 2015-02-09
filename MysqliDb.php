@@ -794,8 +794,12 @@ class MysqliDb
             return;
 
         $this->_query .= " ORDER BY ";
-        foreach ($this->_orderBy as $prop => $value)
-            $this->_query .= $prop . " " . $value . ", ";
+        foreach ($this->_orderBy as $prop => $value) {
+            if (strtolower (str_replace (" ", "", $prop)) == 'rand()')
+                $this->_query .= "rand(), ";
+            else
+                $this->_query .= $prop . " " . $value . ", ";
+        }
 
         $this->_query = rtrim ($this->_query, ', ') . " ";
     }
