@@ -266,6 +266,13 @@ $results = $db->get('users');
 // Gives: SELECT * FROM users ORDER BY id ASC,login DESC, RAND ();
 ```
 
+order by values example:
+```php
+$db->orderBy('userGroup', 'ASC', array('superuser', 'admin', 'users'));
+$db->get('users');
+// Gives: SELECT * FROM users ORDER BY FIELD (userGroup, 'superuser', 'admin', 'users') ASC;
+```
+
 ### Grouping method
 ```php
 $db->groupBy ("name");

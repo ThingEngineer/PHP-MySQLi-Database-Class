@@ -149,6 +149,14 @@ if ($db->count != 3) {
     exit;
 }
 
+// order by field
+$db->orderBy("login","asc", Array ("user3","user2","user1"));
+$login = $db->getValue ("users", "login");
+if ($login != "user3") {
+    echo "order by field test failed";
+    exit;
+}
+
 $db->where ("active", true);
 $users = $db->get("users");
 if ($db->count != 1) {
