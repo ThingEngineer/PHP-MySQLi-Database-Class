@@ -121,6 +121,13 @@ $stats = $db->getOne ("users", "sum(id), count(*) as cnt");
 echo "total ".$stats['cnt']. "users found";
 ```
 
+or select one column or function result
+
+```php
+$count = getValue ("users", "count(*)");
+echo "{$count} users found";
+```
+
 ### Delete Query
 ```php
 $db->where('id', 1);
@@ -254,8 +261,16 @@ $results = $db
 ```php
 $db->orderBy("id","asc");
 $db->orderBy("login","Desc");
+$db->orderBy("RAND ()");
 $results = $db->get('users');
-// Gives: SELECT * FROM users ORDER BY id ASC,login DESC;
+// Gives: SELECT * FROM users ORDER BY id ASC,login DESC, RAND ();
+```
+
+order by values example:
+```php
+$db->orderBy('userGroup', 'ASC', array('superuser', 'admin', 'users'));
+$db->get('users');
+// Gives: SELECT * FROM users ORDER BY FIELD (userGroup, 'superuser', 'admin', 'users') ASC;
 ```
 
 ### Grouping method

@@ -284,6 +284,23 @@ class MysqliDb
     }
 
     /**
+     * A convenient SELECT * function to get one value.
+     *
+     * @param string  $tableName The name of the database table to work with.
+     *
+     * @return array Contains the returned column from the select query.
+     */
+    public function getValue($tableName, $column) 
+    {
+        $res = $this->get ($tableName, 1, "{$column} as retval");
+
+        if (isset($res[0]["retval"]))
+            return $res[0]["retval"];
+
+        return null;
+    }
+
+    /**
      *
      * @param <string $tableName The name of the table.
      * @param array $insertData Data containing information for inserting into the DB.
@@ -300,8 +317,15 @@ class MysqliDb
         $stmt->execute();
         $this->_stmtError = $stmt->error;
         $this->reset();
+        $this->count = $stmt->affected_rows;
 
-        return ($stmt->affected_rows > 0 ? $stmt->insert_id : false);
+        if ($stmt->affected_rows < 1)
+            return false;
+
+        if ($stmt->insert_id > 0)
+            return $stmt->insert_id;
+
+        return true;
     }
 
     /**
@@ -422,7 +446,7 @@ class MysqliDb
      *
      * @return MysqliDb
      */
-    public function orderBy($orderByField, $orderbyDirection = "DESC")
+    public function orderBy($orderByField, $orderbyDirection = "DESC", $customFields = null)
     {
         $allowedDirection = Array ("ASC", "DESC");
         $orderbyDirection = strtoupper (trim ($orderbyDirection));
@@ -430,6 +454,13 @@ class MysqliDb
 
         if (empty($orderbyDirection) || !in_array ($orderbyDirection, $allowedDirection))
             die ('Wrong order direction: '.$orderbyDirection);
+
+        if (is_array ($customFields)) {
+            foreach ($customFields as $key => $value)
+                $customFields[$key] = preg_replace ("/[^-a-z0-9\.\(\),_]+/i",'', $value);
+
+            $orderByField = 'FIELD (' . $orderByField . ', "' . implode('","', $customFields) . '")';
+        }
 
         $this->_orderBy[$orderByField] = $orderbyDirection;
         return $this;
@@ -627,6 +658,7 @@ class MysqliDb
 
         call_user_func_array(array($stmt, 'bind_result'), $parameters);
 
+        $this->count = 0;
         while ($stmt->fetch()) {
             $x = array();
             foreach ($row as $key => $val) {
@@ -794,8 +826,12 @@ class MysqliDb
             return;
 
         $this->_query .= " ORDER BY ";
-        foreach ($this->_orderBy as $prop => $value)
-            $this->_query .= $prop . " " . $value . ", ";
+        foreach ($this->_orderBy as $prop => $value) {
+            if (strtolower (str_replace (" ", "", $prop)) == 'rand()')
+                $this->_query .= "rand(), ";
+            else
+                $this->_query .= $prop . " " . $value . ", ";
+        }
 
         $this->_query = rtrim ($this->_query, ', ') . " ";
     }

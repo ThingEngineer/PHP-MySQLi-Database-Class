@@ -93,12 +93,13 @@ function createTable ($name, $data) {
     $db->rawQuery($q);
 }
 
+// rawQuery test
 foreach ($tables as $name => $fields) {
     $db->rawQuery("DROP TABLE ".$prefix.$name);
     createTable ($prefix.$name, $fields);
 }
 
-
+// insert test with autoincrement
 foreach ($data as $name => $datas) {
     foreach ($datas as $d) {
         $id = $db->insert($name, $d);
@@ -106,8 +107,39 @@ foreach ($data as $name => $datas) {
             $d['id'] = $id;
         else {
             echo "failed to insert: ".$db->getLastQuery() ."\n". $db->getLastError();
+            exit;
         }
     }
+}
+
+// bad insert test
+$badUser = Array ('login' => null,
+               'customerId' => 10,
+               'firstName' => 'John',
+               'lastName' => 'Doe',
+               'password' => 'test',
+               'createdAt' => $db->now(),
+               'expires' => $db->now('+1Y'),
+               'loginCount' => $db->inc()
+        );
+$id = $db->insert ("users", $badUser);
+if ($id) {
+    echo "bad insert test failed";
+    exit;
+}
+
+// insert without autoincrement
+$q = "create table {$prefix}test (id int(10), name varchar(10));";
+$db->rawQuery($q);
+$id = $db->insert ("test", Array ("id" => 1, "name" => "testname"));
+if (!$id) {
+    echo "insert without autoincrement failed";
+    exit;
+}
+$db->get("test");
+if ($db->count != 1) {
+    echo "insert without autoincrement failed -- wrong insert count";
+    exit;
 }
 
 $db->orderBy("id","asc");
@@ -116,6 +148,15 @@ if ($db->count != 3) {
     echo "Invalid total insert count";
     exit;
 }
+
+// order by field
+$db->orderBy("login","asc", Array ("user3","user2","user1"));
+$login = $db->getValue ("users", "login");
+if ($login != "user3") {
+    echo "order by field test failed";
+    exit;
+}
+
 $db->where ("active", true);
 $users = $db->get("users");
 if ($db->count != 1) {
@@ -246,8 +287,8 @@ $usersQ->getOne ("users", "id");
 
 $db2 = $db->copy();
 $db2->where ("userId", $usersQ);
-$res = $db2->getOne ("products", "count(id) as cnt");
-if ($res['cnt'] != 2) {
+$cnt = $db2->getValue ("products", "count(id)");
+if ($cnt != 2) {
     echo "Invalid select result with subquery";
     exit;
 }
@@ -259,6 +300,10 @@ if ($db->count != 0) {
     exit;
 }
 $db->delete("products");
+
+$q = "drop table {$prefix}test;";
+$db->rawQuery($q);
+
 echo "All done";
 
 //print_r($db->rawQuery("CALL simpleproc(?)",Array("test")));
