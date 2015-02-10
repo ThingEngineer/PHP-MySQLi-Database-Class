@@ -644,6 +644,7 @@ class MysqliDb
 
         call_user_func_array(array($stmt, 'bind_result'), $parameters);
 
+        $this->count = 0;
         while ($stmt->fetch()) {
             $x = array();
             foreach ($row as $key => $val) {
