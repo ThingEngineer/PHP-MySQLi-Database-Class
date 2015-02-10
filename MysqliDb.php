@@ -317,8 +317,15 @@ class MysqliDb
         $stmt->execute();
         $this->_stmtError = $stmt->error;
         $this->reset();
+        $this->count = $stmt->affected_rows;
 
-        return ($stmt->affected_rows > 0 ? $stmt->insert_id : false);
+        if ($stmt->affected_rows < 1)
+            return false;
+
+        if ($stmt->insert_id > 0)
+            return $stmt->insert_id;
+
+        return true;
     }
 
     /**
