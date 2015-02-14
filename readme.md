@@ -301,8 +301,8 @@ $customers = $db->copy ();
 $res = $customers->get ("customers", Array (10, 10));
 // SELECT * FROM customers where agentId = 10 and active = 1 limit 10, 10
 
-$res = $db->getOne ("customers", "count(id) as cnt");
-echo "total records found: " . $res['cnt'];
+$cnt = $db->getValue ("customers", "count(id)");
+echo "total records found: " . $cnt;
 // SELECT count(id) FROM users where agentId = 10 and active = 1
 ```
 
