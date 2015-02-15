@@ -315,13 +315,16 @@ $dbi_sub->get ('users', null, 'id');
 $db->where ('id', $dbi_sub, 'IN');
 
 $cnt = $db->copy();
-$count_members = $cnt->getValue ('users', "COUNT(id)");
-echo "count {$count_members}\n";
-echo $cnt->getLastQuery() . "\n";
-
+$c = $cnt->getValue ('users', "COUNT(id)");
+if ($c != 3) {
+    echo "copy with subquery count failed";
+    exit;
+}
 $data = $db->get('users');
-print_r ($data);
-echo $cnt->getLastQuery() . "\n";
+if (count($data) != 3) {
+    echo "copy with subquery data count failed";
+    exit;
+}
 ///
 $usersQ = $db->subQuery ("u");
 $usersQ->where ("active", 1);
