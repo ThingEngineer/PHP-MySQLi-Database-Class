@@ -153,6 +153,10 @@ if ($db->count != 1) {
     exit;
 }
 
+$q = "drop table {$prefix}test;";
+$db->rawQuery($q);
+
+
 $db->orderBy("id","asc");
 $users = $db->get("users");
 if ($db->count != 3) {
@@ -253,7 +257,7 @@ if ($db->count != 2) {
     echo "Invalid users count on where() with between";
     exit;
 }
-
+///
 $db->where ("id", 2);
 $db->orWhere ("customerId", 11);
 $r = $db->get("users");
@@ -261,14 +265,14 @@ if ($db->count != 2) {
     echo "Invalid users count on orWhere()";
     exit;
 }
-
+///
 $db->where ("lastName", NULL, '<=>');
 $r = $db->get("users");
 if ($db->count != 1) {
     echo "Invalid users count on null where()";
     exit;
 }
-
+///
 $db->join("users u", "p.userId=u.id", "LEFT");
 $db->where("u.login",'user2');
 $db->orderBy("CONCAT(u.login, u.firstName)");
@@ -277,7 +281,7 @@ if ($db->count != 2) {
     echo "Invalid products count on join ()";
     exit;
 }
-
+///
 $db->where("id = ? or id = ?", Array(1,2));
 $res = $db->get ("users");
 if ($db->count != 2) {
@@ -285,26 +289,40 @@ if ($db->count != 2) {
     exit;
 }
 
+///
 $db->where("id = 1 or id = 2");
 $res = $db->get ("users");
 if ($db->count != 2) {
     echo "Invalid users count on select with multiple params";
     exit;
 }
-
+///
 $usersQ = $db->subQuery();
 $usersQ->where ("login", "user2");
 $usersQ->getOne ("users", "id");
 
-$db2 = $db->copy();
-$db2->where ("userId", $usersQ);
-$cnt = $db2->getValue ("products", "count(id)");
+$db->where ("userId", $usersQ);
+$cnt = $db->getValue ("products", "count(id)");
 if ($cnt != 2) {
     echo "Invalid select result with subquery";
     exit;
 }
+///
+$dbi_sub = $db->subQuery();
+$dbi_sub->where ('active', 1);
+$dbi_sub->get ('users', null, 'id');
 
+$db->where ('id', $dbi_sub, 'IN');
 
+$cnt = $db->copy();
+$count_members = $cnt->getValue ('users', "COUNT(id)");
+echo "count {$count_members}\n";
+echo $cnt->getLastQuery() . "\n";
+
+$data = $db->get('users');
+print_r ($data);
+echo $cnt->getLastQuery() . "\n";
+///
 $usersQ = $db->subQuery ("u");
 $usersQ->where ("active", 1);
 $usersQ->get("users");
@@ -319,7 +337,7 @@ if ($db->count != 5) {
     echo "invalid join with subquery count";
     exit;
 }
-
+///
 //TODO: insert test
 $db->delete("users");
 $db->get("users");
@@ -328,9 +346,6 @@ if ($db->count != 0) {
     exit;
 }
 $db->delete("products");
-
-$q = "drop table {$prefix}test;";
-$db->rawQuery($q);
 
 echo "All done";
 
