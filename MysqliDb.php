@@ -1071,7 +1071,9 @@ class MysqliDb
      */
     public function copy ()
     {
-        return clone $this;
+        $copy = unserialize (serialize ($this));
+        $copy->_mysqli = $this->_mysqli;
+        return $copy;
     }
 
     /**
