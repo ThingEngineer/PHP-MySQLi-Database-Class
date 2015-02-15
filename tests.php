@@ -292,6 +292,23 @@ if ($cnt != 2) {
     echo "Invalid select result with subquery";
     exit;
 }
+
+
+$usersQ = $db->subQuery ("u");
+$usersQ->where ("active", 1);
+$usersQ->get("users");
+
+$db->join($usersQ, "p.userId=u.id", "LEFT");
+$products = $db->get ("products p", null, "u.login, p.productName");
+if ($products[2]['login'] != 'user1' || $products[2]['productName'] != 'product3') {
+    echo "invalid join with subquery";
+    exit;
+}
+if ($db->count != 5) {
+    echo "invalid join with subquery count";
+    exit;
+}
+
 //TODO: insert test
 $db->delete("users");
 $db->get("users");
