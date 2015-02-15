@@ -25,10 +25,27 @@ To utilize this class, first import MysqliDb.php into your project, and require 
 require_once ('MysqliDb.php');
 ```
 
-After that, create a new instance of the class.
-
+Simple initialization with utf8 charset by default:
 ```php
 $db = new MysqliDb ('host', 'username', 'password', 'databaseName');
+```
+
+Advanced initialization. If no charset should be set charset, set it to null
+```php
+$db = new Mysqlidb (Array (
+                'host' => 'host',
+                'username' => 'username', 
+                'password' => 'password',
+                'db'=> 'databaseName',
+                'port' => 3306,
+                'charset' => 'utf8'));
+```
+port and charset params are optional.
+
+Reuse already connected mysqli:
+```php
+$mysqli = new mysqli ('host', 'username', 'password', 'databaseName');
+$db = new Mysqlidb ($mysqli);
 ```
 
 Its also possible to set a table prefix:
