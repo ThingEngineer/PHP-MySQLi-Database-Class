@@ -92,6 +92,7 @@ class MysqliDb
     protected $password;
     protected $db;
     protected $port;
+    protected $charset;
 
     /**
      * Is Subquery object
@@ -106,24 +107,36 @@ class MysqliDb
      * @param string $db
      * @param int $port
      */
-    public function __construct($host = NULL, $username = NULL, $password = NULL, $db = NULL, $port = NULL)
+    public function __construct($host = NULL, $username = NULL, $password = NULL, $db = NULL, $port = NULL, $charset = 'utf8')
     {
-        $this->host = $host;
+        $isSubQuery = false;
+
+        // if params were passed as array
+        if (is_array ($host)) {
+            foreach ($host as $key => $val)
+                $$key = $val;
+        }
+        // if host were set as mysqli socket
+        if (is_object ($host))
+            $this->_mysqli = $host;
+        else
+            $this->host = $host;
+
         $this->username = $username;
         $this->password = $password;
         $this->db = $db;
-        if($port == NULL)
-            $this->port = ini_get ('mysqli.default_port');
-        else
-            $this->port = $port;
+        $this->port = $port;
+        $this->charset = $charset;
 
-        if ($host == null && $username == null && $db == null) {
+        if ($isSubQuery) {
             $this->isSubQuery = true;
             return;
         }
 
         // for subqueries we do not need database connection and redefine root instance
-        $this->connect();
+        if (!is_object ($host))
+            $this->connect();
+
         $this->setPrefix();
         self::$_instance = $this;
     }
@@ -137,10 +150,14 @@ class MysqliDb
         if ($this->isSubQuery)
             return;
 
+        if (empty ($this->host))
+            die ('Mysql host is not set');
+
         $this->_mysqli = new mysqli ($this->host, $this->username, $this->password, $this->db, $this->port)
             or die('There was a problem connecting to the database');
 
-        $this->_mysqli->set_charset ('utf8');
+        if ($this->charset)
+            $this->_mysqli->set_charset ($this->charset);
     }
     /**
      * A method of returning the static instance to allow access to the
@@ -427,12 +444,14 @@ class MysqliDb
      {
         $allowedTypes = array('LEFT', 'RIGHT', 'OUTER', 'INNER', 'LEFT OUTER', 'RIGHT OUTER');
         $joinType = strtoupper (trim ($joinType));
-        $joinTable = filter_var($joinTable, FILTER_SANITIZE_STRING);
 
         if ($joinType && !in_array ($joinType, $allowedTypes))
             die ('Wrong JOIN type: '.$joinType);
 
-        $this->_join[$joinType . " JOIN " . self::$_prefix . $joinTable] = $joinCondition;
+        if (!is_object ($joinTable))
+            $joinTable = self::$_prefix . filter_var($joinTable, FILTER_SANITIZE_STRING);
+
+        $this->_join[] = Array ($joinType,  $joinTable, $joinCondition);
 
         return $this;
     }
@@ -587,7 +606,7 @@ class MysqliDb
         $subQuery = $value->getSubQuery ();
         $this->_bindParams ($subQuery['params']);
 
-        return " " . $operator . " (" . $subQuery['query'] . ")";
+        return " " . $operator . " (" . $subQuery['query'] . ") " . $subQuery['alias'];
     }
 
     /**
@@ -679,8 +698,16 @@ class MysqliDb
         if (empty ($this->_join))
             return;
 
-        foreach ($this->_join as $prop => $value)
-            $this->_query .= " " . $prop . " on " . $value;
+        foreach ($this->_join as $data) {
+            list ($joinType,  $joinTable, $joinCondition) = $data;
+
+            if (is_object ($joinTable))
+                $joinStr = $this->_buildPair ("", $joinTable);
+            else
+                $joinStr = $joinTable;
+
+            $this->_query .= " " . $joinType. " JOIN " . $joinStr ." on " . $joinCondition;
+        }
     }
 
     /**
@@ -946,7 +973,8 @@ class MysqliDb
 
         array_shift ($this->_bindParams);
         $val = Array ('query' => $this->_query,
-                      'params' => $this->_bindParams
+                      'params' => $this->_bindParams,
+                      'alias' => $this->host
                 );
         $this->reset();
         return $val;
@@ -1031,9 +1059,9 @@ class MysqliDb
     /**
      * Method creates new mysqlidb object for a subquery generation
      */
-    public static function subQuery()
+    public static function subQuery($subQueryAlias = "")
     {
-        return new MysqliDb();
+        return new MysqliDb (Array('host' => $subQueryAlias, 'isSubQuery' => true));
     }
 
     /**
@@ -1043,7 +1071,9 @@ class MysqliDb
      */
     public function copy ()
     {
-        return clone $this;
+        $copy = unserialize (serialize ($this));
+        $copy->_mysqli = $this->_mysqli;
+        return $copy;
     }
 
     /**
