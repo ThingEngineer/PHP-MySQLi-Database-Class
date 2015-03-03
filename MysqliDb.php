@@ -358,7 +358,7 @@ class MysqliDb
         if ($this->isSubQuery)
             return;
 
-        $this->_query = "UPDATE " . self::$_prefix . $tableName ." SET ";
+        $this->_query = "UPDATE " . self::$_prefix . $tableName;
 
         $stmt = $this->_buildQuery (null, $tableData);
         $status = $stmt->execute();
@@ -723,7 +723,8 @@ class MysqliDb
         if ($isInsert !== false) {
             $this->_query .= '(`' . implode(array_keys($tableData), '`, `') . '`)';
             $this->_query .= ' VALUES(';
-        }
+        } else
+            $this->_query .= " SET ";
 
         foreach ($tableData as $column => $value) {
             if ($isUpdate !== false)
