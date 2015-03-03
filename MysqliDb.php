@@ -329,7 +329,7 @@ class MysqliDb
         if ($this->isSubQuery)
             return;
 
-        $this->_query = "INSERT into " .self::$_prefix . $tableName;
+        $this->_query = "INSERT INTO " .self::$_prefix . $tableName;
         $stmt = $this->_buildQuery(null, $insertData);
         $stmt->execute();
         $this->_stmtError = $stmt->error;
@@ -721,8 +721,8 @@ class MysqliDb
         $isUpdate = strpos ($this->_query, 'UPDATE');
 
         if ($isInsert !== false) {
-            $this->_query .= '(`' . implode(array_keys($tableData), '`, `') . '`)';
-            $this->_query .= ' VALUES(';
+            $this->_query .= ' (`' . implode(array_keys($tableData), '`, `') . '`)';
+            $this->_query .= ' VALUES (';
         } else
             $this->_query .= " SET ";
 
@@ -778,7 +778,7 @@ class MysqliDb
             return;
 
         //Prepair the where portion of the query
-        $this->_query .= ' WHERE ';
+        $this->_query .= ' WHERE';
 
         // Remove first AND/OR concatenator
         $this->_where[0][0] = '';
@@ -937,7 +937,9 @@ class MysqliDb
             $val = $vals[$i++];
             if (is_object ($val))
                 $val = '[object]';
-            $newStr .= substr ($str, 0, $pos) . $val;
+            if ($val == NULL)
+                $val = 'NULL';
+            $newStr .= substr ($str, 0, $pos) . "'". $val . "'";
             $str = substr ($str, $pos + 1);
         }
         $newStr .= $str;
