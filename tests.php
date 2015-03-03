@@ -157,12 +157,13 @@ $q = "drop table {$prefix}test;";
 $db->rawQuery($q);
 
 
-$db->orderBy("id","asc");
+$db->orderBy("`id`","asc");
 $users = $db->get("users");
 if ($db->count != 3) {
     echo "Invalid total insert count";
     exit;
 }
+echo $db->getLastQuery();
 
 // order by field
 $db->orderBy("login","asc", Array ("user3","user2","user1"));
