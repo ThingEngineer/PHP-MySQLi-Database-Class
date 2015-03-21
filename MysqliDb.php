@@ -267,7 +267,7 @@ class MysqliDb
             $columns = '*';
 
         $column = is_array($columns) ? implode(', ', $columns) : $columns; 
-        $this->_query = "SELECT $column FROM " .self::$_prefix . $tableName;
+        $this->_query = "SELECT $column FROM " . self::$_prefix . $tableName;
         $stmt = $this->_buildQuery($numRows);
 
         if ($this->isSubQuery)
@@ -343,6 +343,20 @@ class MysqliDb
             return $stmt->insert_id;
 
         return true;
+    }
+
+    /**
+     * A convenient function that returns TRUE if exists at least an element that
+     * satisfy the where condition specified calling the "where" method before this one.
+     *
+     * @param string  $tableName The name of the database table to work with.
+     *
+     * @return array Contains the returned rows from the select query.
+     */
+    public function has($tableName)
+    {
+        $this->getOne($tableName, '1');
+        return $this->count >= 1;
     }
 
     /**
@@ -1124,3 +1138,4 @@ class MysqliDb
         $this->rollback ();
     }
 } // END class
+?>
