@@ -64,7 +64,7 @@ class MysqliDb
      */
     protected $_groupBy = array(); 
     /**
-     * Dynamic array that holds a combination of where condition/table data value types and parameter referances
+     * Dynamic array that holds a combination of where condition/table data value types and parameter references
      *
      * @var array
      */
@@ -75,6 +75,13 @@ class MysqliDb
      * @var string
      */ 
     public $count = 0;
+    /**
+     * Variable which holds an amount of returned rows during get/getOne/select queries with withTotalCount()
+     *
+     * @var string
+     */ 
+    public $totalCount = 0;
+    protected $fetchTotalCount = false;
     /**
      * Variable which holds last statement error
      *
@@ -254,6 +261,16 @@ class MysqliDb
     }
 
     /**
+     * Function to enable SQL_CALC_FOUND_ROWS in the get queries
+     *
+     * @return MysqliDb
+     */
+    public function withTotalCount () {
+        $this->fetchTotalCount = true;
+        return $this;
+    }
+
+    /**
      * A convenient SELECT * function.
      *
      * @param string  $tableName The name of the database table to work with.
@@ -266,8 +283,9 @@ class MysqliDb
         if (empty ($columns))
             $columns = '*';
 
+        $this->_query = $this->fetchTotalCount == true ? 'SELECT SQL_CALC_FOUND_ROWS ' : 'SELECT '; 
         $column = is_array($columns) ? implode(', ', $columns) : $columns; 
-        $this->_query = "SELECT $column FROM " .self::$_prefix . $tableName;
+        $this->_query .= "$column FROM " .self::$_prefix . $tableName;
         $stmt = $this->_buildQuery($numRows);
 
         if ($this->isSubQuery)
@@ -677,6 +695,7 @@ class MysqliDb
 
         call_user_func_array(array($stmt, 'bind_result'), $parameters);
 
+        $this->totalCount = 0;
         $this->count = 0;
         while ($stmt->fetch()) {
             $x = array();
@@ -685,6 +704,13 @@ class MysqliDb
             }
             $this->count++;
             array_push($results, $x);
+        }
+
+        if ($this->fetchTotalCount === true) {
+            $this->fetchTotalCount = false;
+            $stmt = $this->_mysqli->query ('SELECT FOUND_ROWS();');
+            $totalCount = $stmt->fetch_row();
+            $this->totalCount = $totalCount[0];
         }
 
         return $results;
