@@ -237,6 +237,7 @@ class MysqliDb
 
         $stmt->execute();
         $this->_stmtError = $stmt->error;
+        $this->_lastQuery = $this->replacePlaceHolders ($this->_query, $bindParams);
         $this->reset();
 
         return $this->_dynamicBindResults($stmt);
