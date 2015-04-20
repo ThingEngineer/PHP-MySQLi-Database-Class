@@ -142,7 +142,7 @@ echo "total ".$stats['cnt']. "users found";
 or select one column or function result
 
 ```php
-$count = getValue ("users", "count(*)");
+$count = $db->getValue ("users", "count(*)");
 echo "{$count} users found";
 ```
 
@@ -266,6 +266,14 @@ $res = $db->get ("users");
 ```
 
 
+Find the total number of rows matched. Simple pagination example:
+```php
+$offset = 10;
+$count = 15;
+$users = $db->withTotalCount()->get('users', Array ($offset, $count));
+echo "Showing {$count} from {$db->totalCount}";
+```
+
 Optionally you can use method chaining to call where multiple times without referencing your object over an over:
 
 ```php
@@ -310,7 +318,6 @@ print_r ($products);
 ### Properties sharing
 Its is also possible to copy properties
 
-Simple pagination example:
 ```php
 $db->where ("agentId", 10);
 $db->where ("active", true);

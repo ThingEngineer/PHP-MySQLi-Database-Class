@@ -64,7 +64,7 @@ class MysqliDb
      */
     protected $_groupBy = array(); 
     /**
-     * Dynamic array that holds a combination of where condition/table data value types and parameter referances
+     * Dynamic array that holds a combination of where condition/table data value types and parameter references
      *
      * @var array
      */
@@ -75,6 +75,13 @@ class MysqliDb
      * @var string
      */ 
     public $count = 0;
+    /**
+     * Variable which holds an amount of returned rows during get/getOne/select queries with withTotalCount()
+     *
+     * @var string
+     */ 
+    public $totalCount = 0;
+    protected $fetchTotalCount = false;
     /**
      * Variable which holds last statement error
      *
@@ -254,6 +261,16 @@ class MysqliDb
     }
 
     /**
+     * Function to enable SQL_CALC_FOUND_ROWS in the get queries
+     *
+     * @return MysqliDb
+     */
+    public function withTotalCount () {
+        $this->fetchTotalCount = true;
+        return $this;
+    }
+
+    /**
      * A convenient SELECT * function.
      *
      * @param string  $tableName The name of the database table to work with.
@@ -266,8 +283,9 @@ class MysqliDb
         if (empty ($columns))
             $columns = '*';
 
+        $this->_query = $this->fetchTotalCount == true ? 'SELECT SQL_CALC_FOUND_ROWS ' : 'SELECT '; 
         $column = is_array($columns) ? implode(', ', $columns) : $columns; 
-        $this->_query = "SELECT $column FROM " . self::$_prefix . $tableName;
+        $this->_query .= "$column FROM " .self::$_prefix . $tableName;
         $stmt = $this->_buildQuery($numRows);
 
         if ($this->isSubQuery)
@@ -329,7 +347,7 @@ class MysqliDb
         if ($this->isSubQuery)
             return;
 
-        $this->_query = "INSERT into " .self::$_prefix . $tableName;
+        $this->_query = "INSERT INTO " .self::$_prefix . $tableName;
         $stmt = $this->_buildQuery(null, $insertData);
         $stmt->execute();
         $this->_stmtError = $stmt->error;
@@ -372,7 +390,7 @@ class MysqliDb
         if ($this->isSubQuery)
             return;
 
-        $this->_query = "UPDATE " . self::$_prefix . $tableName ." SET ";
+        $this->_query = "UPDATE " . self::$_prefix . $tableName;
 
         $stmt = $this->_buildQuery (null, $tableData);
         $status = $stmt->execute();
@@ -483,14 +501,14 @@ class MysqliDb
     {
         $allowedDirection = Array ("ASC", "DESC");
         $orderbyDirection = strtoupper (trim ($orderbyDirection));
-        $orderByField = preg_replace ("/[^-a-z0-9\.\(\),_]+/i",'', $orderByField);
+        $orderByField = preg_replace ("/[^-a-z0-9\.\(\),_`]+/i",'', $orderByField);
 
         if (empty($orderbyDirection) || !in_array ($orderbyDirection, $allowedDirection))
             die ('Wrong order direction: '.$orderbyDirection);
 
         if (is_array ($customFields)) {
             foreach ($customFields as $key => $value)
-                $customFields[$key] = preg_replace ("/[^-a-z0-9\.\(\),_]+/i",'', $value);
+                $customFields[$key] = preg_replace ("/[^-a-z0-9\.\(\),_`]+/i",'', $value);
 
             $orderByField = 'FIELD (' . $orderByField . ', "' . implode('","', $customFields) . '")';
         }
@@ -691,6 +709,7 @@ class MysqliDb
 
         call_user_func_array(array($stmt, 'bind_result'), $parameters);
 
+        $this->totalCount = 0;
         $this->count = 0;
         while ($stmt->fetch()) {
             $x = array();
@@ -699,6 +718,13 @@ class MysqliDb
             }
             $this->count++;
             array_push($results, $x);
+        }
+
+        if ($this->fetchTotalCount === true) {
+            $this->fetchTotalCount = false;
+            $stmt = $this->_mysqli->query ('SELECT FOUND_ROWS();');
+            $totalCount = $stmt->fetch_row();
+            $this->totalCount = $totalCount[0];
         }
 
         return $results;
@@ -735,9 +761,10 @@ class MysqliDb
         $isUpdate = strpos ($this->_query, 'UPDATE');
 
         if ($isInsert !== false) {
-            $this->_query .= '(`' . implode(array_keys($tableData), '`, `') . '`)';
-            $this->_query .= ' VALUES(';
-        }
+            $this->_query .= ' (`' . implode(array_keys($tableData), '`, `') . '`)';
+            $this->_query .= ' VALUES (';
+        } else
+            $this->_query .= " SET ";
 
         foreach ($tableData as $column => $value) {
             if ($isUpdate !== false)
@@ -791,7 +818,7 @@ class MysqliDb
             return;
 
         //Prepair the where portion of the query
-        $this->_query .= ' WHERE ';
+        $this->_query .= ' WHERE';
 
         // Remove first AND/OR concatenator
         $this->_where[0][0] = '';
@@ -950,7 +977,9 @@ class MysqliDb
             $val = $vals[$i++];
             if (is_object ($val))
                 $val = '[object]';
-            $newStr .= substr ($str, 0, $pos) . $val;
+            if ($val == NULL)
+                $val = 'NULL';
+            $newStr .= substr ($str, 0, $pos) . "'". $val . "'";
             $str = substr ($str, $pos + 1);
         }
         $newStr .= $str;

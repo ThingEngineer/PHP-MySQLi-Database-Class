@@ -157,7 +157,7 @@ $q = "drop table {$prefix}test;";
 $db->rawQuery($q);
 
 
-$db->orderBy("id","asc");
+$db->orderBy("`id`","asc");
 $users = $db->get("users");
 if ($db->count != 3) {
     echo "Invalid total insert count";
@@ -338,6 +338,12 @@ if ($products[2]['login'] != 'user1' || $products[2]['productName'] != 'product3
 }
 if ($db->count != 5) {
     echo "invalid join with subquery count";
+    exit;
+}
+
+$db->withTotalCount()->get('users', 1);
+if ($db->totalCount != 3) {
+    echo "error in totalCount";
     exit;
 }
 ///
