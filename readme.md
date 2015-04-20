@@ -142,7 +142,7 @@ echo "total ".$stats['cnt']. "users found";
 or select one column or function result
 
 ```php
-$count = getValue ("users", "count(*)");
+$count = $db->getValue ("users", "count(*)");
 echo "{$count} users found";
 ```
 
