@@ -14,7 +14,8 @@ MysqliDb -- Simple MySQLi wrapper with prepared statements
 **[Properties Sharing](#properties-sharing)**  
 **[Joining Tables](#join-method)**  
 **[Subqueries](#subqueries)**  
-**[EXISTS / NOT EXISTS condition](#exists--not-exists-condition)** 
+**[EXISTS / NOT EXISTS condition](#exists--not-exists-condition)**  
+**[Has method](#has-method)**  
 **[Helper Functions](#helper-commands)**  
 **[Transaction Helpers](#transaction-helpers)**  
 
@@ -392,6 +393,18 @@ $db->where (null, $sub, 'exists');
 $products = $db->get ("products");
 // Gives SELECT * FROM products WHERE EXISTS (select userId from users where company='testCompany')
 ```
+
+### Has method
+A convenient function that returns TRUE if exists at least an element that satisfy the where condition specified calling the "where" method before this one.
+```php
+$db->where("user", $user);
+$db->where("password", md5($password));
+if($db->has("users")) {
+    return "You are logged";
+} else {
+    return "Wrong user/password";
+}
+``` 
 
 ### Helper commands
 Reconnect in case mysql connection died
