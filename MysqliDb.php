@@ -218,6 +218,7 @@ class MysqliDb
      */
     public function rawQuery ($query, $bindParams = null, $sanitize = true)
     {
+        $params = array(''); // Create the empty 0 index
         $this->_query = $query;
         if ($sanitize)
             $this->_query = filter_var ($query, FILTER_SANITIZE_STRING,
@@ -225,7 +226,6 @@ class MysqliDb
         $stmt = $this->_prepareQuery();
 
         if (is_array($bindParams) === true) {
-            $params = array(''); // Create the empty 0 index
             foreach ($bindParams as $prop => $val) {
                 $params[0] .= $this->_determineType($val);
                 array_push($params, $bindParams[$prop]);
@@ -237,6 +237,7 @@ class MysqliDb
 
         $stmt->execute();
         $this->_stmtError = $stmt->error;
+        $this->_lastQuery = $this->replacePlaceHolders ($this->_query, $params);
         $this->reset();
 
         return $this->_dynamicBindResults($stmt);
@@ -719,6 +720,9 @@ class MysqliDb
             $this->count++;
             array_push($results, $x);
         }
+        // stored procedures sometimes can return more then 1 resultset
+        if ($this->_mysqli->more_results())
+            $this->_mysqli->next_result();
 
         if ($this->fetchTotalCount === true) {
             $this->fetchTotalCount = false;
