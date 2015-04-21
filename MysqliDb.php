@@ -720,6 +720,9 @@ class MysqliDb
             $this->count++;
             array_push($results, $x);
         }
+        // stored procedures sometimes can return more then 1 resultset
+        if ($this->_mysqli->more_results())
+            $this->_mysqli->next_result();
 
         if ($this->fetchTotalCount === true) {
             $this->fetchTotalCount = false;
