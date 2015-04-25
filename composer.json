@@ -1,7 +1,21 @@
 {
-	"name": "joshcam/PHP-MySQLi-Database-Class",
+	"name": "joshcam/mysqli-database-class",
 	"description": "Wrapper for a PHP MySQL class, which utilizes MySQLi and prepared statements.",
 	"license": "GPL-3.0",
+    "authors": [
+        {
+            "name": "Josh Campbell",
+            "email": "josh.lee.campbell@gmail.com",
+            "homepage": "https://github.com/joshcam",
+            "role": "Developer"
+        },
+        {
+            "name": "Alexander V. Butenko",
+            "email": "a.butenka@gmail.com",
+            "homepage": "http://smarttechdo.com",
+            "role": "Developer"
+        }
+    ],
 	"require": {
 		"php": ">=5.3.0"
 	},
