@@ -1,5 +1,5 @@
 {
-	"name": "joshcam/mysqli-database-calss",
+	"name": "joshcam/mysqli-database-class",
 	"description": "Wrapper for a PHP MySQL class, which utilizes MySQLi and prepared statements.",
 	"license": "GPL-3.0",
 	"require": {
