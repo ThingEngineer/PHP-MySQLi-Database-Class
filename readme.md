@@ -45,7 +45,7 @@ $db = new \MysqliDb ('host', 'username', 'password', 'databaseName');
 
 Advanced initialization. If no charset should be set charset, set it to null
 ```php
-$db = new Mysqlidb (Array (
+$db = new MysqliDb (Array (
                 'host' => 'host',
                 'username' => 'username', 
                 'password' => 'password',
@@ -58,7 +58,7 @@ port and charset params are optional.
 Reuse already connected mysqli:
 ```php
 $mysqli = new mysqli ('host', 'username', 'password', 'databaseName');
-$db = new Mysqlidb ($mysqli);
+$db = new MysqliDb ($mysqli);
 ```
 
 Its also possible to set a table prefix:
@@ -74,15 +74,15 @@ Simple example
 $data = Array ("login" => "admin",
                "firstName" => "John",
                "lastName" => 'Doe'
-)
-$id = $db->insert('users', $data);
+);
+$id = $db->insert ('users', $data);
 if($id)
-    echo 'user was created. Id='.$id;
+    echo 'user was created. Id=' . $id;
 ```
 
 Insert with functions use
 ```php
-$data = Array(
+$data = Array (
 	'login' => 'admin',
     'active' => true,
 	'firstName' => 'John',
@@ -151,7 +151,7 @@ $stats = $db->getOne ("users", "sum(id), count(*) as cnt");
 echo "total ".$stats['cnt']. "users found";
 ```
 
-or select one column or function result
+or select one column value or function result
 
 ```php
 $count = $db->getValue ("users", "count(*)");
@@ -202,6 +202,7 @@ print_r ($results); // contains Array of returned rows
 
 ### Where Method
 This method allows you to specify where parameters of the query.
+
 WARNING: In order to use column to column comparisons only raw where conditions should be used as column name or functions cant be passed as a bind variable.
 
 Regular == operator with variables:
