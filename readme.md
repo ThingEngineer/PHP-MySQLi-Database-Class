@@ -19,17 +19,29 @@ MysqliDb -- Simple MySQLi wrapper with prepared statements
 **[Helper Functions](#helper-commands)**  
 **[Transaction Helpers](#transaction-helpers)**  
 
-### Initialization
+### Installation
 To utilize this class, first import MysqliDb.php into your project, and require it.
 
 ```php
 require_once ('MysqliDb.php');
 ```
 
+### Installation with composer
+It is also possible to install library via composer
+```
+composer require joshcam/mysqli-database-class:dev-master
+```
+
+### Initialization
 Simple initialization with utf8 charset by default:
 ```php
 $db = new MysqliDb ('host', 'username', 'password', 'databaseName');
 ```
+Or in case usage of the namespaces:
+```php
+$db = new \MysqliDb ('host', 'username', 'password', 'databaseName');
+```
+
 
 Advanced initialization. If no charset should be set charset, set it to null
 ```php
