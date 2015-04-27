@@ -1170,5 +1170,15 @@ class MysqliDb
             return;
         $this->rollback ();
     }
+    /**
+     * [GetColumn description]
+     * @param string
+     */
+    public function GetColumn ($table='') {
+        $Columns = $this->rawQuery("SHOW COLUMNS FROM ".$this->db.".".$table);
+        return $Columns;
+ }    
+
+    
 } // END class
 ?>
