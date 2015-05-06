@@ -1,3 +1,4 @@
+
 <?php
 /**
  * MysqliDb Class
@@ -11,6 +12,13 @@
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @version   2.0
  **/
+ 
+define( 'MysqliDb_path_to_remove', '' );  // usualy is define( 'MysqliDb_path_to_remove', ABSPATH ) where ABSPATH is defined by programmer as website root folder
+
+// define SAVEQUERIES if is not already defined  if SAVEQUERIES is true in MysqliDb->queries will be stored all queries , mysql time for execution and where and what function was called for query 
+if ( !defined('SAVEQUERIES') )
+		define('SAVEQUERIES', false);
+	
 class MysqliDb
 {
     /**
@@ -37,6 +45,13 @@ class MysqliDb
      * @var string
      */
     protected $_query;
+	
+	/**
+     * The SQL query options required after SELECT, INSERT, UPDATE or DELETE
+     *
+     * @var string
+     */
+	protected $_query_options = '';
     /**
      * The previously executed SQL query
      *
@@ -106,6 +121,18 @@ class MysqliDb
      *
      */
     protected $isSubQuery = false;
+	
+	 /**
+     * Array with all queries if SAVEQUERIES is true
+     *
+     */
+	var $queries ;
+	
+	 /**
+     * Used to store time when a query start
+     *
+     */
+	protected $time_start_q;
 
     /**
      * @param string $host
@@ -179,6 +206,21 @@ class MysqliDb
     {
         return self::$_instance;
     }
+	
+	/**
+     * This method allows you to specify multiple (method chaining optional) options for SQL queries.
+     *
+     * @uses $MySqliDb->setQueryOption('name');
+     *
+     * @param string/array $options The optons name of the query.
+     *
+     * @return MysqliDb
+     */
+	public function setQueryOption($options=''){
+		$option = is_array($options) ? implode(' ', $options) : $options; 
+        $this->_query_options .= ' '.$option;
+		return $this;
+    }
 
     /**
      * Reset states after an execution
@@ -187,12 +229,16 @@ class MysqliDb
      */
     protected function reset()
     {
+		if ( defined( 'SAVEQUERIES' ) && SAVEQUERIES ) {
+			$this->queries[] = array( $this->_lastQuery, $this->timer_stop(), $this->get_caller() );
+		}
         $this->_where = array();
         $this->_join = array();
         $this->_orderBy = array();
         $this->_groupBy = array(); 
         $this->_bindParams = array(''); // Create the empty 0 index
         $this->_query = null;
+		$this->_query_options = '';
         $this->count = 0;
     }
     
@@ -284,7 +330,10 @@ class MysqliDb
         if (empty ($columns))
             $columns = '*';
 
-        $this->_query = $this->fetchTotalCount == true ? 'SELECT SQL_CALC_FOUND_ROWS ' : 'SELECT '; 
+		if($this->fetchTotalCount)
+			$this->_query_options.=' SQL_CALC_FOUND_ROWS';
+        
+		$this->_query = 'SELECT'.$this->_query_options .' '; 
         $column = is_array($columns) ? implode(', ', $columns) : $columns; 
         $this->_query .= "$column FROM " .self::$_prefix . $tableName;
         $stmt = $this->_buildQuery($numRows);
@@ -348,7 +397,7 @@ class MysqliDb
         if ($this->isSubQuery)
             return;
 
-        $this->_query = "INSERT INTO " .self::$_prefix . $tableName;
+        $this->_query = "INSERT".$this->_query_options ." INTO " .self::$_prefix . $tableName;
         $stmt = $this->_buildQuery(null, $insertData);
         $stmt->execute();
         $this->_stmtError = $stmt->error;
@@ -391,7 +440,7 @@ class MysqliDb
         if ($this->isSubQuery)
             return;
 
-        $this->_query = "UPDATE " . self::$_prefix . $tableName;
+        $this->_query = "UPDATE".$this->_query_options ." " . self::$_prefix . $tableName;
 
         $stmt = $this->_buildQuery (null, $tableData);
         $status = $stmt->execute();
@@ -415,7 +464,7 @@ class MysqliDb
         if ($this->isSubQuery)
             return;
 
-        $this->_query = "DELETE FROM " . self::$_prefix . $tableName;
+        $this->_query = "DELETE".$this->_query_options ." FROM " . self::$_prefix . $tableName;
 
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
@@ -931,9 +980,16 @@ class MysqliDb
      */
     protected function _prepareQuery()
     {
+		
+		
         if (!$stmt = $this->_mysqli->prepare($this->_query)) {
             trigger_error("Problem preparing query ($this->_query) " . $this->_mysqli->error, E_USER_ERROR);
         }
+		
+		if ( defined( 'SAVEQUERIES' ) && SAVEQUERIES ) {
+			$this->timer_start();
+		}
+		
         return $stmt;
     }
 
@@ -1170,5 +1226,42 @@ class MysqliDb
             return;
         $this->rollback ();
     }
+	
+	/**
+     * Start timer and store current time for debuging queries
+     *
+     */
+	 
+	public function timer_start() {
+		$this->time_start_q = microtime( true );
+		return true;
+	}
+	
+	/**
+     * Stop timer and return time passed from time_start_q for for debuging queries
+     *
+     * @return float
+     *
+     */
+	public function timer_stop() {
+		return ( microtime( true ) - $this->time_start_q );
+	}
+	
+	/**
+     * Get where and what function was called for query stored in MySqliDb->queries
+     *
+     *
+     * @return string with information 
+     *
+     */
+	public function get_caller(){
+		$dd=debug_backtrace();
+		$out=false;
+		$caller = next($dd);
+		while( isset($caller) &&  $caller["file"] == __FILE__ ){
+			$caller = next($dd);
+		}
+		return __CLASS__."->".$caller["function"]."() >>  file \"".str_replace( MysqliDb_path_to_remove,'',$caller["file"] ) ."\" line #".$caller["line"]." " ;
+	}
 } // END class
 ?>
