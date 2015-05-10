@@ -5,6 +5,9 @@ error_reporting(E_ALL);
 $db = new Mysqlidb('localhost', 'root', '', 'testdb');
 if(!$db) die("Database error");
 
+$mysqli = new mysqli ('localhost', 'root', '', 'testdb');
+$db = new Mysqlidb($mysqli);
+
 $db = new Mysqlidb(Array (
                 'host' => 'localhost',
                 'username' => 'root', 
@@ -13,11 +16,10 @@ $db = new Mysqlidb(Array (
                 'charset' => null));
 if(!$db) die("Database error");
 
-$mysqli = new mysqli ('localhost', 'root', '', 'testdb');
-$db = new Mysqlidb($mysqli);
 
 $prefix = 't_';
 $db->setPrefix($prefix);
+$db->setTrace(true);
 
 $tables = Array (
     'users' => Array (
@@ -360,4 +362,5 @@ echo "All done";
 
 //print_r($db->rawQuery("CALL simpleproc(?)",Array("test")));
 
+print_r ($db->trace);
 ?>

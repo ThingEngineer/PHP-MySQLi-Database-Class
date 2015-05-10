@@ -113,6 +113,15 @@ class MysqliDb
     protected $isSubQuery = false;
 
     /**
+     * Variables for query execution tracing
+     *
+     */
+    protected $traceStartQ;
+    protected $traceEnabled;
+    protected $traceStripPrefix;
+    public $trace = array();
+
+    /**
      * @param string $host
      * @param string $username
      * @param string $password
@@ -192,6 +201,9 @@ class MysqliDb
      */
     protected function reset()
     {
+        if ($this->traceEnabled)
+            $this->trace[] = array ($this->_lastQuery, (microtime(true) - $this->traceStartQ) , $this->_traceGetCaller());
+
         $this->_where = array();
         $this->_join = array();
         $this->_orderBy = array();
@@ -968,6 +980,9 @@ class MysqliDb
         if (!$stmt = $this->_mysqli->prepare($this->_query)) {
             trigger_error("Problem preparing query ($this->_query) " . $this->_mysqli->error, E_USER_ERROR);
         }
+        if ($this->traceEnabled)
+            $this->traceStartQ = microtime (true);
+
         return $stmt;
     }
 
@@ -1203,6 +1218,32 @@ class MysqliDb
         if (!$this->_transaction_in_progress)
             return;
         $this->rollback ();
+    }
+
+    /**
+     * Query exection time tracking switch
+     *
+     * @param bool $enabled Enable execution time tracking
+     * @param string $stripPrefix Prefix to strip from the path in exec log
+     **/
+    public function setTrace ($enabled, $stripPrefix = null) {
+        $this->traceEnabled = $enabled;
+        $this->traceStripPrefix = $stripPrefix;
+        return $this;
+    }
+    /**
+     * Get where and what function was called for query stored in MysqliDB->trace
+     *
+     * @return string with information
+     */
+    private function _traceGetCaller () {
+        $dd = debug_backtrace ();
+        $caller = next ($dd);
+        while (isset ($caller) &&  $caller["file"] == __FILE__ )
+            $caller = next($dd);
+
+        return __CLASS__ . "->" . $caller["function"] . "() >>  file \"" .
+                str_replace ($this->traceStripPrefix, '', $caller["file"] ) . "\" line #" . $caller["line"] . " " ;
     }
 } // END class
 ?>
