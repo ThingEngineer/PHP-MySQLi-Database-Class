@@ -44,6 +44,12 @@ class MysqliDb
      */
     protected $_lastQuery;
     /**
+     * The SQL query options required after SELECT, INSERT, UPDATE or DELETE
+     *
+     * @var string
+     */
+    protected $_queryOptions = array();
+    /**
      * An array that holds where joins
      *
      * @var array
@@ -81,7 +87,6 @@ class MysqliDb
      * @var string
      */ 
     public $totalCount = 0;
-    protected $fetchTotalCount = false;
     /**
      * Variable which holds last statement error
      *
@@ -106,6 +111,15 @@ class MysqliDb
      *
      */
     protected $isSubQuery = false;
+
+    /**
+     * Variables for query execution tracing
+     *
+     */
+    protected $traceStartQ;
+    protected $traceEnabled;
+    protected $traceStripPrefix;
+    public $trace = array();
 
     /**
      * @param string $host
@@ -187,13 +201,16 @@ class MysqliDb
      */
     protected function reset()
     {
+        if ($this->traceEnabled)
+            $this->trace[] = array ($this->_lastQuery, (microtime(true) - $this->traceStartQ) , $this->_traceGetCaller());
+
         $this->_where = array();
         $this->_join = array();
         $this->_orderBy = array();
         $this->_groupBy = array(); 
         $this->_bindParams = array(''); // Create the empty 0 index
         $this->_query = null;
-        $this->count = 0;
+        $this->_queryOptions = array();
     }
     
     /**
@@ -238,9 +255,10 @@ class MysqliDb
         $stmt->execute();
         $this->_stmtError = $stmt->error;
         $this->_lastQuery = $this->replacePlaceHolders ($this->_query, $params);
+        $res = $this->_dynamicBindResults($stmt);
         $this->reset();
 
-        return $this->_dynamicBindResults($stmt);
+        return $res;
     }
 
     /**
@@ -256,9 +274,37 @@ class MysqliDb
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
         $this->_stmtError = $stmt->error;
+        $res = $this->_dynamicBindResults($stmt);
         $this->reset();
 
-        return $this->_dynamicBindResults($stmt);
+        return $res;
+    }
+
+    /**
+     * This method allows you to specify multiple (method chaining optional) options for SQL queries.
+     *
+     * @uses $MySqliDb->setQueryOption('name');
+     *
+     * @param string/array $options The optons name of the query.
+     *
+     * @return MysqliDb
+     */
+    public function setQueryOption ($options) {
+        $allowedOptions = Array ('ALL','DISTINCT','DISTINCTROW','HIGH_PRIORITY','STRAIGHT_JOIN','SQL_SMALL_RESULT',
+                          'SQL_BIG_RESULT','SQL_BUFFER_RESULT','SQL_CACHE','SQL_NO_CACHE', 'SQL_CALC_FOUND_ROWS',
+                          'LOW_PRIORITY','IGNORE','QUICK');
+        if (!is_array ($options))
+            $options = Array ($options);
+
+        foreach ($options as $option) {
+            $option = strtoupper ($option);
+            if (!in_array ($option, $allowedOptions))
+                die ('Wrong query option: '.$option);
+
+            $this->_queryOptions[] = $option;
+        }
+
+        return $this;
     }
 
     /**
@@ -267,7 +313,7 @@ class MysqliDb
      * @return MysqliDb
      */
     public function withTotalCount () {
-        $this->fetchTotalCount = true;
+        $this->setQueryOption ('SQL_CALC_FOUND_ROWS');
         return $this;
     }
 
@@ -284,9 +330,9 @@ class MysqliDb
         if (empty ($columns))
             $columns = '*';
 
-        $this->_query = $this->fetchTotalCount == true ? 'SELECT SQL_CALC_FOUND_ROWS ' : 'SELECT '; 
         $column = is_array($columns) ? implode(', ', $columns) : $columns; 
-        $this->_query .= "$column FROM " .self::$_prefix . $tableName;
+        $this->_query = 'SELECT ' . implode(' ', $this->_queryOptions) . ' ' .
+                        $column . " FROM " .self::$_prefix . $tableName;
         $stmt = $this->_buildQuery($numRows);
 
         if ($this->isSubQuery)
@@ -294,9 +340,10 @@ class MysqliDb
 
         $stmt->execute();
         $this->_stmtError = $stmt->error;
+        $res = $this->_dynamicBindResults($stmt);
         $this->reset();
 
-        return $this->_dynamicBindResults($stmt);
+        return $res;
     }
 
     /**
@@ -724,9 +771,8 @@ class MysqliDb
         if ($this->_mysqli->more_results())
             $this->_mysqli->next_result();
 
-        if ($this->fetchTotalCount === true) {
-            $this->fetchTotalCount = false;
-            $stmt = $this->_mysqli->query ('SELECT FOUND_ROWS();');
+        if (in_array ('SQL_CALC_FOUND_ROWS', $this->_queryOptions)) {
+            $stmt = $this->_mysqli->query ('SELECT FOUND_ROWS()');
             $totalCount = $stmt->fetch_row();
             $this->totalCount = $totalCount[0];
         }
@@ -934,6 +980,9 @@ class MysqliDb
         if (!$stmt = $this->_mysqli->prepare($this->_query)) {
             trigger_error("Problem preparing query ($this->_query) " . $this->_mysqli->error, E_USER_ERROR);
         }
+        if ($this->traceEnabled)
+            $this->traceStartQ = microtime (true);
+
         return $stmt;
     }
 
@@ -1169,6 +1218,32 @@ class MysqliDb
         if (!$this->_transaction_in_progress)
             return;
         $this->rollback ();
+    }
+
+    /**
+     * Query exection time tracking switch
+     *
+     * @param bool $enabled Enable execution time tracking
+     * @param string $stripPrefix Prefix to strip from the path in exec log
+     **/
+    public function setTrace ($enabled, $stripPrefix = null) {
+        $this->traceEnabled = $enabled;
+        $this->traceStripPrefix = $stripPrefix;
+        return $this;
+    }
+    /**
+     * Get where and what function was called for query stored in MysqliDB->trace
+     *
+     * @return string with information
+     */
+    private function _traceGetCaller () {
+        $dd = debug_backtrace ();
+        $caller = next ($dd);
+        while (isset ($caller) &&  $caller["file"] == __FILE__ )
+            $caller = next($dd);
+
+        return __CLASS__ . "->" . $caller["function"] . "() >>  file \"" .
+                str_replace ($this->traceStripPrefix, '', $caller["file"] ) . "\" line #" . $caller["line"] . " " ;
     }
 } // END class
 ?>
