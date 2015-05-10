@@ -278,10 +278,19 @@ class MysqliDb
      * @return MysqliDb
      */
     public function setQueryOption ($options) {
-        if (is_array ($options))
-            $this->_queryOptions = array_merge ($this->_queryOptions, $options);
-        else
-            $this->_queryOptions[] = $options;
+        $allowedOptions = Array ('ALL','DISTINCT','DISTINCTROW','HIGH_PRIORITY','STRAIGHT_JOIN','SQL_SMALL_RESULT',
+                          'SQL_BIG_RESULT','SQL_BUFFER_RESULT','SQL_CACHE','SQL_NO_CACHE', 'SQL_CALC_FOUND_ROWS',
+                          'LOW_PRIORITY','IGNORE','QUICK');
+        if (!is_array ($options))
+            $options = Array ($options);
+
+        foreach ($options as $option) {
+            $option = strtoupper ($option);
+            if (!in_array ($option, $allowedOptions))
+                die ('Wrong query option: '.$option);
+
+            $this->_queryOptions[] = $option;
+        }
 
         return $this;
     }
