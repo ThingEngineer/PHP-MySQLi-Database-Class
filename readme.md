@@ -7,6 +7,7 @@ MysqliDb -- Simple MySQLi wrapper with prepared statements
 **[Select Query](#select-query)**  
 **[Delete Query](#delete-query)**  
 **[Generic Query](#generic-query-method)**  
+**[Query Keywords](#query-keywords)**  
 **[Raw Query](#raw-query-method)**  
 **[Where Conditions](#where-method)**  
 **[Order Conditions](#ordering-method)**  
@@ -287,6 +288,28 @@ $users = $db->withTotalCount()->get('users', Array ($offset, $count));
 echo "Showing {$count} from {$db->totalCount}";
 ```
 
+### Query Keywords
+To add LOW PRIORITY | DELAYED | HIGH PRIORITY | IGNORE and the rest of mysql keywords to INSERT , SELECT , UPDATE, DELETE query:
+```php
+$db->setQueryOption('LOW_PRIORITY');
+$db->insert($table,$param);
+// GIVES: INSERT LOW_PRIORITY INTO table ...
+```
+
+Also you can use an array of keywords:
+```php
+$db->setQueryOption(Array('LOW_PRIORITY', 'IGNORE'));
+$db->insert($table,$param);
+// GIVES: INSERT LOW_PRIORITY IGNORE INTO table ...
+```
+
+Same way keywords could be used in SELECT queries as well:
+```php
+$db->setQueryOption('SQL_NO_CACHE');
+$db->get("users");
+// GIVES: SELECT SQL_NO_CACHE * FROM USERS;
+```
+
 Optionally you can use method chaining to call where multiple times without referencing your object over an over:
 
 ```php
@@ -418,7 +441,6 @@ if($db->has("users")) {
     return "Wrong user/password";
 }
 ``` 
-
 ### Helper commands
 Reconnect in case mysql connection died
 ```php
