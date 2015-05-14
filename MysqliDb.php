@@ -66,6 +66,12 @@ class MysqliDb
      */
     protected $_orderBy = array(); 
     /**
+     * An array that holds having conditions
+     *
+     * @var array
+     */
+    protected $_having = array();
+    /**
      * Dynamic type list for group by condition value
      */
     protected $_groupBy = array(); 
@@ -207,6 +213,7 @@ class MysqliDb
         $this->_where = array();
         $this->_join = array();
         $this->_orderBy = array();
+        $this->_having = array();
         $this->_groupBy = array(); 
         $this->_bindParams = array(''); // Create the empty 0 index
         $this->_query = null;
@@ -510,6 +517,43 @@ class MysqliDb
         return $this;
     }
     /**
+     * This method allows you to specify multiple (method chaining optional) AND HAVING statements for SQL queries.
+     *
+     * @uses $MySqliDb->having('SUM(tags) > 10')
+     *
+     * @param string $havingProp  The name of the database field.
+     * @param mixed  $havingValue The value of the database field.
+     *
+     * @return MysqliDb
+     */
+    public function having($havingProp, $havingValue = null, $operator = null)
+    {
+        if ($operator)
+            $havingValue = Array ($operator => $havingValue);
+
+        $this->_having[] = Array ("AND", $havingValue, $havingProp);
+        return $this;
+    }
+
+    /**
+     * This method allows you to specify multiple (method chaining optional) OR HAVING statements for SQL queries.
+     *
+     * @uses $MySqliDb->orHaving('SUM(tags) > 10')
+     *
+     * @param string $havingProp  The name of the database field.
+     * @param mixed  $havingValue The value of the database field.
+     *
+     * @return MysqliDb
+     */
+    public function orHaving($havingProp, $havingValue = null, $operator = null)
+    {
+        if ($operator)
+            $havingValue = Array ($operator => $havingValue);
+
+        $this->_having[] = Array ("OR", $havingValue, $havingProp);
+        return $this;
+    }
+    /**
      * This method allows you to concatenate joins for the final SQL statement.
      *
      * @uses $MySqliDb->join('table1', 'field1 <> field2', 'LEFT')
@@ -703,8 +747,9 @@ class MysqliDb
     {
         $this->_buildJoin();
         $this->_buildTableData ($tableData);
-        $this->_buildWhere();
+        $this->_buildCondition('WHERE', $this->_where);
         $this->_buildGroupBy();
+        $this->_buildCondition('HAVING', $this->_having);
         $this->_buildOrderBy();
         $this->_buildLimit ($numRows);
 
@@ -861,18 +906,21 @@ class MysqliDb
     }
 
     /**
-     * Abstraction method that will build the part of the WHERE conditions
+     * Abstraction method that will build the part of the WHERE and HAVING conditions
+     *
+     * @param string $operator The name of the MySQL operator, should be either WHERE or HAVING.
+     * @param array $conditions The array contaning the condition data, i.e. $this->_where and $this->_having.
      */
-    protected function _buildWhere () {
-        if (empty ($this->_where))
+    protected function _buildCondition ($operator, &$conditions) {
+        if (empty ($conditions))
             return;
 
         //Prepair the where portion of the query
-        $this->_query .= ' WHERE';
+        $this->_query .= " $operator";
 
         // Remove first AND/OR concatenator
-        $this->_where[0][0] = '';
-        foreach ($this->_where as $cond) {
+        $conditions[0][0] = '';
+        foreach ($conditions as $cond) {
             list ($concat, $wValue, $wKey) = $cond;
 
             $this->_query .= " " . $concat ." " . $wKey;
