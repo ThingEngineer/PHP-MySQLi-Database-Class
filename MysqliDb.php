@@ -755,8 +755,6 @@ class MysqliDb
 
         $this->_lastQuery = $this->replacePlaceHolders ($this->_query, $this->_bindParams);
 
-        print_r($this->_lastQuery);
-
         if ($this->isSubQuery)
             return;
 
