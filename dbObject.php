@@ -82,6 +82,9 @@ abstract class dbObject {
     }
 
     public function remove () {
+        if (empty ($this->data[$this->primaryKey]))
+            return false;
+
         $this->db->where ($this->primaryKey, $this->data[$this->primaryKey]);
         return $this->db->delete ($this->dbTable);
     }
