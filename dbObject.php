@@ -1,62 +1,98 @@
 <?php
 abstract class dbObject {
-    public $db;
-    
-    public function __construct () {
+    private $db;
+    public $data;
+    public $isNew = true;
+    public $returnType = 'Object';
+
+
+    public function __construct ($data = null) {
         $this->db = MysqliDb::getInstance();
+        if ($data)
+            $this->data = $data;
     }
 
-    private function cleanup ($data) {
-        if (method_exists ($this, "preLoad"))
-            $this->preLoad ($data);
-
-        if (count ($data) == 0)
-            return Array();
-
-        foreach ($this->dbFields  as $key => $prop) {
-            $value = $data[$key];
-            if (!is_array($value)) {
-                $sqlData[$key] = $value;
-                continue;
-            }
-
-            if ($prop['json'])
-                $sqlData[$key] = json_encode($value);
-            else if ($prop['array'])
-                $sqlData[$key] = implode ("|", $value);
-            else
-                $sqlData[$key] = $value;
-        }
-
-        return $sqlData;
+    public function __set ($name, $value) {
+        $this->data[$name] = $value;
     }
 
-    public function insert (&$data) {
-        if (empty ($this->dbFields))
-            return false;
+    public function __get ($name) {
+        if (isset ($this->data[$name]))
+            return $this->data[$name];
 
-        $data = $this->cleanup ($data);
-        $id = $this->db->insert ($this->dbTable, $data);
-        $data[$this->$primaryKey] = $id;
+        if (property_exists ($this->db, $name))
+            return $this->db->$name;
+    }
+
+    public function __isset ($name) {
+        if ($this->data[$name])
+            return isset ($this->data[$name]);
+
+        if (property_exists ($this->db, $name))
+            return isset ($this->db->$name);
+    }
+
+    public function __unset ($name) {
+        unset ($this->data[$name]);
+    }
+
+    public static function ObjectBuilder () {
+        $obj = self::objectCopy ();
+        $obj->returnType = 'Object';
+        return $obj;
+    }
+
+    public static function ArrayBuilder () {
+        $obj = self::objectCopy ();
+        $obj->returnType = 'Array';
+        return $obj;
+    }
+
+    public function insert () {
+        $sqlData = $this->prepareData ();
+        $id = $this->db->insert ($this->dbTable, $sqlData);
+        if (!empty ($this->primaryKey))
+            $this->data[$this->primaryKey] = $id;
+        $this->isNew = false;
+
         return $id;
     }
 
-    public function remove ($data) {
-        $this->db->where ($this->primaryKey, $data['id']);
-        return $this->db->delete ($this->dbTable);
-    }
-
-    public function update ($data) {
+    public function update ($data = null) {
         if (empty ($this->dbFields))
             return false;
 
-        $data = $this->cleanup ($data);
-        $this->db->where ($this->primaryKey, $data[$this->primaryKey]);
-        return $this->db->update ($this->dbTable, $data);
+        if (empty ($this->data[$this->primaryKey]))
+            return false;
+
+        if ($data) {
+            foreach ($data as $k => $v)
+                $this->$k = $v;
+        }
+
+        $sqlData = $this->prepareData ();
+        $this->db->where ($this->primaryKey, $this->data[$this->primaryKey]);
+        return $this->db->update ($this->dbTable, $sqlData);
     }
 
-    public function getOne($id, $fields = null) {
+    public function save () {
+        if ($this->isNew)
+            return $this->insert();
+        return $this->update();
+    }
+
+    public function remove () {
+        $this->db->where ($this->primaryKey, $this->data[$this->primaryKey]);
+        return $this->db->delete ($this->dbTable);
+    }
+
+
+    public function byId ($id, $fields = null) {
         $this->db->where($this->primaryKey, $id);
+        return $this->getOne ($fields);
+    }
+
+    public function getOne ($fields = null) {
         $results = $this->db->getOne ($this->dbTable, $fields);
         if (isset($this->jsonFields) && is_array($this->jsonFields)) {
             foreach ($this->jsonFields as $key)
@@ -66,12 +102,18 @@ abstract class dbObject {
             foreach ($this->arrayFields as $key)
                 $results[$key] = explode ("|", $results[$key]);
         }
-        return $results;
+        if ($this->returnType == 'Array')
+            return $results;
+
+        $item = $this->objectCopy ($results);
+        $item->isNew = false;
+
+        return $item;
     }
 
     public function get ($limit = null, $fields = null) {
-        $db = MysqliDb::getInstance();
-        $results = $db->get($this->dbTable);
+        $objects = Array ();
+        $results = $this->db->get($this->dbTable);
         foreach ($results as &$r) {
             if (isset ($this->jsonFields) && is_array($this->jsonFields)) {
                 foreach ($this->jsonFields as $key)
@@ -81,28 +123,68 @@ abstract class dbObject {
                 foreach ($this->arrayFields as $key)
                     $r[$key] = explode ("|", $r[$key]);
             }
+            if ($this->returnType == 'Object') {
+                $item = $this->objectCopy ($r);
+                $item->isNew = false;
+                $objects[] = $item;
+            }
         }
+        if ($this->returnType == 'Object')
+            return $objects;
         return $results;
     }
 
-    public function where ($whereProp, $whereValue = null, $operator = null) {
-        $this->db->where ($whereProp, $whereValue, $operator);
-        return $this;
-    }
-
-    public function orWhere ($whereProp, $whereValue = null, $operator = null) {
-        $this->db->orWhere ($whereProp, $whereValue, $operator);
-        return $this;
-    }
-
-    public function orderBy($orderByField, $orderbyDirection = "DESC", $customFields = null) {
-        $this->db->orderBy ($orderByField, $orderbyDirection, $customFields);
-        return $this;
-    }
-
     public function count () {
-        $res = $this->db->getValue($this->dbTable, "count(*)");
+        $res = $this->db->getValue ($this->dbTable, "count(*)");
         return $res['cnt'];
     }
+
+
+    public function __call ($method, $arg) {
+        call_user_func_array (array ($this->db, $method), $arg);
+        return $this;
+    }
+
+    public function toJson () {
+        return json_encode ($this->data);
+    }
+
+    public function __toString () {
+        return $this->toJson ();
+    }
+
+    private function prepareData () {
+        $sqlData = Array();
+        if (method_exists ($this, "preLoad"))
+            $this->preLoad ($data);
+
+        if (count ($this->data) == 0)
+            return Array();
+
+        foreach ($this->data as $key => $value) {
+            if (!in_array ($key, array_keys ($this->dbFields)))
+                continue;
+
+            if (!is_array($value)) {
+                $sqlData[$key] = $value;
+                continue;
+            }
+
+            if (in_array ($key, $this->jsonFields))
+                $sqlData[$key] = json_encode($value);
+            else
+                $sqlData[$key] = implode ("|", $value);
+
+        }
+        return $sqlData;
+    }
+
+
+    private static function objectCopy ($data = null) {
+        $className = get_called_class ();
+        return new $className ($data);
+    }
+
+
 }
 ?>
