@@ -3,8 +3,7 @@ abstract class dbObject {
     private $db;
     public $data;
     public $isNew = true;
-    public $returnType = 'Object';
-
+    public static $returnType = 'Object';
 
     public function __construct ($data = null) {
         $this->db = MysqliDb::getInstance();
@@ -17,11 +16,31 @@ abstract class dbObject {
     }
 
     public function __get ($name) {
+        if (property_exists ($this, 'relations')) {
+            if (isset ($this->relations[$name])) {
+                $relationType = strtolower ($this->relations[$name][0]);
+                $modelName = $this->relations[$name][1];
+                switch ($relationType) {
+                    case 'hasone':
+                        return $modelName::byId($this->data[$name]);
+                        break;
+                    case 'hasmany':
+                        $key = $this->relations[$name][2];
+                        return $modelName::ObjectBuilder()->where($key, $this->data[$this->primaryKey])->get();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+
         if (isset ($this->data[$name]))
             return $this->data[$name];
 
         if (property_exists ($this->db, $name))
             return $this->db->$name;
+
     }
 
     public function __isset ($name) {
@@ -36,15 +55,14 @@ abstract class dbObject {
         unset ($this->data[$name]);
     }
 
-    public static function ObjectBuilder () {
-        $obj = self::objectCopy ();
-        $obj->returnType = 'Object';
+    public static function ArrayBuilder () {
+        $obj = new static;
+        static::$returnType = 'Array';
         return $obj;
     }
 
-    public static function ArrayBuilder () {
-        $obj = self::objectCopy ();
-        $obj->returnType = 'Array';
+    public static function ObjectBuilder () {
+        $obj = new static;
         return $obj;
     }
 
@@ -90,51 +108,64 @@ abstract class dbObject {
     }
 
 
-    public function byId ($id, $fields = null) {
-        $this->db->where($this->primaryKey, $id);
-        return $this->getOne ($fields);
+    public static function byId ($id, $fields = null) {
+        return static::getOne ($fields, $id);
     }
 
-    public function getOne ($fields = null) {
-        $results = $this->db->getOne ($this->dbTable, $fields);
-        if (isset($this->jsonFields) && is_array($this->jsonFields)) {
-            foreach ($this->jsonFields as $key)
+    public static function getOne ($fields = null, $primaryKey = null, $obj = null) {
+        $obj = new static;
+        if ($primaryKey)
+            $obj->db->where ($obj->primaryKey, $primaryKey);
+
+        $results = $obj->db->getOne ($obj->dbTable, $fields);
+        if (isset($obj->jsonFields) && is_array($obj->jsonFields)) { 
+            foreach ($obj->jsonFields as $key)
                 $results[$key] = json_decode ($results[$key]);
         }
-        if (isset($this->arrayFields) && is_array($this->arrayFields)) {
-            foreach ($this->arrayFields as $key)
+        if (isset($obj->arrayFields) && is_array($obj->arrayFields)) { 
+            foreach ($obj->arrayFields as $key)
                 $results[$key] = explode ("|", $results[$key]);
         }
-        if ($this->returnType == 'Array')
+        if (static::$returnType == 'Array')
             return $results;
 
-        $item = $this->objectCopy ($results);
+        $item = new static ($results);
         $item->isNew = false;
 
         return $item;
     }
 
-    public function get ($limit = null, $fields = null) {
+    public static function get ($limit = null, $fields = null) {
+        $obj = new static;
         $objects = Array ();
-        $results = $this->db->get($this->dbTable);
+        $results = $obj->db->get($obj->dbTable, $limit, $fields);
         foreach ($results as &$r) {
-            if (isset ($this->jsonFields) && is_array($this->jsonFields)) {
-                foreach ($this->jsonFields as $key)
+            if (isset ($obj->jsonFields) && is_array($obj->jsonFields)) { 
+                foreach ($obj->jsonFields as $key)
                     $r[$key] = json_decode ($r[$key]);
             }
-            if (isset ($this->arrayFields) && is_array($this->arrayFields)) {
-                foreach ($this->arrayFields as $key)
+            if (isset ($obj->arrayFields) && is_array($obj->arrayFields)) { 
+                foreach ($obj->arrayFields as $key)
                     $r[$key] = explode ("|", $r[$key]);
             }
-            if ($this->returnType == 'Object') {
-                $item = $this->objectCopy ($r);
+            if (static::$returnType == 'Object') {
+                $item = new static ($r);
                 $item->isNew = false;
                 $objects[] = $item;
             }
         }
-        if ($this->returnType == 'Object')
+        if (static::$returnType == 'Object')
             return $objects;
         return $results;
+    }
+
+    public function join ($objectName, $key = null, $joinType = 'LEFT') {
+        $joinObj = new $objectName;
+        if (!$key)
+            $key = $objectName . "id";
+        $joinStr = "{$this->dbTable}.{$key} = {$joinObj->dbTable}.{$joinObj->primaryKey}";
+        $this->db->join ($joinObj->dbTable, $joinStr, $joinType);
+        return $this;
     }
 
     public function count () {
@@ -147,6 +178,13 @@ abstract class dbObject {
         call_user_func_array (array ($this->db, $method), $arg);
         return $this;
     }
+
+    public static function __callStatic ($method, $arg) {
+        $obj = new static;
+        call_user_func_array (array ($obj, $method), $arg);
+        return $obj;
+    }
+
 
     public function toJson () {
         return json_encode ($this->data);
@@ -181,13 +219,5 @@ abstract class dbObject {
         }
         return $sqlData;
     }
-
-
-    private static function objectCopy ($data = null) {
-        $className = get_called_class ();
-        return new $className ($data);
-    }
-
-
 }
 ?>

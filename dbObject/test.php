@@ -1,5 +1,6 @@
 <?
 require_once ("../MysqliDb.php");
+require_once ("../dbObject.php");
 require_once ("models/department.php");
 
 $db = new Mysqlidb('localhost', 'root', '', 'akorbi');
@@ -13,7 +14,7 @@ $dept->insert();
 
 $dept2 = new department([
         'userid' => '11',
-        'name' => 'avb2 test',
+        'name' => 'john doe',
         'authcode' => '5678',
         'iscallerid' => 0,
 ]);
@@ -22,25 +23,30 @@ $dept2->iscallerid=1;
 print_r ($dept2->data);
 $dept2->save();
 
-//echo $db->getLastQuery();
-
 echo "List\n";
-$depts = department::ObjectBuilder()->last()->get ();
+$depts = department::get ();
 foreach ($depts as $d) {
 //    print_r ($d->data);
     echo $d . "\n";
 }
 
 echo "getOne\n";
-$dept3 = department::ObjectBuilder()->byId ("181");
+$dept3 = department::byId ("181");
+echo 'cnt ' . $dept3->count . "\n";
 $dept3->authcode=333;
 $dept3->save();
 print_r ($dept3->data) . "\n";
 
-echo $dept3->count;
-print_r ($dept3->trace);
 
-echo $dept3->qqq;
+echo "hasOne\n";
+echo json_encode ($dept3->userid->data);
 
+echo "\nhasMany\n";
+foreach ($dept3->userid->departments as $d) {
+        echo $d;
+}
+
+$dept4 = department::ArrayBuilder()->join('user')->get(2);
+echo json_encode ($dept4);
 
 ?>

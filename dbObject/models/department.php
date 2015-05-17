@@ -1,5 +1,5 @@
 <?php
-require_once "../dbObject.php";
+require_once ("user.php");
 
 /**
  * To make IDEs autocomplete happy
@@ -17,13 +17,17 @@ class department extends dbObject {
         'userid' => 'int:required',
         'name' => 'int:required',
         'authcode' => 'int',
+        'userid' => 'int',
         'iscallerid' => 'int',
         'testvar' => 'int'
     );
+    protected $relations = Array (
+        'userid' => Array ("hasOne", "user")
+    );
+
     protected $jsonFields = Array ('authcode');
     
     public function last () {
-        $this->setTrace (true);
         $this->where ("id" , 130, '>');
         return $this;
     }
