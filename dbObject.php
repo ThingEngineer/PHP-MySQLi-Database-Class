@@ -22,7 +22,7 @@ abstract class dbObject {
                 $modelName = $this->relations[$name][1];
                 switch ($relationType) {
                     case 'hasone':
-                        return $modelName::byId($this->data[$name]);
+                        return $modelName::ObjectBuilder()->byId($this->data[$name]);
                         break;
                     case 'hasmany':
                         $key = $this->relations[$name][2];
@@ -44,7 +44,7 @@ abstract class dbObject {
     }
 
     public function __isset ($name) {
-        if ($this->data[$name])
+        if (isset ($this->data[$name]))
             return isset ($this->data[$name]);
 
         if (property_exists ($this->db, $name))
@@ -108,22 +108,21 @@ abstract class dbObject {
     }
 
 
-    public static function byId ($id, $fields = null) {
-        return static::getOne ($fields, $id);
+    private function byId ($id, $fields = null) {
+        return $this->getOne ($fields, $id);
     }
 
-    public static function getOne ($fields = null, $primaryKey = null, $obj = null) {
-        $obj = new static;
+    private function getOne ($fields = null, $primaryKey = null) {
         if ($primaryKey)
-            $obj->db->where ($obj->primaryKey, $primaryKey);
+            $this->db->where ($this->primaryKey, $primaryKey);
 
-        $results = $obj->db->getOne ($obj->dbTable, $fields);
-        if (isset($obj->jsonFields) && is_array($obj->jsonFields)) { 
-            foreach ($obj->jsonFields as $key)
+        $results = $this->db->getOne ($this->dbTable, $fields);
+        if (isset($this->jsonFields) && is_array($this->jsonFields)) {
+            foreach ($this->jsonFields as $key)
                 $results[$key] = json_decode ($results[$key]);
         }
-        if (isset($obj->arrayFields) && is_array($obj->arrayFields)) { 
-            foreach ($obj->arrayFields as $key)
+        if (isset($this->arrayFields) && is_array($this->arrayFields)) {
+            foreach ($this->arrayFields as $key)
                 $results[$key] = explode ("|", $results[$key]);
         }
         if (static::$returnType == 'Array')
@@ -135,17 +134,16 @@ abstract class dbObject {
         return $item;
     }
 
-    public static function get ($limit = null, $fields = null) {
-        $obj = new static;
+    private function get ($limit = null, $fields = null) {
         $objects = Array ();
-        $results = $obj->db->get($obj->dbTable, $limit, $fields);
+        $results = $this->db->get ($this->dbTable, $limit, $fields);
         foreach ($results as &$r) {
-            if (isset ($obj->jsonFields) && is_array($obj->jsonFields)) { 
-                foreach ($obj->jsonFields as $key)
+            if (isset ($this->jsonFields) && is_array($this->jsonFields)) {
+                foreach ($this->jsonFields as $key)
                     $r[$key] = json_decode ($r[$key]);
             }
-            if (isset ($obj->arrayFields) && is_array($obj->arrayFields)) { 
-                foreach ($obj->arrayFields as $key)
+            if (isset ($this->arrayFields) && is_array($this->arrayFields)) {
+                foreach ($this->arrayFields as $key)
                     $r[$key] = explode ("|", $r[$key]);
             }
             if (static::$returnType == 'Object') {
@@ -173,18 +171,21 @@ abstract class dbObject {
         return $res['cnt'];
     }
 
-
     public function __call ($method, $arg) {
+        if (method_exists ($this, $method))
+            return call_user_func_array (array ($this, $method), $arg);
+
         call_user_func_array (array ($this->db, $method), $arg);
         return $this;
     }
 
     public static function __callStatic ($method, $arg) {
         $obj = new static;
-        call_user_func_array (array ($obj, $method), $arg);
+        $result = call_user_func_array (array ($obj, $method), $arg);
+        if (method_exists ($obj, $method))
+            return $result;
         return $obj;
     }
-
 
     public function toJson () {
         return json_encode ($this->data);

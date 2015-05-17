@@ -14,6 +14,7 @@ $dept->name = 'avb test';
 $dept->authcode = Array('1234','123456');
 $dept->iscallerid = 1;
 $dept->insert();
+echo "ID = " . $dept->id . "\n";
 
 $dept2 = new department([
         'userid' => '11',
@@ -25,29 +26,36 @@ $dept2->save();
 $dept2->iscallerid=1;
 print_r ($dept2->data);
 $dept2->save();
+echo "department is of class " . get_class ($dept2) . "\n";
 
 echo "List\n";
 $depts = department::get ();
 foreach ($depts as $d) {
 //    print_r ($d->data);
     echo $d . "\n";
+echo "department is of class " . get_class ($d) . "\n";
 }
 
 echo "getOne\n";
-$dept3 = department::byId ("181");
+$dept3 = department::byId ($dept->id);
 echo 'cnt ' . $dept3->count . "\n";
-$dept3->authcode=333;
+$dept3->authcode=443;
 $dept3->save();
 print_r ($dept3->data) . "\n";
-
+echo "department is of class " . get_class ($dept3) . "\n";
 
 echo "hasOne\n";
 echo json_encode ($dept3->userid->data);
+echo "user is of class " . get_class ($dept3->userid) . "\n";
 
 echo "\nhasMany\n";
 foreach ($dept3->userid->departments as $d) {
-        echo $d;
+    echo $d;
+    echo "department is of class " . get_class ($d) . "\n";
 }
+
+$user = user::byId (41);
+echo "user is of class " . get_class ($user) . "\n";
 
 
 ?>
