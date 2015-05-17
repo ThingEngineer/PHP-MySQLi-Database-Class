@@ -5,6 +5,9 @@ require_once ("models/department.php");
 
 $db = new Mysqlidb('localhost', 'root', '', 'akorbi');
 
+$dept4 = department::ArrayBuilder()->join('user')->get(2);
+echo json_encode ($dept4);
+
 $dept = new department();
 $dept->userid = 10;
 $dept->name = 'avb test';
@@ -46,7 +49,5 @@ foreach ($dept3->userid->departments as $d) {
         echo $d;
 }
 
-$dept4 = department::ArrayBuilder()->join('user')->get(2);
-echo json_encode ($dept4);
 
 ?>

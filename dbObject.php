@@ -57,7 +57,7 @@ abstract class dbObject {
 
     public static function ArrayBuilder () {
         $obj = new static;
-        static::$returnType = 'Array';
+        $obj->returnType = 'Array';
         return $obj;
     }
 
