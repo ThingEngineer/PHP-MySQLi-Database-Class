@@ -10,23 +10,18 @@ require_once ("user.php");
  * @property string authcode 
  * @property string iscallerid
  */
-class department extends dbObject {
-    protected $dbTable = "departments";
+class product extends dbObject {
+    protected $dbTable = "products";
     protected $primaryKey = "id";
     protected $dbFields = Array (
-        'userid' => 'int:required',
-        'name' => 'int:required',
-        'authcode' => 'int',
-        'userid' => 'int',
-        'iscallerid' => 'int',
-        'testvar' => 'int'
+        'userId' => 'int:required',
+        'customerId' => 'int:required',
+        'productName' => 'char:required'
     );
     protected $relations = Array (
-        'userid' => Array ("hasOne", "user")
+        'userId' => Array ("hasOne", "user")
     );
 
-    protected $jsonFields = Array ('authcode');
-    
     public function last () {
         $this->where ("id" , 130, '>');
         return $this;

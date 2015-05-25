@@ -40,7 +40,7 @@ $tables = Array (
     )
 );
 $data = Array (
-    'users' => Array (
+    'user' => Array (
         Array ('login' => 'user1',
                'customerId' => 10,
                'firstName' => 'John',
@@ -70,7 +70,7 @@ $data = Array (
                'loginCount' => $db->inc(3)
         )
     ),
-    'products' => Array (
+    'product' => Array (
         Array ('customerId' => 1,
                'userId' => 1,
                'productName' => 'product1',

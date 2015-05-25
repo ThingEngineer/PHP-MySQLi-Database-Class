@@ -1,61 +1,170 @@
 <?
 require_once ("../MysqliDb.php");
 require_once ("../dbObject.php");
-require_once ("models/department.php");
+require_once ("models/product.php");
 
-$db = new Mysqlidb('localhost', 'root', '', 'akorbi');
+$db = new Mysqlidb('localhost', 'root', '', 'testdb');
+$tables = Array (
+    'users' => Array (
+        'login' => 'char(10) not null',
+        'active' => 'bool default 0',
+        'customerId' => 'int(10) not null',
+        'firstName' => 'char(10) not null',
+        'lastName' => 'char(10)',
+        'password' => 'text not null',
+        'createdAt' => 'datetime',
+        'expires' => 'datetime',
+        'loginCount' => 'int(10) default 0'
+    ),
+    'products' => Array (
+        'customerId' => 'int(10) not null',
+        'userId' => 'int(10) not null',
+        'productName' => 'char(50)'
+    )
+);
 
-$dept4 = department::ArrayBuilder()->join('user')->get(2);
-echo json_encode ($dept4);
+$data = Array (
+    'user' => Array (
+        Array ('login' => 'user1',
+               'customerId' => 10,
+               'firstName' => 'John',
+               'lastName' => 'Doe',
+               'password' => $db->func('SHA1(?)',Array ("secretpassword+salt")),
+               'createdAt' => $db->now(),
+               'expires' => $db->now('+1Y'),
+               'loginCount' => $db->inc()
+        ),
+        Array ('login' => 'user2',
+               'customerId' => 10,
+               'firstName' => 'Mike',
+               'lastName' => NULL,
+               'password' => $db->func('SHA1(?)',Array ("secretpassword2+salt")),
+               'createdAt' => $db->now(),
+               'expires' => $db->now('+1Y'),
+               'loginCount' => $db->inc(2)
+        ),
+        Array ('login' => 'user3',
+               'active' => true,
+               'customerId' => 11,
+               'firstName' => 'Pete',
+               'lastName' => 'D',
+               'password' => $db->func('SHA1(?)',Array ("secretpassword2+salt")),
+               'createdAt' => $db->now(),
+               'expires' => $db->now('+1Y'),
+               'loginCount' => $db->inc(3)
+        )
+    ),
+    'product' => Array (
+        Array ('customerId' => 1,
+               'userId' => 1,
+               'productName' => 'product1',
+        ),
+        Array ('customerId' => 1,
+               'userId' => 1,
+               'productName' => 'product2',
+        ),
+        Array ('customerId' => 1,
+               'userId' => 1,
+               'productName' => 'product3',
+        ),
+        Array ('customerId' => 1,
+               'userId' => 2,
+               'productName' => 'product4',
+        ),
+        Array ('customerId' => 1,
+               'userId' => 2,
+               'productName' => 'product5',
+        ),
 
-$dept = new department();
-$dept->userid = 10;
-$dept->name = 'avb test';
-$dept->authcode = Array('1234','123456');
-$dept->iscallerid = 1;
-$dept->insert();
-echo "ID = " . $dept->id . "\n";
+    )
+);
+function createTable ($name, $data) {
+    global $db;
+    //$q = "CREATE TABLE $name (id INT(9) UNSIGNED PRIMARY KEY NOT NULL";
+    $q = "CREATE TABLE $name (id INT(9) UNSIGNED PRIMARY KEY AUTO_INCREMENT";
+    foreach ($data as $k => $v) {
+        $q .= ", $k $v";
+    }
+    $q .= ")";
+    $db->rawQuery($q);
+}
 
-$dept2 = new department([
-        'userid' => '11',
-        'name' => 'john doe',
-        'authcode' => '5678',
-        'iscallerid' => 0,
-]);
-$dept2->save();
-$dept2->iscallerid=1;
-print_r ($dept2->data);
-$dept2->save();
-echo "department is of class " . get_class ($dept2) . "\n";
+// rawQuery test
+foreach ($tables as $name => $fields) {
+    $db->rawQuery("DROP TABLE " . $name);
+    createTable ($name, $fields);
+}
 
-echo "List\n";
-$depts = department::get ();
+foreach ($data as $name => $datas) {
+    foreach ($data[$name] as $userData) {
+        $obj = new $name ($userData);
+        $id  = $obj->save();
+        echo "$name $id created\n";
+    }
+}
+
+$products = product::ArrayBuilder()->get(2);
+foreach ($products as $p) {
+    if (!is_array ($p)) {
+        echo "ArrayBuilder do not return an array\n";
+        exit;
+    }
+}
+
+$products = product::ArrayBuilder()->get(2);
+$products = product::ArrayBuilder()->with('userId')->get(2);
+print_r ($products);
+
+
+$depts = product::join('user')->orderBy('products.id', 'desc')->get(5);
 foreach ($depts as $d) {
-//    print_r ($d->data);
-    echo $d . "\n";
-echo "department is of class " . get_class ($d) . "\n";
+    if (!is_object($d)) {
+        echo "Return should be an object\n";
+        exit;
+    }
 }
 
-echo "getOne\n";
-$dept3 = department::byId ($dept->id);
-echo 'cnt ' . $dept3->count . "\n";
-$dept3->authcode=443;
-$dept3->save();
-print_r ($dept3->data) . "\n";
-echo "department is of class " . get_class ($dept3) . "\n";
-
-echo "hasOne\n";
-echo json_encode ($dept3->userid->data);
-echo "user is of class " . get_class ($dept3->userid) . "\n";
-
-echo "\nhasMany\n";
-foreach ($dept3->userid->departments as $d) {
-    echo $d;
-    echo "department is of class " . get_class ($d) . "\n";
+$dept = product::join('user')->byId(5);
+if (count ($dept->data) != 12) {
+    echo "wrong props count " .count ($dept->data). "\n";
+    exit;
 }
 
-$user = user::byId (41);
-echo "user is of class " . get_class ($user) . "\n";
+// hasOne
+$products = product::get ();
+$cnt = 0;
+foreach ($products as $p) {
+    if (get_class ($d) != 'product') {
+        echo "wrong class returned\n";
+        exit;
+    }
+
+    if (!($p->userId instanceof user)) {
+        echo "wrong return class of hasOne result\n";
+        exit;
+    }
+    
+    $cnt++;
+}
+
+if (($cnt != $db->count) && ($cnt != 5)) {
+    echo "wrong count after get\n";
+    exit;
+}
+
+// hasMany
+$user = user::where('id',1)->getOne();
+if (!is_array ($user->products) || (count ($user->products) != 3)) {
+    echo "wrong count in hasMany\n";
+    exit;
+}
+
+foreach ($user->products as $p) {
+    if (!($p instanceof product)) {
+        echo "wrong return class of hasMany result\n";
+        exit;
+    }
+}
 
 
 ?>

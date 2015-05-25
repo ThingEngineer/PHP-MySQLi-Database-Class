@@ -1,9 +1,10 @@
 <?php
-abstract class dbObject {
+class dbObject {
     private $db;
     public $data;
     public $isNew = true;
-    public static $returnType = 'Object';
+    public $returnType = 'Object';
+    private $_with = Array();
 
     public function __construct ($data = null) {
         $this->db = MysqliDb::getInstance();
@@ -16,31 +17,33 @@ abstract class dbObject {
     }
 
     public function __get ($name) {
-        if (property_exists ($this, 'relations')) {
-            if (isset ($this->relations[$name])) {
-                $relationType = strtolower ($this->relations[$name][0]);
-                $modelName = $this->relations[$name][1];
-                switch ($relationType) {
-                    case 'hasone':
-                        return $modelName::ObjectBuilder()->byId($this->data[$name]);
-                        break;
-                    case 'hasmany':
-                        $key = $this->relations[$name][2];
-                        return $modelName::ObjectBuilder()->where($key, $this->data[$this->primaryKey])->get();
-                        break;
-                    default:
-                        break;
-                }
-            }
+        if (!property_exists ($this, 'relations')) {
+            if (isset ($this->data[$name]))
+                return $this->data[$name];
+
+            if (property_exists ($this->db, $name))
+                return $this->db->$name;
         }
+        if (!isset ($this->relations[$name]))
+            return;
 
-
-        if (isset ($this->data[$name]))
-            return $this->data[$name];
-
-        if (property_exists ($this->db, $name))
-            return $this->db->$name;
-
+        $relationType = strtolower ($this->relations[$name][0]);
+        $modelName = $this->relations[$name][1];
+        switch ($relationType) {
+            case 'hasone':
+                $obj = new $modelName;
+                $obj->returnType = $this->returnType;
+                return $obj->byId($this->data[$name]);
+                break;
+            case 'hasmany':
+                $key = $this->relations[$name][2];
+                $obj = new $modelName;
+                $obj->returnType = $this->returnType;
+                return $obj->where($key, $this->data[$this->primaryKey])->get();
+                break;
+            default:
+                break;
+        }
     }
 
     public function __isset ($name) {
@@ -112,9 +115,16 @@ abstract class dbObject {
         return $this->getOne ($fields, $id);
     }
 
+    private function processWith (&$data) {
+        if (count ($this->_with) == 0)
+            return;
+        foreach ($this->_with as $w)
+            $data[$w] = $this->$w;
+    }
+
     private function getOne ($fields = null, $primaryKey = null) {
         if ($primaryKey)
-            $this->db->where ($this->primaryKey, $primaryKey);
+            $this->db->where ($this->dbTable . '.' . $this->primaryKey, $primaryKey);
 
         $results = $this->db->getOne ($this->dbTable, $fields);
         if (isset($this->jsonFields) && is_array($this->jsonFields)) {
@@ -125,8 +135,10 @@ abstract class dbObject {
             foreach ($this->arrayFields as $key)
                 $results[$key] = explode ("|", $results[$key]);
         }
-        if (static::$returnType == 'Array')
+        if ($this->returnType == 'Array') {
+            $this->processWith ($results);
             return $results;
+        }
 
         $item = new static ($results);
         $item->isNew = false;
@@ -146,18 +158,25 @@ abstract class dbObject {
                 foreach ($this->arrayFields as $key)
                     $r[$key] = explode ("|", $r[$key]);
             }
-            if (static::$returnType == 'Object') {
+            if ($this->returnType == 'Object') {
                 $item = new static ($r);
                 $item->isNew = false;
                 $objects[] = $item;
-            }
+            } else
+                $this->processWith($r);
         }
-        if (static::$returnType == 'Object')
+        if ($this->returnType == 'Object')
             return $objects;
+
         return $results;
     }
 
-    public function join ($objectName, $key = null, $joinType = 'LEFT') {
+    private function with ($objectName) {
+        $this->_with[] = $objectName;
+
+        return $this;
+    }
+    private function join ($objectName, $key = null, $joinType = 'LEFT') {
         $joinObj = new $objectName;
         if (!$key)
             $key = $objectName . "id";
@@ -212,11 +231,12 @@ abstract class dbObject {
                 continue;
             }
 
-            if (in_array ($key, $this->jsonFields))
+            if (isset ($this->jsonFields) && in_array ($key, $this->jsonFields))
                 $sqlData[$key] = json_encode($value);
-            else
+            else if (isset ($this->arrayFields) && in_array ($key, $this->arrayFields))
                 $sqlData[$key] = implode ("|", $value);
-
+            else
+                $sqlData[$key] = $value;
         }
         return $sqlData;
     }
