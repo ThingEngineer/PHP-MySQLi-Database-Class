@@ -1,22 +1,21 @@
 <?php
-require_once ("user.php");
+require_once("user.php");
 
 /**
  * To make IDEs autocomplete happy
  *
  * @property string id
  * @property string userid
- * @property string name
- * @property string authcode 
- * @property string iscallerid
+ * @property string customerId
+ * @property string productName
  */
 class product extends dbObject {
     protected $dbTable = "products";
     protected $primaryKey = "id";
     protected $dbFields = Array (
-        'userId' => 'int:required',
-        'customerId' => 'int:required',
-        'productName' => 'char:required'
+        'userId' => Array('int', 'required'),
+        'customerId' => Array ('int', 'required'),
+        'productName' => Array ('text','required')
     );
     protected $relations = Array (
         'userId' => Array ("hasOne", "user")

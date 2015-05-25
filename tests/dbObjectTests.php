@@ -13,6 +13,7 @@ $tables = Array (
         'lastName' => 'char(10)',
         'password' => 'text not null',
         'createdAt' => 'datetime',
+        'updatedAt' => 'datetime',
         'expires' => 'datetime',
         'loginCount' => 'int(10) default 0'
     ),
@@ -30,7 +31,6 @@ $data = Array (
                'firstName' => 'John',
                'lastName' => 'Doe',
                'password' => $db->func('SHA1(?)',Array ("secretpassword+salt")),
-               'createdAt' => $db->now(),
                'expires' => $db->now('+1Y'),
                'loginCount' => $db->inc()
         ),
@@ -39,7 +39,6 @@ $data = Array (
                'firstName' => 'Mike',
                'lastName' => NULL,
                'password' => $db->func('SHA1(?)',Array ("secretpassword2+salt")),
-               'createdAt' => $db->now(),
                'expires' => $db->now('+1Y'),
                'loginCount' => $db->inc(2)
         ),
@@ -49,7 +48,6 @@ $data = Array (
                'firstName' => 'Pete',
                'lastName' => 'D',
                'password' => $db->func('SHA1(?)',Array ("secretpassword2+salt")),
-               'createdAt' => $db->now(),
                'expires' => $db->now('+1Y'),
                'loginCount' => $db->inc(3)
         )
@@ -99,7 +97,10 @@ foreach ($data as $name => $datas) {
     foreach ($data[$name] as $userData) {
         $obj = new $name ($userData);
         $id  = $obj->save();
-        echo "$name $id created\n";
+        if ($obj->errors) {
+            print_r ($obj->errors);
+            exit;
+        }
     }
 }
 
@@ -111,10 +112,17 @@ foreach ($products as $p) {
     }
 }
 
-$products = product::ArrayBuilder()->get(2);
-$products = product::ArrayBuilder()->with('userId')->get(2);
-print_r ($products);
+$product = product::ArrayBuilder()->with('userId')->byId(5);
+if (!is_array ($product['userId'])) {
+    echo "Error in with processing in getOne";
+    exit;
+}
 
+$products = product::ArrayBuilder()->with('userId')->get(2);
+if (!is_array ($products[0]['userId'])) {
+    echo "Error in with processing in get";
+    exit;
+}
 
 $depts = product::join('user')->orderBy('products.id', 'desc')->get(5);
 foreach ($depts as $d) {
@@ -125,8 +133,12 @@ foreach ($depts as $d) {
 }
 
 $dept = product::join('user')->byId(5);
-if (count ($dept->data) != 12) {
+if (count ($dept->data) != 13) {
     echo "wrong props count " .count ($dept->data). "\n";
+    exit;
+}
+if ($db->count != 1) {
+    echo "wrong count after byId\n";
     exit;
 }
 
@@ -166,5 +178,49 @@ foreach ($user->products as $p) {
     }
 }
 
+// multi save
+$client = new user;
+$client->login = 'testuser';
+$client->firstName = 'john';
+$client->lastName = 'Doe Jr';
 
+$obj = new product;
+$obj->customerId = 2;
+$obj->userId = 2;
+$obj->productName = "product6";
+$obj->save();
+
+$obj->userId = 5;
+$obj->save();
+
+$obj->userId = $client;
+$obj->save();
+if ($client->errors) {
+    print_r ($client->errors);
+    exit;
+}
+
+$expected = '{"customerId":2,"userId":{"id":4,"login":"testuser","active":0,"customerId":0,"firstName":"john","lastName":"Doe Jr","password":"","createdAt":"' .$client->createdAt. '","updatedAt":null,"expires":null,"loginCount":0},"productName":"product6","id":6}';
+
+if ($obj->with('userId')->toJson() != $expected) {
+    echo "Multisave problem\n";
+    echo $obj->with('userId')->toJson();
+    exit;
+}
+
+$obj = new user;
+$obj->active='test';
+$obj->customerId = 'test';
+$obj->expires = 'test;';
+$obj->firstName = 'test';
+if ($obj->save()) {
+    echo "validation 1 failed\n";
+    exit;
+}
+if (count ($obj->errors) != 4) {
+    echo "validation 2 failed\n";
+    exit;
+}
+
+echo "All done";
 ?>

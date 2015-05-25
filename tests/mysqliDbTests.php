@@ -1,5 +1,5 @@
 <?php
-require_once ("MysqliDb.php");
+require_once ("../MysqliDb.php");
 error_reporting(E_ALL);
 
 $db = new Mysqlidb('localhost', 'root', '', 'testdb');
@@ -40,7 +40,7 @@ $tables = Array (
     )
 );
 $data = Array (
-    'user' => Array (
+    'users' => Array (
         Array ('login' => 'user1',
                'customerId' => 10,
                'firstName' => 'John',
@@ -70,7 +70,7 @@ $data = Array (
                'loginCount' => $db->inc(3)
         )
     ),
-    'product' => Array (
+    'products' => Array (
         Array ('customerId' => 1,
                'userId' => 1,
                'productName' => 'product1',
@@ -358,9 +358,9 @@ if ($db->count != 0) {
 }
 $db->delete("products");
 
-echo "All done";
 
 //print_r($db->rawQuery("CALL simpleproc(?)",Array("test")));
 
 print_r ($db->trace);
+echo "All done";
 ?>
