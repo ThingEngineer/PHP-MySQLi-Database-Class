@@ -4,9 +4,9 @@ require_once "product.php";
 /**
  * To make IDEs autocomplete happy
  *
- * @property string id
+ * @property int id
  * @property string login
- * @property string active
+ * @property bool active
  * @property string customerId
  * @property string firstName
  * @property string lastName
@@ -14,7 +14,7 @@ require_once "product.php";
  * @property string createdAt
  * @property string updatedAt
  * @property string expires
- * @property string loginCount
+ * @property int loginCount
  */
 class user extends dbObject {
     protected $dbTable = "users";

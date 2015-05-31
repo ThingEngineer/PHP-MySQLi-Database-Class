@@ -4,9 +4,9 @@ require_once("user.php");
 /**
  * To make IDEs autocomplete happy
  *
- * @property string id
- * @property string userid
- * @property string customerId
+ * @property int id
+ * @property int userid
+ * @property int customerId
  * @property string productName
  */
 class product extends dbObject {

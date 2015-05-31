@@ -222,5 +222,28 @@ if (count ($obj->errors) != 4) {
     exit;
 }
 
+if (!user::byId(1) instanceof user)
+    echo "wrong return type1";
+
+if (!is_array (user::ArrayBuilder()->byId(1)))
+    echo "wrong return type2";
+
+if (!is_array (product::join('user')->orderBy('products.id', 'desc')->get(2)))
+    echo "wrong return type2";
+
+if (!is_array (product::orderBy('products.id', 'desc')->join('user')->get(2)))
+    echo "wrong return type2";
+
+$u = new user;
+if (!$u->byId(1) instanceof user)
+    echo "wrong return type2";
+
+$p = new product;
+if (!is_array ($p->join('user')->orderBy('products.id', 'desc')->get(2)))
+    echo "wrong return type2";
+
+if (!is_array ($p->orderBy('products.id', 'desc')->join('user')->get(2)))
+    echo "wrong return type2";
+
 echo "All done";
 ?>
