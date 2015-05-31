@@ -1,4 +1,5 @@
 <?
+error_reporting (E_STRICT);
 require_once ("../MysqliDb.php");
 require_once ("../dbObject.php");
 require_once ("models/product.php");
@@ -98,6 +99,7 @@ foreach ($data as $name => $datas) {
         $obj = new $name ($userData);
         $id  = $obj->save();
         if ($obj->errors) {
+            echo "errors:";
             print_r ($obj->errors);
             exit;
         }
@@ -196,6 +198,7 @@ $obj->save();
 $obj->userId = $client;
 $obj->save();
 if ($client->errors) {
+    echo "errors:";
     print_r ($client->errors);
     exit;
 }
@@ -208,16 +211,21 @@ if ($obj->with('userId')->toJson() != $expected) {
     exit;
 }
 
-$obj = new user;
-$obj->active='test';
-$obj->customerId = 'test';
-$obj->expires = 'test;';
-$obj->firstName = 'test';
+$u= new user;
+$u->active='test';
+$u->customerId = 'test';
+$u->expires = 'test;';
+$u->firstName = 'test';
+
+$obj = new product;
+$obj->userId = $u;
+$obj->save();
 if ($obj->save()) {
     echo "validation 1 failed\n";
     exit;
 }
-if (count ($obj->errors) != 4) {
+if (count ($obj->errors) != 7) {
+    print_r ($obj->errors);
     echo "validation 2 failed\n";
     exit;
 }

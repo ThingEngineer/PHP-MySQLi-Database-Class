@@ -462,7 +462,6 @@ class dbObject {
      * @param array $data
      */
     private function validate ($data) {
-        $this->errors = Array ();
         foreach ($this->dbFields as $key => $desc) {
             $type = null;
             $required = false;
@@ -480,7 +479,7 @@ class dbObject {
                 $required = true;
 
             if ($required && strlen ($value) == 0) {
-                $this->errors[] = Array ($key => "is required");
+                $this->errors[] = Array ($this->dbTable . "." . $key => "is required");
                 continue;
             }
             if ($value == null)
@@ -507,7 +506,7 @@ class dbObject {
                 continue;
 
             if (!preg_match ($regexp, $value)) {
-                $this->errors[] = Array ($key => "$type validation failed");
+                $this->errors[] = Array ($this->dbTable . "." . $key => "$type validation failed");
                 continue;
             }
         }
@@ -515,6 +514,7 @@ class dbObject {
     }
 
     private function prepareData () {
+        $this->errors = Array ();
         $sqlData = Array();
         if (count ($this->data) == 0)
             return Array();
@@ -523,8 +523,13 @@ class dbObject {
             $this->preLoad ($data);
 
         foreach ($this->data as $key => &$value) {
-            if ($value instanceof dbObject && $value->isNew == true)
-                $value = $value->save();
+            if ($value instanceof dbObject && $value->isNew == true) {
+                $id = $value->save();
+                if ($id)
+                    $value = $id;
+                else
+                    $this->errors = array_merge ($this->errors, $value->errors);
+            }
 
             if (!in_array ($key, array_keys ($this->dbFields)))
                 continue;
