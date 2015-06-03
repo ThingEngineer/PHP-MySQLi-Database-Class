@@ -3,12 +3,9 @@ error_reporting (E_ALL|E_STRICT);
 require_once ("../MysqliDb.php");
 require_once ("../dbObject.php");
 
-function __autoload ($classname) {
-    $filename = "models/". $classname .".php";
-    include_once ($filename);
-}
-
 $db = new Mysqlidb('localhost', 'root', '', 'testdb');
+dbObject::autoload ("models");
+
 $tables = Array (
     'users' => Array (
         'login' => 'char(10) not null',

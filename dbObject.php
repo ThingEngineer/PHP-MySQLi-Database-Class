@@ -40,6 +40,12 @@ class dbObject {
      */
     private $db;
     /**
+     * Models path
+     *
+     * @var modelPath
+     */
+    private static $modelPath;
+    /**
      * An array that holds object data
      *
      * @var array
@@ -547,6 +553,26 @@ class dbObject {
                 $sqlData[$key] = $value;
         }
         return $sqlData;
+    }
+
+    private static function dbObjectAutoload ($classname) {
+        $filename = "models/". $classname .".php";
+        include ($filename);
+    }
+
+    /*
+     * Enable models autoload from a specified path
+     *
+     * Calling autoload() without path will set path to dbObjectPath/models/ directory
+     *
+     * @param string $path 
+     */
+    public static function autoload ($path = null) {
+        if ($path)
+            static::$modelPath = $path . "/";
+        else
+            static::$modelPath = __DIR__ . "/models/";
+        spl_autoload_register ("dbObject::dbObjectAutoload");
     }
 }
 ?>
