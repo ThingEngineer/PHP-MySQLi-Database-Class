@@ -1,6 +1,4 @@
 <?php
-require_once("user.php");
-
 /**
  * To make IDEs autocomplete happy
  *

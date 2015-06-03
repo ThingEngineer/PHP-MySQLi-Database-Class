@@ -1,6 +1,4 @@
 <?php
-require_once "product.php";
-
 /**
  * To make IDEs autocomplete happy
  *
