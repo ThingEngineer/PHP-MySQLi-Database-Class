@@ -227,10 +227,10 @@ class dbObject {
      *
      * @return mixed insert id or false in case of failure
      */
-    public function save () {
+    public function save ($data = null) {
         if ($this->isNew)
             return $this->insert();
-        return $this->update();
+        return $this->update($data);
     }
 
     /**
