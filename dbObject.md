@@ -2,8 +2,10 @@ dbObject - model implementation on top of the MysqliDb
 Please note, that this library is not pretending to be a full stack ORM but a simple OOP wrapper for mysqlidb
 
 <hr>
-**[Initialization] (#initialization)**
+###Initialization
+
 1. Include mysqlidb and dbObject classes. 
+
 2. If you want to use model autoloading instead of manually including them in the scripts use autoload () method.
 
 ```php
@@ -14,9 +16,10 @@ require_once ("libs/dbObject.php");
 $db = new Mysqlidb ('localhost', 'user', '', 'testdb');
 // enable class autoloading
 dbObject::autoload ("models");
-
 ```
-2. Create simple user class (models/user.php):
+
+3. Create simple user class (models/user.php):
+
 ```php
 class user extends dbObject {
   protected $dbTable = "users";
@@ -29,7 +32,7 @@ class user extends dbObject {
   );
 }
 ```
-**[Insert Row]**
+###Insert Row
 1. OOP Way. Just create new object of a needed class, fill it in and call save () method. Save will return 
 record id in case of success and false in case if insert will fail.
 ```php
@@ -40,6 +43,7 @@ $id = $user->save ();
 if ($id)
   echo "user created with id = " . $id;
 ```
+
 2. Using arrays
 ```php
 $data = Array ('login' => 'demo',
@@ -53,7 +57,8 @@ if ($id == null) {
     echo "user created with id = " . $id;
 ```
 
-2. Multisave
+3. Multisave
+
 ```php
 $user = new user;
 $user->login = 'demo';
@@ -68,12 +73,15 @@ $p->save ();
 
 After save() is call both new objects (user and product) will be saved.
 
-**[Selects]**
+###Selects
+
 Retrieving objects from the database is pretty much the same process of a get ()/getOne () execution without a need to specify table name.
+
 All mysqlidb functions like where(), orWhere(), orderBy(), join etc are supported.
 Please note that objects returned with join() will not save changes to a joined properties. For this you can use relationships.
 
 Select row by primary key
+
 ```php
 $user = user::byId (1);
 echo $user->login;
@@ -93,7 +101,7 @@ $users = user::where ("login", "demo")->get (Array (10, 20));
 foreach (users as $u) ...
 ```
 
-**[Update]**
+###Update
 To update model properties just set them and call save () method. As well values that needed to by changed could be passed as an array to the save () method.
 
 ```php
@@ -107,14 +115,14 @@ $user = user::byId (1);
 $user->save ($data);
 ```
 
-**[Delete]**
+###Delete
 Use delete() method on any loaded object. 
 ```php
 $user = user::byId (1);
 $user->delete ();
 ```
 
-**[Relations]**
+###Relations
 Currently dbObject supports only hasMany and hasOne relations only. To use them declare $relations array in the model class like:
 ```php
     protected $relations = Array (
@@ -125,20 +133,18 @@ Currently dbObject supports only hasMany and hasOne relations only. To use them 
 After that you can get related object via variables and do their modification/removal/display:
 ```php
     $user = user::byId (1);
-    // sql: select * from $persontable where id = $personValue
+    // sql: select  from $persontable where id = $personValue
     echo $user->person->firstName . " " . $user->person->lastName . " have the following products:\n";
-    // sql: select * from $product_table where userid = $userPrimaryKey
+    // sql: select  from $product_table where userid = $userPrimaryKey
     foreach ($user->products as $p) {
             echo $p->title;
     }
 ```
-**[Error checking]**
+###Error checking
 TBD
-**[Validation]**
+###Validation
 TBD
-**[Array as return values]**
+###Array as return values
 TBD
-**[2array and 2json]**
+###2array and 2json
 TBD
-
-
