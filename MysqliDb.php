@@ -484,12 +484,16 @@ class MysqliDb
      *
      * @return MysqliDb
      */
-    public function where($whereProp, $whereValue = null, $operator = null)
+    public function where($whereProp, $whereValue = 'DBNULL', $operator = '=', $cond = 'AND')
     {
-        if ($operator)
-            $whereValue = Array ($operator => $whereValue);
-
-        $this->_where[] = Array ("AND", $whereValue, $whereProp);
+        // forkaround for an old operation api
+        if (is_array ($whereValue) && ($key = key ($whereValue)) != "0") {
+            $operator = $key;
+            $whereValue = $whereValue[$key];
+        }
+        if (count ($this->_where) == 0)
+            $cond = '';
+        $this->_where[] = Array ($cond, $whereProp, $operator, $whereValue);
         return $this;
     }
 
@@ -503,13 +507,9 @@ class MysqliDb
      *
      * @return MysqliDb
      */
-    public function orWhere($whereProp, $whereValue = null, $operator = null)
+    public function orWhere($whereProp, $whereValue = 'DBNULL', $operator = '=')
     {
-        if ($operator)
-            $whereValue = Array ($operator => $whereValue);
-
-        $this->_where[] = Array ("OR", $whereValue, $whereProp);
-        return $this;
+        return $this->where ($whereProp, $whereValue, $operator, 'OR');
     }
     /**
      * This method allows you to concatenate joins for the final SQL statement.
@@ -870,33 +870,17 @@ class MysqliDb
         if (empty ($this->_where))
             return;
 
-        //Prepair the where portion of the query
+        //Prepare the where portion of the query
         $this->_query .= ' WHERE';
 
-        // Remove first AND/OR concatenator
-        $this->_where[0][0] = '';
         foreach ($this->_where as $cond) {
-            list ($concat, $wValue, $wKey) = $cond;
+            list ($concat, $varName, $operator, $val) = $cond;
+            $this->_query .= " " . $concat ." " . $varName;
 
-            $this->_query .= " " . $concat ." " . $wKey;
-
-            // Empty value (raw where condition in wKey)
-            if ($wValue === null)
-                continue;
-
-            // Simple = comparison
-            if (!is_array ($wValue))
-                $wValue = Array ('=' => $wValue);
-
-            $key = key ($wValue);
-            $val = $wValue[$key];
-            switch (strtolower ($key)) {
-                case '0':
-                    $this->_bindParams ($wValue);
-                    break;
+            switch (strtolower ($operator)) {
                 case 'not in':
                 case 'in':
-                    $comparison = ' ' . $key . ' (';
+                    $comparison = ' ' . $operator. ' (';
                     if (is_object ($val)) {
                         $comparison .= $this->_buildPair ("", $val);
                     } else {
@@ -909,15 +893,20 @@ class MysqliDb
                     break;
                 case 'not between':
                 case 'between':
-                    $this->_query .= " $key ? AND ? ";
+                    $this->_query .= " $operator ? AND ? ";
                     $this->_bindParams ($val);
                     break;
                 case 'not exists':
                 case 'exists':
-                    $this->_query.= $key . $this->_buildPair ("", $val);
+                    $this->_query.= $operator . $this->_buildPair ("", $val);
                     break;
                 default:
-                    $this->_query .= $this->_buildPair ($key, $val);
+                    if (is_array ($val))
+                        $this->_bindParams ($val);
+                    else if ($val === null)
+                        $this->_query .= $operator . " NULL";
+                    else if ($val != 'DBNULL')
+                        $this->_query .= $this->_buildPair ($operator, $val);
             }
         }
     }
