@@ -123,28 +123,103 @@ $user->delete ();
 ```
 
 ###Relations
-Currently dbObject supports only hasMany and hasOne relations only. To use them declare $relations array in the model class like:
+Currently dbObject supports only hasMany and hasOne relations. To use them declare $relations array in the model class.
+After that you can get related object via variable names defined as keys.
+
+HasOne example:
 ```php
     protected $relations = Array (
         'person' => Array ("hasOne", "person", 'id');
+    );
+
+    ...
+
+    $user = user::byId (1);
+    // sql: select * from $persontable where id = $personValue
+    echo $user->person->firstName . " " . $user->person->lastName . " have the following products:\n";
+```
+
+In HasMany Array should be defined target object name (product in example) and a relation key (userid).
+
+HasMany example:
+```php
+    protected $relations = Array (
         'products' => Array ("hasMany", "product", 'userid')
     );
-```
-After that you can get related object via variables and do their modification/removal/display:
-```php
+
+    ...
+
     $user = user::byId (1);
-    // sql: select  from $persontable where id = $personValue
-    echo $user->person->firstName . " " . $user->person->lastName . " have the following products:\n";
-    // sql: select  from $product_table where userid = $userPrimaryKey
+    // sql: select * from $product_table where userid = $userPrimaryKey
     foreach ($user->products as $p) {
             echo $p->title;
     }
 ```
-###Error checking
-TBD
-###Validation
-TBD
+###Timestamps
+Library provides a transparent way to set timestamps of an object creation and its modification:
+To enable that define $timestamps array as follows:
+```php
+protected $timestamps = Array ('createdAt', 'updatedAt');
+```
+Field names cant be changed.
+
+###Validation and Error checking
+Before saving and updating the row dbObject do input validation. In case validation rules are set but their criteria is not met
+then save() will return an error with its description. For example:
+```php
+$id = $user->save();
+if (!$id) {
+    // show all validation errors
+    print_r ($user->errors);
+    echo $db->getLastQuery();
+    echo $db->getLastError();
+}
+echo "user were created with id" . $id;
+```
+Validation rules must be defined in $dbFields array.
+```php
+  protected $dbFields = Array (
+    'login' => Array ('text', 'required'),
+    'password' => Array ('text'),
+    'createdAt' => Array ('datetime'),
+    'updatedAt' => Array ('datetime'),
+    'custom' => Array ('/^test/'),
+  );
+```
+First parameter is a field type. Types could be the one of following: text, bool, int, datetime or a custom regexp.
+Second parameter is 'required' and its defines that following entry field be always defined.
+
 ###Array as return values
-TBD
-###2array and 2json
-TBD
+dbObject can return its data as array instead of object. To do that ArrayBuilder() function should be used in the beginning of the call.
+```php
+    $user = user::ArrayBuilder()->byId (1);
+    echo $user['login'];
+
+    $users = user::ArrayBuilder()->orderBy ("id", "desc")->get ();
+    foreach ($users as $u)
+        echo $u['login'];
+```
+
+Following call will return data only of the called instance without any relations data. Use with() function to include relation data as well.
+
+```php
+    $user = user::ArrayBuilder()->with ("product")->byId (1);
+    print_r ($user['products']);
+```
+###Object serialization
+
+Object could be easily converted to a json string or an array.
+
+```php
+    $user = user::byId (1);
+    // echo will display json representation of an object
+    echo $user;
+    // userJson will contain json representation of an object
+    $userJson = $user->toJson ();
+    // userArray will contain array representation of an object
+    $userArray = $user->toArray ();
+```
+
+###Examples
+
+Please look for a use examples in tests/dbObjectTests.php file and test models inside the tests/models/ directory
