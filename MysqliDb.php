@@ -264,7 +264,7 @@ class MysqliDb
     /**
      *
      * @param string $query   Contains a user-provided select query.
-     * @param int    $numRows The number of rows total to return.
+     * @param integer|array $numRows Array to define SQL limit in format Array ($count, $offset)
      *
      * @return array Contains the returned rows from the query.
      */
@@ -321,7 +321,8 @@ class MysqliDb
      * A convenient SELECT * function.
      *
      * @param string  $tableName The name of the database table to work with.
-     * @param integer $numRows   The number of rows total to return.
+     * @param integer|array $numRows Array to define SQL limit in format Array ($count, $offset)
+     *                               or only $count
      *
      * @return array Contains the returned rows from the select query.
      */
@@ -453,7 +454,8 @@ class MysqliDb
      * Delete query. Call the "where" method first.
      *
      * @param string  $tableName The name of the database table to work with.
-     * @param integer $numRows   The number of rows to delete.
+     * @param integer|array $numRows Array to define SQL limit in format Array ($count, $offset)
+     *                               or only $count
      *
      * @return boolean Indicates success. 0 or 1.
      */
@@ -694,7 +696,8 @@ class MysqliDb
      * any passed update data, and the desired rows.
      * It then builds the SQL query.
      *
-     * @param int   $numRows   The number of rows total to return.
+     * @param integer|array $numRows Array to define SQL limit in format Array ($count, $offset)
+     *                               or only $count
      * @param array $tableData Should contain an array of data for updating the database.
      *
      * @return mysqli_stmt Returns the $stmt object.
@@ -937,7 +940,6 @@ class MysqliDb
     /**
      * Abstraction method that will build the LIMIT part of the WHERE statement
      *
-     * @param int   $numRows   The number of rows total to return.
      */
     protected function _buildOrderBy () {
         if (empty ($this->_orderBy))
@@ -957,7 +959,8 @@ class MysqliDb
     /**
      * Abstraction method that will build the LIMIT part of the WHERE statement
      *
-     * @param int   $numRows   The number of rows total to return.
+     * @param integer|array $numRows Array to define SQL limit in format Array ($count, $offset)
+     *                               or only $count
      */
     protected function _buildLimit ($numRows) {
         if (!isset ($numRows))
