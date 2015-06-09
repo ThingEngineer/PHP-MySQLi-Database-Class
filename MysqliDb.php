@@ -44,6 +44,12 @@ class MysqliDb
      */
     protected $_lastQuery;
     /**
+     * An array that holds query headers
+     *
+     * @var array
+     */
+    protected $_lastQueryHeaders = array(); 
+    /**
      * The SQL query options required after SELECT, INSERT, UPDATE or DELETE
      *
      * @var string
@@ -211,6 +217,7 @@ class MysqliDb
         $this->_bindParams = array(''); // Create the empty 0 index
         $this->_query = null;
         $this->_queryOptions = array();
+        $this->_lastQueryHeaders = null;
     }
     
     /**
@@ -738,6 +745,7 @@ class MysqliDb
     {
         $parameters = array();
         $results = array();
+        $queryheaders = array();
 
         $meta = $stmt->result_metadata();
 
@@ -751,6 +759,7 @@ class MysqliDb
         while ($field = $meta->fetch_field()) {
             $row[$field->name] = null;
             $parameters[] = & $row[$field->name];
+            $queryheaders[]=$field->name;
         }
 
         // avoid out of memory bug in php 5.2 and 5.3
@@ -779,7 +788,7 @@ class MysqliDb
             $totalCount = $stmt->fetch_row();
             $this->totalCount = $totalCount[0];
         }
-
+        $this->_lastQueryHeaders=$queryheaders;
         return $results;
     }
 
@@ -1048,7 +1057,15 @@ class MysqliDb
     public function getLastError () {
         return trim ($this->_stmtError . " " . $this->_mysqli->error);
     }
-
+    
+    /**
+     * Method returns column headers from last  query
+     *
+     * @return string
+     */
+    public function getLastQueryHeaders () {
+        return $this->_lastQueryHeaders;
+    }
     /**
      * Mostly internal method to get query and its params out of subquery object
      * after get() and getAll()
