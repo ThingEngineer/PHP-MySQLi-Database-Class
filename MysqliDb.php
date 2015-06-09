@@ -99,6 +99,12 @@ class MysqliDb
      * @var string
      */
     protected $_stmtError;
+    /**
+     * Variable which holds results output can be set to an array or object
+     *
+     * @var string
+     */
+    protected $_output = 'object';
 
     /**
      * Database credentials
@@ -385,9 +391,14 @@ class MysqliDb
     {
         $res = $this->get ($tableName, 1, "{$column} as retval");
 
-        if (isset($res[0]["retval"]))
-            return $res[0]["retval"];
-
+        if($this->_output=='array'){
+            if (isset($res[0]["retval"]))
+                return $res[0]["retval"];
+        }
+        else{
+            if (isset($res[0]->retval))
+                 return $res[0]->retval;
+        }
         return null;
     }
 
@@ -772,9 +783,20 @@ class MysqliDb
         $this->totalCount = 0;
         $this->count = 0;
         while ($stmt->fetch()) {
-            $x = array();
-            foreach ($row as $key => $val) {
-                $x[$key] = $val;
+            if ($this->_output == 'array') {
+                //returns result as an array of records
+                $x = array();
+                foreach ($row as $key => $val) {
+                    $x[$key] = $val;
+                }
+            }
+            else
+            {
+                //returns result as object
+                $x = new stdClass();
+                foreach ($row as $key => $val) {
+                    $x->$key = $val;
+                }
             }
             $this->count++;
             array_push($results, $x);
@@ -1065,6 +1087,21 @@ class MysqliDb
      */
     public function getLastQueryHeaders () {
         return $this->_lastQueryHeaders;
+    }
+    
+    /**
+     * Method that sets the type of output to array or object
+     *
+     * @param $output
+     * @return $this
+     */
+    public function setOutput($output)
+    {
+        if (!in_array(strtolower($output), array('object', 'array'))) {
+            $output = 'object';
+        }
+        $this->_output = strtolower($output);
+        return $this;
     }
     /**
      * Mostly internal method to get query and its params out of subquery object
