@@ -4,10 +4,7 @@ Please note, that this library is not pretending to be a full stack ORM but a si
 <hr>
 ###Initialization
 
-1. Include mysqlidb and dbObject classes. 
-
-2. If you want to use model autoloading instead of manually including them in the scripts use autoload () method.
-
+Include mysqlidb and dbObject classes. If you want to use model autoloading instead of manually including them in the scripts use autoload () method.
 ```php
 require_once ("libs/MysqliDb.php");
 require_once ("libs/dbObject.php");
@@ -18,24 +15,65 @@ $db = new Mysqlidb ('localhost', 'user', '', 'testdb');
 dbObject::autoload ("models");
 ```
 
-3. Create simple user class (models/user.php):
+Each database table could be easily mapped into a dbObject instance.  If you do not want to create model for a simple table its object could be simply created with a table() method.
+```php
+$user = dbObject::table ("users");
+```
+
+Otherwise basic model should be declared as (in case if autoload is set to 'models' directory filename should be models/user.php):
+```php
+class user extends dbObject {}
+```
+
+Class will be related to 'user' table. To change table name define correct name in the $dbTable variable:
 
 ```php
-class user extends dbObject {
-  protected $dbTable = "users";
-  protected $primaryKey = "id";
-  protected $dbFields = Array (
-    'login' => Array ('text', 'required'),
-    'password' => Array ('text'),
-    'createdAt' => Array ('datetime'),
-    'updatedAt' => Array ('datetime'),
-  );
+    protected $dbTable = "users";
+```
+
+Both objects created throw new class file creation of with table() method will have the same set of methods available. Only exception is that relations, validation or custom model methods
+will not be working with an objects created with table() method.
+
+
+###Selects
+Retrieving objects from the database is pretty much the same process as a mysqliDb get()/getOne() methods without a need to specify table name. All mysqlidb functions like where(), orWhere(), orderBy(), join etc are supported.
+
+##Retrieving All Records
+
+```php
+//$users = dbObject::table('users')->get ();
+$users = user::get ();
+foreach (users as $u) {
+  echo $u->login;
 }
 ```
+
+## Using Where Condition And A Limit
+```php
+$users = user::where ("login", "demo")->get (Array (10, 20));
+foreach (users as $u) ...
+```
+
+##Retrieving A Model By Primary Key
+
+```php
+//$user = dbObject::table('users')->byId (1);
+$user = user::byId (1);
+echo $user->login;
+```
+
+dbObject will also assume that each table has a primary key column named "id". You may define a primaryKey property to override this assumption.
+
+```php
+  protected $primaryKey = "userId";
+```
+
+
 ###Insert Row
-1. OOP Way. Just create new object of a needed class, fill it in and call save () method. Save will return 
+1. OOP Way. Just create new object of a needed class, fill it in and call save () method. Save will return
 record id in case of success and false in case if insert will fail.
 ```php
+//$user = dbObject::table('users');
 $user = new user;
 $user->login = 'demo';
 $user->password = 'demo';
@@ -71,35 +109,8 @@ $p->seller = $user;
 $p->save ();
 ```
 
-After save() is call both new objects (user and product) will be saved.
+After save() is called both new objects (user and product) will be saved.
 
-###Selects
-
-Retrieving objects from the database is pretty much the same process of a get ()/getOne () execution without a need to specify table name.
-
-All mysqlidb functions like where(), orWhere(), orderBy(), join etc are supported.
-Please note that objects returned with join() will not save changes to a joined properties. For this you can use relationships.
-
-Select row by primary key
-
-```php
-$user = user::byId (1);
-echo $user->login;
-```
-
-Get all users
-```php
-$users = user::orderBy ('id')->get ();
-foreach (users as $u) {
-  echo $u->login;
-}
-```
-
-Using where with limit
-```php
-$users = user::where ("login", "demo")->get (Array (10, 20));
-foreach (users as $u) ...
-```
 
 ###Update
 To update model properties just set them and call save () method. As well values that needed to by changed could be passed as an array to the save () method.
@@ -116,7 +127,7 @@ $user->save ($data);
 ```
 
 ###Delete
-Use delete() method on any loaded object. 
+Use delete() method on any loaded object.
 ```php
 $user = user::byId (1);
 $user->delete ();
@@ -126,7 +137,7 @@ $user->delete ();
 Currently dbObject supports only hasMany and hasOne relations. To use them declare $relations array in the model class.
 After that you can get related object via variable names defined as keys.
 
-HasOne example:
+##HasOne example:
 ```php
     protected $relations = Array (
         'person' => Array ("hasOne", "person", 'id');
@@ -141,7 +152,7 @@ HasOne example:
 
 In HasMany Array should be defined target object name (product in example) and a relation key (userid).
 
-HasMany example:
+##HasMany example:
 ```php
     protected $relations = Array (
         'products' => Array ("hasMany", "product", 'userid')
@@ -155,6 +166,18 @@ HasMany example:
             echo $p->title;
     }
 ```
+
+### Joining tables
+```php
+$depts = product::join ('user');
+$depts = product::join ('user', 'productid');
+```
+
+First parameter will set an object which should be joined. Second paramter will define a key. Default key is $objectName+'Id'
+
+
+NOTE: Objects returned with join() will not save changes to a joined properties. For this you can use relationships.
+
 ###Timestamps
 Library provides a transparent way to set timestamps of an object creation and its modification:
 To enable that define $timestamps array as follows:

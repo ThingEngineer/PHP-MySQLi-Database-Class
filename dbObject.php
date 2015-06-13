@@ -88,12 +88,27 @@ class dbObject {
      * @var array
      */
     public $errors = null;
+    /**
+     * Primary key for an object. 'id' is a default value.
+     *
+     * @var stating
+     */
+    protected $primaryKey = 'id';
+    /**
+     * Table name for an object. Class name will be used by default
+     *
+     * @var stating
+     */
+    protected $dbTable;
 
     /**
      * @param array $data Data to preload on object creation
      */
     public function __construct ($data = null) {
         $this->db = MysqliDb::getInstance();
+        if (empty ($this->dbTable))
+            $this->dbTable = get_class ($this);
+
         if ($data)
             $this->data = $data;
     }
@@ -174,10 +189,21 @@ class dbObject {
      * @return dbObject
      */
     public static function ObjectBuilder () {
-        $obj = new static;
-        return $obj;
+        return new static;
     }
 
+    /**
+     * Helper function to create a virtual table class
+     *
+     * @param string tableName Table name
+     * @return dbObject
+     */
+    public static function table ($tableName) {
+        $tableName = preg_replace ("/[^-a-z0-9_]+/i",'', $tableName);
+        if (!class_exists ($tableName))
+            eval ("class $tableName extends dbObject {}");
+        return new $tableName ();
+    }
     /**
      * @return mixed insert id or false in case of failure
      */
@@ -471,6 +497,9 @@ class dbObject {
      * @param array $data
      */
     private function validate ($data) {
+        if (!$this->dbFields)
+            return true;
+
         foreach ($this->dbFields as $key => $desc) {
             $type = null;
             $required = false;
@@ -530,6 +559,9 @@ class dbObject {
 
         if (method_exists ($this, "preLoad"))
             $this->preLoad ($data);
+
+        if (!$this->dbFields)
+            return $this->data;
 
         foreach ($this->data as $key => &$value) {
             if ($value instanceof dbObject && $value->isNew == true) {

@@ -1,7 +1,8 @@
-MysqliDb -- Simple MySQLi wrapper with prepared statements
+MysqliDb -- Simple MySQLi wrapper and object mapper with prepared statements
 <hr>
 ### Table of Contents
 **[Initialization](#initialization)**  
+**[Objects mapping](#objects-mapping)**  
 **[Insert Query](#insert-query)**  
 **[Update Query](#update-query)**  
 **[Select Query](#select-query)**  
@@ -68,6 +69,10 @@ $db->setPrefix ('my_');
 ```
 
 Next, prepare your data, and call the necessary methods. 
+
+### Objects mapping
+dbObject.php is an object mapping library built on top of mysqliDb to provide model prepresentation functionality.
+See <a href='dbObject.pm'>dbObject manual for more information</a>
 
 ### Insert Query
 Simple example
