@@ -72,7 +72,7 @@ Next, prepare your data, and call the necessary methods.
 
 ### Objects mapping
 dbObject.php is an object mapping library built on top of mysqliDb to provide model prepresentation functionality.
-See <a href='dbObject.pm'>dbObject manual for more information</a>
+See <a href='dbObject.md'>dbObject manual for more information</a>
 
 ### Insert Query
 Simple example
