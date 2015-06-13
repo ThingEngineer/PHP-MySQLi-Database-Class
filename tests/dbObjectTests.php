@@ -121,6 +121,13 @@ if (!is_array ($product['userId'])) {
     exit;
 }
 
+$product = product::with('userId')->byId(5);
+if (!is_object ($product->data['userId'])) {
+    echo "Error in with processing in getOne object";
+    exit;
+}
+
+
 $products = product::ArrayBuilder()->with('userId')->get(2);
 if (!is_array ($products[0]['userId'])) {
     echo "Error in with processing in get";

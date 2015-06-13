@@ -16,7 +16,6 @@
  */
 class user extends dbObject {
     protected $dbTable = "users";
-    protected $primaryKey = "id";
     protected $dbFields = Array (
         'login' => Array ('text', 'required'),
         'active' => Array ('bool'),
