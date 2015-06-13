@@ -186,6 +186,31 @@ protected $timestamps = Array ('createdAt', 'updatedAt');
 ```
 Field names cant be changed.
 
+### Array Fields
+dbObject can automatically handle array type of values. Optionaly you can store arrays in json encoded or in pipe delimeted format.
+To enable automatic json serialization of the field define $jsonFields array in your modal:
+```php
+    protected $jsonFields = Array ('operations');
+```
+To enable pipe delimetered storage of the field define $arrayFields array in your modal:
+```php
+    protected $arrayFields = Array ('sections');
+```
+
+```php
+    $user = new user;
+    $user->login = 'admin';
+    $user->options = Array ('canReadNews', 'canPostNews', 'canDeleteNews');
+    $user->sections = Array ('news', 'companyNews');
+    $user->save ();
+    ...
+    $user = user::byId (1);
+    print_r ($user->options);
+```
+Following code will store 'options' variable as a json string in the database and will return back an array on load.
+Same with 'sections' variable except that it will be stored in pipe delimetered format.
+
+
 ###Validation and Error checking
 Before saving and updating the row dbObject do input validation. In case validation rules are set but their criteria is not met
 then save() will return an error with its description. For example:
@@ -211,6 +236,8 @@ Validation rules must be defined in $dbFields array.
 ```
 First parameter is a field type. Types could be the one of following: text, bool, int, datetime or a custom regexp.
 Second parameter is 'required' and its defines that following entry field be always defined.
+
+NOTE: All variables which are not defined in the $dbFields array will be ignored from insert/update statement.
 
 ###Array as return values
 dbObject can return its data as array instead of object. To do that ArrayBuilder() function should be used in the beginning of the call.
@@ -245,4 +272,4 @@ Object could be easily converted to a json string or an array.
 
 ###Examples
 
-Please look for a use examples in tests/dbObjectTests.php file and test models inside the tests/models/ directory
+Please look for a use examples in <a href='tests/dbObjectTests.php'>tests file</a> and test models inside the <a href='tests/models/'>test models</a> directory
