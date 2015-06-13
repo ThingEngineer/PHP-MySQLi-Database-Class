@@ -271,6 +271,7 @@ class dbObject {
     private function getOne ($fields = null) {
         $results = $this->db->getOne ($this->dbTable, $fields);
         $this->processArrays ($results);
+        $this->data = $results;
         $this->processWith ($results);
         if ($this->returnType == 'Array')
             return $results;
@@ -296,6 +297,7 @@ class dbObject {
         $results = $this->db->get ($this->dbTable, $limit, $fields);
         foreach ($results as &$r) {
             $this->processArrays ($r);
+            $this->data = $r;
             $this->processWith ($r);
             if ($this->returnType == 'Object') {
                 $item = new static ($r);
@@ -446,6 +448,7 @@ class dbObject {
             return;
         foreach ($this->_with as $w)
             $data[$w] = $this->$w;
+
         $this->_with = Array();
     }
 
@@ -556,8 +559,9 @@ class dbObject {
     }
 
     private static function dbObjectAutoload ($classname) {
-        $filename = "models/". $classname .".php";
-        include ($filename);
+        $filename = static::$modelPath . $classname .".php";
+        if (file_exists ($filename))
+            include ($filename);
     }
 
     /*
