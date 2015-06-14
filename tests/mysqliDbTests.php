@@ -95,6 +95,8 @@ $data = Array (
     )
 );
 
+
+
 function createTable ($name, $data) {
     global $db;
     //$q = "CREATE TABLE $name (id INT(9) UNSIGNED PRIMARY KEY NOT NULL";
@@ -140,6 +142,33 @@ if ($id) {
     echo "bad insert test failed";
     exit;
 }
+
+
+$db->where('id', 1);
+$res=$db->get("users");
+if (!is_object($res[0])) {
+    echo "Invalid return type"; 
+    exit;
+}
+
+$db->setReturnType('bad input');
+
+$db->where('id', 1);
+$res=$db->get("users");
+if (!is_object($res[0])) {
+    echo "Invalid return type"; 
+    exit;
+}
+
+$db->setReturnType('Array');
+
+
+$cols = Array ("id as 'my user ID'", "lastName as 'LAST NAME'", "firstName as 'FIRST NAME'");
+$users = $db->get ("users", null, $cols);
+if ($db->count > 0){
+    print_r ($db->getLastQueryHeaders());
+}
+
 
 // insert without autoincrement
 $q = "create table {$prefix}test (id int(10), name varchar(10));";
