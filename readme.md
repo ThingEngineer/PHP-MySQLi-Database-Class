@@ -17,8 +17,8 @@ MysqliDb -- Simple MySQLi wrapper with prepared statements
 **[Subqueries](#subqueries)**  
 **[EXISTS / NOT EXISTS condition](#exists--not-exists-condition)**  
 **[Has method](#has-method)**  
-**[Define return type](#returnType)**  
-**[Headers Columns](#header-column)**  
+**[Define return type](#define-return-type)**  
+**[Headers Columns](#headers-columns)**  
 **[Helper Functions](#helper-commands)**  
 **[Transaction Helpers](#transaction-helpers)**  
 
@@ -448,13 +448,15 @@ You can easily define if the result should be return as an Array or an Object wi
 ```php
 $db->setReturnType('Array');
 $db->where('id', 1);
-$results = $db->get('users', 'id');
+$results = $db->get('users', null, 'id');
 // Gives : Array ( [id] => 1 ) 
+// echo $results[0];
 
 db->setReturnType('Object');
 $db->where('id', 1);
-$results = $db->get('users', 'id');
+$results = $db->get('users', null, 'id');
  // Gives : stdClass Object ( [id] => 1 )
+ // echo $results->id;
 ``` 
 
 ### Headers Columns
