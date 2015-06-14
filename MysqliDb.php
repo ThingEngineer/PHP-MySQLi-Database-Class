@@ -104,7 +104,7 @@ class MysqliDb
      *
      * @var string
      */
-    protected $_output = 'object';
+    protected $_returnType = 'Object';
 
     /**
      * Database credentials
@@ -391,7 +391,7 @@ class MysqliDb
     {
         $res = $this->get ($tableName, 1, "{$column} as retval");
 
-        if($this->_output=='array'){
+        if($this->_returnType=='Array'){
             if (isset($res[0]["retval"]))
                 return $res[0]["retval"];
         }
@@ -783,7 +783,7 @@ class MysqliDb
         $this->totalCount = 0;
         $this->count = 0;
         while ($stmt->fetch()) {
-            if ($this->_output == 'array') {
+            if ($this->_returnType == 'Array') {
                 //returns result as an array of records
                 $x = array();
                 foreach ($row as $key => $val) {
@@ -1095,12 +1095,12 @@ class MysqliDb
      * @param $output
      * @return $this
      */
-    public function setOutput($output)
+    public function setReturnType($returnType)
     {
-        if (!in_array(strtolower($output), array('object', 'array'))) {
-            $output = 'object';
+        if (!in_array(strtolower($returnType), array('object', 'array'))) {
+            $returnType = 'Object';
         }
-        $this->_output = strtolower($output);
+        $this->_returnType = ucfirst($returnType);
         return $this;
     }
     /**
