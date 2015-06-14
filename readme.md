@@ -450,7 +450,7 @@ $db->setReturnType('Array');
 $db->where('id', 1);
 $results = $db->get('users', null, 'id');
 // Gives : Array ( [id] => 1 ) 
-// echo $results[0];
+// echo $results['id'];
 
 db->setReturnType('Object');
 $db->where('id', 1);
