@@ -24,7 +24,7 @@ class MysqliDb
      * 
      * @var string
      */
-    protected static $_prefix;
+    public static $prefix;
     /**
      * MySQLi instance
      *
@@ -220,7 +220,7 @@ class MysqliDb
      */
     public function setPrefix($prefix = '')
     {
-        self::$_prefix = $prefix;
+        self::$prefix = $prefix;
         return $this;
     }
 
@@ -333,7 +333,7 @@ class MysqliDb
 
         $column = is_array($columns) ? implode(', ', $columns) : $columns; 
         $this->_query = 'SELECT ' . implode(' ', $this->_queryOptions) . ' ' .
-                        $column . " FROM " .self::$_prefix . $tableName;
+                        $column . " FROM " .self::$prefix . $tableName;
         $stmt = $this->_buildQuery($numRows);
 
         if ($this->isSubQuery)
@@ -396,7 +396,7 @@ class MysqliDb
         if ($this->isSubQuery)
             return;
 
-        $this->_query = "INSERT INTO " .self::$_prefix . $tableName;
+        $this->_query = "INSERT INTO " .self::$prefix . $tableName;
         $stmt = $this->_buildQuery(null, $insertData);
         $stmt->execute();
         $this->_stmtError = $stmt->error;
@@ -439,7 +439,7 @@ class MysqliDb
         if ($this->isSubQuery)
             return;
 
-        $this->_query = "UPDATE " . self::$_prefix . $tableName;
+        $this->_query = "UPDATE " . self::$prefix . $tableName;
 
         $stmt = $this->_buildQuery (null, $tableData);
         $status = $stmt->execute();
@@ -464,7 +464,7 @@ class MysqliDb
         if ($this->isSubQuery)
             return;
 
-        $this->_query = "DELETE FROM " . self::$_prefix . $tableName;
+        $this->_query = "DELETE FROM " . self::$prefix . $tableName;
 
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
@@ -531,7 +531,7 @@ class MysqliDb
             die ('Wrong JOIN type: '.$joinType);
 
         if (!is_object ($joinTable))
-            $joinTable = self::$_prefix . filter_var($joinTable, FILTER_SANITIZE_STRING);
+            $joinTable = self::$prefix . filter_var($joinTable, FILTER_SANITIZE_STRING);
 
         $this->_join[] = Array ($joinType,  $joinTable, $joinCondition);
 
