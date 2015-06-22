@@ -282,7 +282,7 @@ class dbObject {
      * @return dbObject|array
      */
     private function byId ($id, $fields = null) {
-        $this->db->where ($this->dbTable . '.' . $this->primaryKey, $id);
+        $this->db->where (MysqliDb::$prefix . $this->dbTable . '.' . $this->primaryKey, $id);
         return $this->getOne ($fields);
     }
 
@@ -365,7 +365,8 @@ class dbObject {
         $joinObj = new $objectName;
         if (!$key)
             $key = $objectName . "id";
-        $joinStr = "{$this->dbTable}.{$key} = {$joinObj->dbTable}.{$joinObj->primaryKey}";
+        $joinStr = MysqliDb::$prefix . $this->dbTable . ".{$key} = " .
+                    MysqliDb::$prefix . "{$joinObj->dbTable}.{$joinObj->primaryKey}";
         $this->db->join ($joinObj->dbTable, $joinStr, $joinType);
         return $this;
     }
@@ -601,7 +602,7 @@ class dbObject {
      *
      * Calling autoload() without path will set path to dbObjectPath/models/ directory
      *
-     * @param string $path 
+     * @param string $path
      */
     public static function autoload ($path = null) {
         if ($path)

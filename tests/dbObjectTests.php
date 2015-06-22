@@ -4,6 +4,8 @@ require_once ("../MysqliDb.php");
 require_once ("../dbObject.php");
 
 $db = new Mysqlidb('localhost', 'root', '', 'testdb');
+$prefix = 't_';
+$db->setPrefix($prefix);
 dbObject::autoload ("models");
 
 $tables = Array (
@@ -91,8 +93,8 @@ function createTable ($name, $data) {
 
 // rawQuery test
 foreach ($tables as $name => $fields) {
-    $db->rawQuery("DROP TABLE " . $name);
-    createTable ($name, $fields);
+    $db->rawQuery("DROP TABLE " . $prefix . $name);
+    createTable ($prefix . $name, $fields);
 }
 
 foreach ($data as $name => $datas) {
@@ -134,7 +136,7 @@ if (!is_array ($products[0]['userId'])) {
     exit;
 }
 
-$depts = product::join('user')->orderBy('products.id', 'desc')->get(5);
+$depts = product::join('user')->orderBy('t_products.id', 'desc')->get(5);
 foreach ($depts as $d) {
     if (!is_object($d)) {
         echo "Return should be an object\n";
@@ -244,10 +246,10 @@ if (!user::byId(1) instanceof user)
 if (!is_array (user::ArrayBuilder()->byId(1)))
     echo "wrong return type2";
 
-if (!is_array (product::join('user')->orderBy('products.id', 'desc')->get(2)))
+if (!is_array (product::join('user')->orderBy('t_products.id', 'desc')->get(2)))
     echo "wrong return type2";
 
-if (!is_array (product::orderBy('products.id', 'desc')->join('user')->get(2)))
+if (!is_array (product::orderBy('t_products.id', 'desc')->join('user')->get(2)))
     echo "wrong return type2";
 
 $u = new user;
@@ -255,10 +257,10 @@ if (!$u->byId(1) instanceof user)
     echo "wrong return type2";
 
 $p = new product;
-if (!is_array ($p->join('user')->orderBy('products.id', 'desc')->get(2)))
+if (!is_array ($p->join('user')->orderBy('t_products.id', 'desc')->get(2)))
     echo "wrong return type2";
 
-if (!is_array ($p->orderBy('products.id', 'desc')->join('user')->get(2)))
+if (!is_array ($p->orderBy('t_products.id', 'desc')->join('user')->get(2)))
     echo "wrong return type2";
 
 echo "All done";
