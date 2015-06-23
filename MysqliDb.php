@@ -911,7 +911,7 @@ class MysqliDb
                         $this->_bindParams ($val);
                     else if ($val === null)
                         $this->_query .= $operator . " NULL";
-                    else if ($val != 'DBNULL')
+                    else if ($val != 'DBNULL' || $val == '0')
                         $this->_query .= $this->_buildPair ($operator, $val);
             }
         }
@@ -1028,7 +1028,7 @@ class MysqliDb
             $val = $vals[$i++];
             if (is_object ($val))
                 $val = '[object]';
-            if ($val == NULL)
+            if ($val === NULL)
                 $val = 'NULL';
             $newStr .= substr ($str, 0, $pos) . "'". $val . "'";
             $str = substr ($str, $pos + 1);
