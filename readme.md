@@ -107,8 +107,10 @@ if ($id)
     echo 'user was created. Id=' . $id;
 else
     echo 'insert failed: ' . $db->getLastError();
-
 ```
+
+### Replace Query
+replace() method implements same API as insert();
 
 ### Update Query
 ```php
@@ -294,17 +296,17 @@ echo "Showing {$count} from {$db->totalCount}";
 ```
 
 ### Query Keywords
-To add LOW PRIORITY | DELAYED | HIGH PRIORITY | IGNORE and the rest of mysql keywords to INSERT , SELECT , UPDATE, DELETE query:
+To add LOW PRIORITY | DELAYED | HIGH PRIORITY | IGNORE and the rest of the mysql keywords to INSERT (), REPLACE (), GET (), UPDATE (), DELETE() method:
 ```php
 $db->setQueryOption('LOW_PRIORITY');
-$db->insert($table,$param);
+$db->insert ($table, $param);
 // GIVES: INSERT LOW_PRIORITY INTO table ...
 ```
 
 Also you can use an array of keywords:
 ```php
 $db->setQueryOption(Array('LOW_PRIORITY', 'IGNORE'));
-$db->insert($table,$param);
+$db->insert ($table,$param);
 // GIVES: INSERT LOW_PRIORITY IGNORE INTO table ...
 ```
 
