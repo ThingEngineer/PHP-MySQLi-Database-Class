@@ -385,31 +385,27 @@ class MysqliDb
     }
 
     /**
+     * Insert method to add new row
      *
      * @param <string $tableName The name of the table.
      * @param array $insertData Data containing information for inserting into the DB.
      *
      * @return boolean Boolean indicating whether the insert query was completed succesfully.
      */
-    public function insert($tableName, $insertData)
-    {
-        if ($this->isSubQuery)
-            return;
+    public function insert ($tableName, $insertData) {
+        return $this->_buildInsert ($tableName, $insertData, 'INSERT');
+    }
 
-        $this->_query = "INSERT " . implode(' ', $this->_queryOptions) ." INTO " .self::$prefix . $tableName;
-        $stmt = $this->_buildQuery(null, $insertData);
-        $stmt->execute();
-        $this->_stmtError = $stmt->error;
-        $this->reset();
-        $this->count = $stmt->affected_rows;
-
-        if ($stmt->affected_rows < 1)
-            return false;
-
-        if ($stmt->insert_id > 0)
-            return $stmt->insert_id;
-
-        return true;
+    /**
+     * Replace method to add new row
+     *
+     * @param <string $tableName The name of the table.
+     * @param array $insertData Data containing information for inserting into the DB.
+     *
+     * @return boolean Boolean indicating whether the insert query was completed succesfully.
+     */
+    public function replace ($tableName, $insertData) {
+        return $this->_buildInsert ($tableName, $insertData, 'REPLACE');
     }
 
     /**
@@ -695,6 +691,35 @@ class MysqliDb
         $this->_bindParams ($subQuery['params']);
 
         return " " . $operator . " (" . $subQuery['query'] . ") " . $subQuery['alias'];
+    }
+
+    /**
+     * Internal function to build and execute INSERT/REPLACE calls
+     *
+     * @param <string $tableName The name of the table.
+     * @param array $insertData Data containing information for inserting into the DB.
+     *
+     * @return boolean Boolean indicating whether the insert query was completed succesfully.
+     */
+    private function _buildInsert ($tableName, $insertData, $operation)
+    {
+        if ($this->isSubQuery)
+            return;
+
+        $this->_query = $operation . " " . implode (' ', $this->_queryOptions) ." INTO " .self::$prefix . $tableName;
+        $stmt = $this->_buildQuery (null, $insertData);
+        $stmt->execute();
+        $this->_stmtError = $stmt->error;
+        $this->reset();
+        $this->count = $stmt->affected_rows;
+
+        if ($stmt->affected_rows < 1)
+            return false;
+
+        if ($stmt->insert_id > 0)
+            return $stmt->insert_id;
+
+        return true;
     }
 
     /**
