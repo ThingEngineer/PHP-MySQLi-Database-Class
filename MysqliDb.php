@@ -396,7 +396,7 @@ class MysqliDb
         if ($this->isSubQuery)
             return;
 
-        $this->_query = "INSERT INTO " .self::$prefix . $tableName;
+        $this->_query = "INSERT " . implode(' ', $this->_queryOptions) ." INTO " .self::$prefix . $tableName;
         $stmt = $this->_buildQuery(null, $insertData);
         $stmt->execute();
         $this->_stmtError = $stmt->error;
