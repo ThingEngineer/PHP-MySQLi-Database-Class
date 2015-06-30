@@ -368,11 +368,11 @@ class MysqliDb
     }
 
     /**
-     * A convenient SELECT * function to get one value.
+     * A convenient SELECT COLUMN function to get a single column value from one row
      *
      * @param string  $tableName The name of the database table to work with.
      *
-     * @return array Contains the returned column from the select query.
+     * @return string Contains the value of a returned column.
      */
     public function getValue($tableName, $column) 
     {
