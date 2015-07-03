@@ -769,6 +769,9 @@ class MysqliDb
     {
         $parameters = array();
         $results = array();
+        // See http://php.net/manual/en/mysqli-result.fetch-fields.php
+        $mysqlLongType = 252;
+        $shouldStoreResult = false;
 
         $meta = $stmt->result_metadata();
 
@@ -780,13 +783,17 @@ class MysqliDb
 
         $row = array();
         while ($field = $meta->fetch_field()) {
+            if ($field->type == $mysqlLongType)
+                $shouldStoreResult = true;
+
             $row[$field->name] = null;
             $parameters[] = & $row[$field->name];
         }
 
-        // avoid out of memory bug in php 5.2 and 5.3
+        // avoid out of memory bug in php 5.2 and 5.3. Mysqli allocates lot of memory for long*
+        // and blob* types. So to avoid out of memory issues store_result is used
         // https://github.com/joshcam/PHP-MySQLi-Database-Class/pull/119
-        if (version_compare (phpversion(), '5.4', '<'))
+        if ($shouldStoreResult)
              $stmt->store_result();
 
         call_user_func_array(array($stmt, 'bind_result'), $parameters);
