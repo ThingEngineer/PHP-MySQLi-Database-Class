@@ -44,7 +44,7 @@ class dbObject {
      *
      * @var modelPath
      */
-    private static $modelPath;
+    protected static $modelPath;
     /**
      * An array that holds object data
      *
@@ -59,6 +59,7 @@ class dbObject {
     public $isNew = true;
     /**
      * Return type: 'Array' to return results as array, 'Object' as object
+     * 'Json' as json string
      *
      * @var string
      */
@@ -170,6 +171,16 @@ class dbObject {
         unset ($this->data[$name]);
     }
 
+    /**
+     * Helper function to create dbObject with Json return type
+     *
+     * @return dbObject
+     */
+    public static function JsonBuilder () {
+        $obj = new static;
+        $obj->returnType = 'Json';
+        return $obj;
+    }
 
     /**
      * Helper function to create dbObject with Array return type
@@ -299,6 +310,8 @@ class dbObject {
         $this->processArrays ($results);
         $this->data = $results;
         $this->processWith ($results);
+        if ($this->returnType == 'Json')
+            return json_encode ($results);
         if ($this->returnType == 'Array')
             return $results;
 
@@ -333,6 +346,9 @@ class dbObject {
         }
         if ($this->returnType == 'Object')
             return $objects;
+
+        if ($this->returnType == 'Json')
+            return json_encode ($results);
 
         return $results;
     }

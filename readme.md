@@ -128,7 +128,6 @@ if ($db->update ('users', $data))
 else
     echo 'update failed: ' . $db->getLastError();
 ```
-
 ### Select Query
 After any select/get function calls amount or returned rows
 is stored in $count variable
@@ -165,7 +164,18 @@ or select one column value or function result
 $count = $db->getValue ("users", "count(*)");
 echo "{$count} users found";
 ```
-
+### Defining a return type
+MysqliDb can return result in 3 different formats: Array of Array, Array of Objects and a Json string. To select a return type use ArrayBuilder(), ObjectBuilder() and JsonBuilder() methods. Note that ArrayBuilder() is a default return type
+```php
+// Array return type
+$= $db->getOne("users");
+echo $u['login'];
+// Object return type
+$u = $db->ObjectBuilder()->getOne("users");
+echo $u->login;
+// Json return type
+$json = $db->JsonBuilder()->getOne("users");
+```
 ### Delete Query
 ```php
 $db->where('id', 1);
