@@ -118,7 +118,7 @@ class MysqliDb
      *
      * @var string
      */
-    public $returnType = 'Object';
+    public $returnType = 'Array';
 
     /**
      * Variables for query execution tracing
