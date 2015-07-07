@@ -268,8 +268,12 @@ class dbObject {
      * @return mixed insert id or false in case of failure
      */
     public function save ($data = null) {
-        if ($this->isNew)
-            return $this->insert();
+        if ($this->isNew) {
+            $id = $this->insert();
+            if (isset ($this->primaryKey))
+                $this->data[$this->primaryKey] = $id;
+            return $id;
+        }
         return $this->update($data);
     }
 
