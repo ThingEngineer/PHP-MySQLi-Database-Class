@@ -146,13 +146,23 @@ After that you can get related object via variable names defined as keys.
     ...
 
     $user = user::byId (1);
-    // sql: select * from $persontable where id = $personValue
+    // sql: select * from users where id = $personValue
+    echo $user->person->firstName . " " . $user->person->lastName . " have the following products:\n";
+    // one more sql: select * from person where id=x
+```
+Please note, that following way of querying will execute 2 sql queries:
+1. select * from users where id=1;
+2. select * from person where id=x
+
+To optimize this into single select join query use with() method.
+```php
+   $user = user::with ('person')->byId (1);
+   // sql: select * from users left join person on person.id = users.id wher id = 1;
     echo $user->person->firstName . " " . $user->person->lastName . " have the following products:\n";
 ```
 
-In HasMany Array should be defined target object name (product in example) and a relation key (userid).
-
 ##HasMany example:
+In HasMany Array should be defined target object name (product in example) and a relation key (userid).
 ```php
     protected $relations = Array (
         'products' => Array ("hasMany", "product", 'userid')

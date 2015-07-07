@@ -131,6 +131,9 @@ class dbObject {
      * @return mixed
      */
     public function __get ($name) {
+        if (isset ($this->data[$name]) && $this->data[$name] instanceof dbObject)
+            return $this->data[$name];
+
         if (property_exists ($this, 'relations') && isset ($this->relations[$name])) {
             $relationType = strtolower ($this->relations[$name][0]);
             $modelName = $this->relations[$name][1];
@@ -306,10 +309,11 @@ class dbObject {
      * @return dbObject
      */
     private function getOne ($fields = null) {
-        $results = $this->db->getOne ($this->dbTable, $fields);
+        $this->processHasOneWith ();
+        $results = $this->db->ArrayBuilder()->getOne ($this->dbTable, $fields);
         $this->processArrays ($results);
         $this->data = $results;
-        $this->processWith ($results);
+        $this->processAllWith ($results);
         if ($this->returnType == 'Json')
             return json_encode ($results);
         if ($this->returnType == 'Array')
@@ -333,17 +337,19 @@ class dbObject {
      */
     private function get ($limit = null, $fields = null) {
         $objects = Array ();
-        $results = $this->db->get ($this->dbTable, $limit, $fields);
+        $this->processHasOneWith ();
+        $results = $this->db->ArrayBuilder()->get ($this->dbTable, $limit, $fields);
         foreach ($results as &$r) {
             $this->processArrays ($r);
             $this->data = $r;
-            $this->processWith ($r);
+            $this->processAllWith ($r, false);
             if ($this->returnType == 'Object') {
                 $item = new static ($r);
                 $item->isNew = false;
                 $objects[] = $item;
             }
         }
+        $this->_with = Array();
         if ($this->returnType == 'Object')
             return $objects;
 
@@ -362,7 +368,10 @@ class dbObject {
      * @return dbObject
      */
     private function with ($objectName) {
-        $this->_with[] = $objectName;
+        if (!property_exists ($this, 'relations') && !isset ($this->relations[$name]))
+            die ("No relation with name $objectName found");
+
+        $this->_with[$objectName] = $this->relations[$objectName];
 
         return $this;
     }
@@ -393,7 +402,7 @@ class dbObject {
      * @return int
      */
     private function count () {
-        $res = $this->db->getValue ($this->dbTable, "count(*)");
+        $res = $this->db->ArrayBuilder()->getValue ($this->dbTable, "count(*)");
         return $res['cnt'];
     }
 
@@ -457,7 +466,7 @@ class dbObject {
      */
     public function toArray () {
         $data = $this->data;
-        $this->processWith ($data);
+        $this->processAllWith ($data);
         foreach ($data as &$d) {
             if ($d instanceof dbObject)
                 $d = $d->data;
@@ -484,15 +493,59 @@ class dbObject {
     }
 
     /**
+     * Function queries hasMany relations if needed and also converts hasOne object names
+     *
      * @param array $data
      */
-    private function processWith (&$data) {
+    private function processAllWith (&$data, $shouldReset = true) {
         if (count ($this->_with) == 0)
             return;
-        foreach ($this->_with as $w)
-            $data[$w] = $this->$w;
 
-        $this->_with = Array();
+        foreach ($this->_with as $name => $opts) {
+            $relationType = strtolower ($opts[0]);
+            $modelName = $opts[1];
+            if ($relationType == 'hasone') {
+                $obj = new $modelName;
+                $table = $obj->dbTable;
+
+                if (!isset ($data[$table])) {
+                    $data[$name] = $this->$name;
+                    continue;
+                }
+                if ($this->returnType == 'Object') {
+                    $item = new $modelName ($data[$table]);
+                    $item->returnType = $this->returnType;
+                    $item->isNew = false;
+                    $data[$name] = $item;
+                } else {
+                    $data[$name] = $data[$table];
+                }
+                unset ($data[$table]);
+            }
+            else
+                $data[$name] = $this->$name;
+        }
+        if ($shouldReset)
+            $this->_with = Array();
+    }
+
+    /*
+     * Function building hasOne joins for get/getOne method
+     */
+    private function processHasOneWith () {
+        if (count ($this->_with) == 0)
+            return;
+        foreach ($this->_with as $name => $opts) {
+            $relationType = strtolower ($opts[0]);
+            $modelName = $opts[1];
+            $key = null;
+            if (isset ($opts[2]))
+                $key = $opts[2];
+            if ($relationType == 'hasone') {
+                $this->db->setQueryOption ("MYSQLI_NESTJOIN");
+                $this->join ($modelName, $key);
+            }
+        }
     }
 
     /**
