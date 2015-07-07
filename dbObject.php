@@ -59,6 +59,7 @@ class dbObject {
     public $isNew = true;
     /**
      * Return type: 'Array' to return results as array, 'Object' as object
+     * 'Json' as json string
      *
      * @var string
      */

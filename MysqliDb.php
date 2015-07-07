@@ -113,6 +113,14 @@ class MysqliDb
     protected $isSubQuery = false;
 
     /**
+     * Return type: 'Array' to return results as array, 'Object' as object
+     * 'Json' as json string
+     *
+     * @var string
+     */
+    public $returnType = 'Object';
+
+    /**
      * Variables for query execution tracing
      *
      */
@@ -211,6 +219,38 @@ class MysqliDb
         $this->_bindParams = array(''); // Create the empty 0 index
         $this->_query = null;
         $this->_queryOptions = array();
+        $this->returnType = 'Array';
+    }
+
+    /**
+     * Helper function to create dbObject with Json return type
+     *
+     * @return dbObject
+     */
+    public function JsonBuilder () {
+        $this->returnType = 'Json';
+        return $this;
+    }
+
+    /**
+     * Helper function to create dbObject with Array return type
+     * Added for consistency as thats default output type
+     *
+     * @return dbObject
+     */
+    public function ArrayBuilder () {
+        $this->returnType = 'Array';
+        return $this;
+    }
+
+    /**
+     * Helper function to create dbObject with Object return type.
+     *
+     * @return dbObject
+     */
+    public function ObjectBuilder () {
+        $this->returnType = 'Object';
+        return $this;
     }
     
     /**
@@ -358,11 +398,12 @@ class MysqliDb
     {
         $res = $this->get ($tableName, 1, $columns);
 
-        if (is_object($res))
+        if ($res instanceof MysqliDb)
             return $res;
-
-        if (isset($res[0]))
+        else if (is_array ($res) && isset ($res[0]))
             return $res[0];
+        else if ($res)
+            return $res;
 
         return null;
     }
@@ -376,7 +417,7 @@ class MysqliDb
      */
     public function getValue($tableName, $column) 
     {
-        $res = $this->get ($tableName, 1, "{$column} as retval");
+        $res = $this->ArrayBuilder()->get ($tableName, 1, "{$column} as retval");
 
         if (isset($res[0]["retval"]))
             return $res[0]["retval"];
@@ -801,9 +842,14 @@ class MysqliDb
         $this->totalCount = 0;
         $this->count = 0;
         while ($stmt->fetch()) {
-            $x = array();
-            foreach ($row as $key => $val) {
-                $x[$key] = $val;
+            if ($this->returnType == 'Object') {
+                $x = new stdClass ();
+                foreach ($row as $key => $val)
+                    $x->$key = $val;
+            } else {
+                $x = array();
+                foreach ($row as $key => $val)
+                    $x[$key] = $val;
             }
             $this->count++;
             array_push($results, $x);
@@ -816,6 +862,9 @@ class MysqliDb
             $stmt = $this->_mysqli->query ('SELECT FOUND_ROWS()');
             $totalCount = $stmt->fetch_row();
             $this->totalCount = $totalCount[0];
+        }
+        if ($this->returnType == 'Json') {
+            return json_encode ($results);
         }
 
         return $results;
