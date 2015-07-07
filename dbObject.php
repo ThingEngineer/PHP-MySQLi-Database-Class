@@ -44,7 +44,7 @@ class dbObject {
      *
      * @var modelPath
      */
-    private static $modelPath;
+    protected static $modelPath;
     /**
      * An array that holds object data
      *
