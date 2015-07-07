@@ -239,7 +239,7 @@ Second parameter is 'required' and its defines that following entry field be alw
 
 NOTE: All variables which are not defined in the $dbFields array will be ignored from insert/update statement.
 
-###Array as return values
+###Using array as a return value
 dbObject can return its data as array instead of object. To do that ArrayBuilder() function should be used in the beginning of the call.
 ```php
     $user = user::ArrayBuilder()->byId (1);
@@ -251,10 +251,15 @@ dbObject can return its data as array instead of object. To do that ArrayBuilder
 ```
 
 Following call will return data only of the called instance without any relations data. Use with() function to include relation data as well.
-
 ```php
     $user = user::ArrayBuilder()->with ("product")->byId (1);
     print_r ($user['products']);
+```
+
+###Using json as a return value
+Togeather with ArrayBuilder() and ObjectBuilder() dbObject can return result in json format to avoid extra coding
+```php
+    $userjson = user::JsonBuilder()->with ("product")->byId (1);
 ```
 ###Object serialization
 
