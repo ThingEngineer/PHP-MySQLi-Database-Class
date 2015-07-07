@@ -121,6 +121,12 @@ class MysqliDb
     public $returnType = 'Array';
 
     /**
+     * Should join() results be nested by table
+     * @var boolean
+     */
+    protected $_nestJoin = false;
+    private $_tableName = '';
+    /**
      * Variables for query execution tracing
      *
      */
@@ -220,6 +226,8 @@ class MysqliDb
         $this->_query = null;
         $this->_queryOptions = array();
         $this->returnType = 'Array';
+        $this->_nestJoin = false;
+        $this->_tableName = '';
     }
 
     /**
@@ -332,7 +340,7 @@ class MysqliDb
     public function setQueryOption ($options) {
         $allowedOptions = Array ('ALL','DISTINCT','DISTINCTROW','HIGH_PRIORITY','STRAIGHT_JOIN','SQL_SMALL_RESULT',
                           'SQL_BIG_RESULT','SQL_BUFFER_RESULT','SQL_CACHE','SQL_NO_CACHE', 'SQL_CALC_FOUND_ROWS',
-                          'LOW_PRIORITY','IGNORE','QUICK');
+                          'LOW_PRIORITY','IGNORE','QUICK', 'MYSQLI_NESTJOIN');
         if (!is_array ($options))
             $options = Array ($options);
 
@@ -341,7 +349,10 @@ class MysqliDb
             if (!in_array ($option, $allowedOptions))
                 die ('Wrong query option: '.$option);
 
-            $this->_queryOptions[] = $option;
+            if ($option == 'MYSQLI_NESTJOIN')
+                $this->_nestJoin = true;
+            else
+                $this->_queryOptions[] = $option;
         }
 
         return $this;
@@ -372,8 +383,9 @@ class MysqliDb
             $columns = '*';
 
         $column = is_array($columns) ? implode(', ', $columns) : $columns; 
+        $this->_tableName = self::$prefix . $tableName;
         $this->_query = 'SELECT ' . implode(' ', $this->_queryOptions) . ' ' .
-                        $column . " FROM " .self::$prefix . $tableName;
+                        $column . " FROM " . $this->_tableName;
         $stmt = $this->_buildQuery($numRows);
 
         if ($this->isSubQuery)
@@ -827,8 +839,14 @@ class MysqliDb
             if ($field->type == $mysqlLongType)
                 $shouldStoreResult = true;
 
-            $row[$field->name] = null;
-            $parameters[] = & $row[$field->name];
+            if ($this->_nestJoin && $field->table != $this->_tableName) {
+                $field->table = substr ($field->table, strlen (self::$prefix));
+                $row[$field->table][$field->name] = null;
+                $parameters[] = & $row[$field->table][$field->name];
+            } else {
+                $row[$field->name] = null;
+                $parameters[] = & $row[$field->name];
+            }
         }
 
         // avoid out of memory bug in php 5.2 and 5.3. Mysqli allocates lot of memory for long*
@@ -844,8 +862,14 @@ class MysqliDb
         while ($stmt->fetch()) {
             if ($this->returnType == 'Object') {
                 $x = new stdClass ();
-                foreach ($row as $key => $val)
-                    $x->$key = $val;
+                foreach ($row as $key => $val) {
+                    if (is_array ($val)) {
+                        $x->$key = new stdClass ();
+                        foreach ($val as $k => $v)
+                            $x->$key->$k = $v;
+                    } else
+                        $x->$key = $val;
+                }
             } else {
                 $x = array();
                 foreach ($row as $key => $val)
