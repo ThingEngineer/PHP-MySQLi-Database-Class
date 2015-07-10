@@ -141,13 +141,15 @@ class dbObject {
                 case 'hasone':
                     $obj = new $modelName;
                     $obj->returnType = $this->returnType;
-                    return $obj->byId($this->data[$name]);
+                    $this->data[$name] = $obj->byId($this->data[$name]);
+                    return $this->data[$name];
                     break;
                 case 'hasmany':
                     $key = $this->relations[$name][2];
                     $obj = new $modelName;
                     $obj->returnType = $this->returnType;
-                    return $obj->where($key, $this->data[$this->primaryKey])->get();
+                    $this->data[$name] = $obj->where($key, $this->data[$this->primaryKey])->get();
+                    return $this->data[$name];
                     break;
                 default:
                     break;
