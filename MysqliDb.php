@@ -285,9 +285,6 @@ class MysqliDb
     {
         $params = array(''); // Create the empty 0 index
         $this->_query = $query;
-        if ($sanitize)
-            $this->_query = filter_var ($query, FILTER_SANITIZE_STRING,
-                                    FILTER_FLAG_NO_ENCODE_QUOTES);
         $stmt = $this->_prepareQuery();
 
         if (is_array($bindParams) === true) {
