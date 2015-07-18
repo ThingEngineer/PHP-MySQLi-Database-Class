@@ -918,21 +918,18 @@ class MysqliDb
         if (!is_array ($tableData))
             return;
 
-        $isInsert = strpos ($this->_query, 'INSERT');
-        $isUpdate = strpos ($this->_query, 'UPDATE');
-
-        if ($isInsert !== false) {
-            $this->_query .= ' (`' . implode(array_keys($tableData), '`, `') . '`)';
-            $this->_query .= ' VALUES (';
-        } else
+        $isInsert = preg_match ('/^[INSERT|REPLACE]/', $this->_query);
+        if ($isInsert)
+            $this->_query .= ' (`' . implode(array_keys($tableData), '`, `') . '`)  VALUES (';
+        else
             $this->_query .= " SET ";
 
         foreach ($tableData as $column => $value) {
-            if ($isUpdate !== false)
+            if (!$isInsert)
                 $this->_query .= "`" . $column . "` = ";
 
             // Subquery value
-            if (is_object ($value)) {
+            if ($value instanceof MysqliDb) {
                 $this->_query .= $this->_buildPair ("", $value) . ", ";
                 continue;
             }
@@ -966,8 +963,8 @@ class MysqliDb
                     die ("Wrong operation");
             }
         }
-        $this->_query = rtrim($this->_query, ', ');
-        if ($isInsert !== false)
+        $this->_query = rtrim ($this->_query, ', ');
+        if ($isInsert)
             $this->_query .= ')';
     }
 
