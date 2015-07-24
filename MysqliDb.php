@@ -24,7 +24,7 @@ class MysqliDb
      * 
      * @var string
      */
-    public static $prefix;
+    public static $prefix = '';
     /**
      * MySQLi instance
      *
@@ -167,7 +167,8 @@ class MysqliDb
             $this->isSubQuery = true;
             return;
         }
-        $this->setPrefix();
+        if (isset ($prefix))
+            $this->setPrefix ($prefix);
         self::$_instance = $this;
     }
 
