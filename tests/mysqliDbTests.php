@@ -112,6 +112,12 @@ foreach ($tables as $name => $fields) {
     createTable ($prefix.$name, $fields);
 }
 
+if (!$db->ping()) {
+    echo "db is not up";
+    exit;
+}
+
+$str = $db->escape ("te'st");
 // insert test with autoincrement
 foreach ($data as $name => $datas) {
     foreach ($datas as $d) {
