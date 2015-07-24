@@ -40,6 +40,12 @@ class dbObject {
      */
     private $db;
     /**
+     * Loaded related object storage
+     *
+     * @var array
+     */
+    private $_related = Array();
+    /**
      * Models path
      *
      * @var modelPath
@@ -131,30 +137,6 @@ class dbObject {
      * @return mixed
      */
     public function __get ($name) {
-        if (isset ($this->data[$name]) && $this->data[$name] instanceof dbObject)
-            return $this->data[$name];
-
-        if (property_exists ($this, 'relations') && isset ($this->relations[$name])) {
-            $relationType = strtolower ($this->relations[$name][0]);
-            $modelName = $this->relations[$name][1];
-            switch ($relationType) {
-                case 'hasone':
-                    $obj = new $modelName;
-                    $obj->returnType = $this->returnType;
-                    $this->data[$name] = $obj->byId($this->data[$name]);
-                    return $this->data[$name];
-                    break;
-                case 'hasmany':
-                    $key = $this->relations[$name][2];
-                    $obj = new $modelName;
-                    $obj->returnType = $this->returnType;
-                    $this->data[$name] = $obj->where($key, $this->data[$this->primaryKey])->get();
-                    return $this->data[$name];
-                    break;
-                default:
-                    break;
-            }
-        }
 
         if (isset ($this->data[$name])) {
             return $this->data[$name];
@@ -162,6 +144,44 @@ class dbObject {
 
         if (property_exists ($this->db, $name))
             return $this->db->$name;
+
+        if(isset($this->_related[$name]))
+        {
+            // Return related model that has already been fetched
+            return $this->_related[$name];
+        }
+
+        if (property_exists ($this, 'relations') && isset ($this->relations[$name])) {
+            $relationType = strtolower ($this->relations[$name][0]);
+            $modelName = $this->relations[$name][1];
+            switch ($relationType) {
+                case 'hasone':
+                    $key = $this->relations[$name][2];
+                    $obj = new $modelName;
+                    $obj->returnType = $this->returnType;
+                    return $this->_related[$name] = $obj->byId($this->data[$key]);
+                    break;
+                case 'hasmany':
+                    $key = $this->relations[$name][2];
+                    $obj = new $modelName;
+                    $obj->returnType = $this->returnType;
+                    return $this->_related[$name] = $obj->where($key, $this->data[$this->primaryKey]);
+                    break;
+                case 'hasmanythrough':
+                    $pivotTable = $this->relations[$name][2];
+                    $key = $this->relations[$name][3];
+                    $farKey = $this->relations[$name][4];
+                    $obj = new $modelName;
+                    $obj->returnType = $this->returnType;
+                    $joinStr = MysqliDb::$prefix . $obj->dbTable . ".{$obj->primaryKey} = " .
+                               MysqliDb::$prefix . $pivotTable.'.'.$farKey;
+                    $obj->db->join($pivotTable, $joinStr, 'LEFT');
+                    return $this->_related[$name] = $obj->where($key, $this->data[$this->primaryKey]);
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
     public function __isset ($name) {
