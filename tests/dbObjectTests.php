@@ -265,4 +265,5 @@ if (!is_array ($p->join('user')->orderBy('`products`.id', 'desc')->get(2)))
 if (!is_array ($p->orderBy('`products`.id', 'desc')->join('user')->get(2)))
     echo "wrong return type2";
 
-echo "All done";
+echo "All done\n";
+echo "Memory usage: ".memory_get_peak_usage()."\n";
