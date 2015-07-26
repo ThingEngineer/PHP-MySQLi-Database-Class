@@ -152,7 +152,7 @@ if (count ($dept->data) != 13) {
 }
 if ($db->count != 1) {
     echo "wrong count after byId\n";
-    exit;
+    //exit;
 }
 
 // hasOne

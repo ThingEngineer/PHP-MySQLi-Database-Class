@@ -112,7 +112,7 @@ class dbObject {
      * @param array $data Data to preload on object creation
      */
     public function __construct ($data = null) {
-        $this->db = MysqliDb::getInstance();
+        $this->db = new MysqliDb(MysqliDb::getMysqli());
         if (empty ($this->dbTable))
             $this->dbTable = get_class ($this);
 

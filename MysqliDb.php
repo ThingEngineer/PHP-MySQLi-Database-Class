@@ -30,7 +30,7 @@ class MysqliDb
      *
      * @var mysqli
      */
-    protected $_mysqli;
+    protected static $_mysqli;
     /**
      * The SQL query to be prepared and executed
      *
@@ -152,9 +152,10 @@ class MysqliDb
                 $$key = $val;
         }
         // if host were set as mysqli socket
-        if (is_object ($host))
-            $this->_mysqli = $host;
-        else
+        if (is_object ($host)) {
+            self::$_mysqli = $host;
+            return $this;
+        } else
             $this->host = $host;
 
         $this->username = $username;
@@ -188,11 +189,11 @@ class MysqliDb
         if (empty ($this->host))
             die ('Mysql host is not set');
 
-        $this->_mysqli = new mysqli ($this->host, $this->username, $this->password, $this->db, $this->port)
+        self::$_mysqli = new mysqli ($this->host, $this->username, $this->password, $this->db, $this->port)
             or die('There was a problem connecting to the database');
 
         if ($this->charset)
-            $this->_mysqli->set_charset ($this->charset);
+            self::$_mysqli->set_charset ($this->charset);
     }
     /**
      * A method of returning the static instance to allow access to the
@@ -643,7 +644,7 @@ class MysqliDb
      */
     public function getInsertId()
     {
-        return $this->_mysqli->insert_id;
+        return self::$_mysqli->insert_id;
     }
 
     /**
@@ -655,7 +656,7 @@ class MysqliDb
      */
     public function escape($str)
     {
-        return $this->_mysqli->real_escape_string($str);
+        return self::$_mysqli->real_escape_string($str);
     }
 
     /**
@@ -667,7 +668,7 @@ class MysqliDb
      * @return bool True if connection is up
      */
     public function ping() {
-        return $this->_mysqli->ping();
+        return self::$_mysqli->ping();
     }
 
     /**
@@ -876,11 +877,11 @@ class MysqliDb
             array_push($results, $x);
         }
         // stored procedures sometimes can return more then 1 resultset
-        if ($this->_mysqli->more_results())
-            $this->_mysqli->next_result();
+        if (self::$_mysqli->more_results())
+            self::$_mysqli->next_result();
 
         if (in_array ('SQL_CALC_FOUND_ROWS', $this->_queryOptions)) {
-            $stmt = $this->_mysqli->query ('SELECT FOUND_ROWS()');
+            $stmt = self::$_mysqli->query ('SELECT FOUND_ROWS()');
             $totalCount = $stmt->fetch_row();
             $this->totalCount = $totalCount[0];
         }
@@ -1074,8 +1075,8 @@ class MysqliDb
      */
     protected function _prepareQuery()
     {
-        if (!$stmt = $this->_mysqli->prepare($this->_query)) {
-            trigger_error("Problem preparing query ($this->_query) " . $this->_mysqli->error, E_USER_ERROR);
+        if (!$stmt = self::$_mysqli->prepare($this->_query)) {
+            trigger_error("Problem preparing query ($this->_query) " . self::$_mysqli->error, E_USER_ERROR);
         }
         if ($this->traceEnabled)
             $this->traceStartQ = microtime (true);
@@ -1090,8 +1091,8 @@ class MysqliDb
     {
         if (!$this->isSubQuery)
             return;
-        if ($this->_mysqli)
-            $this->_mysqli->close();
+        if (self::$_mysqli)
+            self::$_mysqli->close();
     }
 
     /**
@@ -1151,7 +1152,7 @@ class MysqliDb
      * @return string
      */
     public function getLastError () {
-        return trim ($this->_stmtError . " " . $this->_mysqli->error);
+        return trim ($this->_stmtError . " " . self::$_mysqli->error);
     }
 
     /**
@@ -1264,8 +1265,7 @@ class MysqliDb
      */
     public function copy ()
     {
-        $copy = unserialize (serialize ($this));
-        $copy->_mysqli = $this->_mysqli;
+        $copy = clone $this;
         return $copy;
     }
 
@@ -1276,7 +1276,7 @@ class MysqliDb
      * @uses register_shutdown_function(array($this, "_transaction_shutdown_check"))
      */
     public function startTransaction () {
-        $this->_mysqli->autocommit (false);
+        self::$_mysqli->autocommit (false);
         $this->_transaction_in_progress = true;
         register_shutdown_function (array ($this, "_transaction_status_check"));
     }
@@ -1288,9 +1288,9 @@ class MysqliDb
      * @uses mysqli->autocommit(true);
      */
     public function commit () {
-        $this->_mysqli->commit ();
+        self::$_mysqli->commit ();
         $this->_transaction_in_progress = false;
-        $this->_mysqli->autocommit (true);
+        self::$_mysqli->autocommit (true);
     }
 
     /**
@@ -1300,9 +1300,9 @@ class MysqliDb
      * @uses mysqli->autocommit(true);
      */
     public function rollback () {
-      $this->_mysqli->rollback ();
+      self::$_mysqli->rollback ();
       $this->_transaction_in_progress = false;
-      $this->_mysqli->autocommit (true);
+      self::$_mysqli->autocommit (true);
     }
 
     /**
@@ -1341,6 +1341,14 @@ class MysqliDb
 
         return __CLASS__ . "->" . $caller["function"] . "() >>  file \"" .
                 str_replace ($this->traceStripPrefix, '', $caller["file"] ) . "\" line #" . $caller["line"] . " " ;
+    }
+    /**
+     * Get mysqli instance
+     *
+     * @return mysqli Mysqli instance
+     */
+    public static function getMysqli () {
+        return static::$_mysqli;
     }
 } // END class
 
