@@ -1343,4 +1343,4 @@ class MysqliDb
                 str_replace ($this->traceStripPrefix, '', $caller["file"] ) . "\" line #" . $caller["line"] . " " ;
     }
 } // END class
-?>
+

@@ -3,3 +3,6 @@
 
 #Vim trash
 *.swp
+
+#Ignore IDE
+/.idea

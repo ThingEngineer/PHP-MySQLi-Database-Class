@@ -394,7 +394,7 @@ class dbObject {
      * @return dbObject
      */
     private function with ($objectName) {
-        if (!property_exists ($this, 'relations') && !isset ($this->relations[$name]))
+        if (!property_exists ($this, 'relations') && !isset ($this->relations[$objectName]))
             die ("No relation with name $objectName found");
 
         $this->_with[$objectName] = $this->relations[$objectName];
@@ -654,7 +654,7 @@ class dbObject {
             return Array();
 
         if (method_exists ($this, "preLoad"))
-            $this->preLoad ($data);
+            $this->preLoad ($sqlData);
 
         if (!$this->dbFields)
             return $this->data;
@@ -707,4 +707,4 @@ class dbObject {
         spl_autoload_register ("dbObject::dbObjectAutoload");
     }
 }
-?>
+

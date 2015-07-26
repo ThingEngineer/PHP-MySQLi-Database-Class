@@ -2,16 +2,16 @@
 require_once ("../MysqliDb.php");
 error_reporting(E_ALL);
 
-$db = new Mysqlidb('localhost', 'root', '', 'testdb');
+$db = new Mysqlidb('127.0.0.1', 'root', 'root', 'testdb');
 if(!$db) die("Database error");
 
-$mysqli = new mysqli ('localhost', 'root', '', 'testdb');
+$mysqli = new mysqli ('127.0.0.1', 'root', 'root', 'testdb');
 $db = new Mysqlidb($mysqli);
 
 $db = new Mysqlidb(Array (
-                'host' => 'localhost',
+                'host' => '127.0.0.1',
                 'username' => 'root', 
-                'password' => '',
+                'password' => 'root',
                 'db'=> 'testdb',
                 'charset' => null));
 if(!$db) die("Database error");
@@ -363,4 +363,4 @@ $db->delete("products");
 
 print_r ($db->trace);
 echo "All done";
-?>
+
