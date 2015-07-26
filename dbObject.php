@@ -142,11 +142,7 @@ class dbObject {
             return $this->data[$name];
         }
 
-        if (property_exists ($this->db, $name))
-            return $this->db->$name;
-
-        if(isset($this->_related[$name]))
-        {
+        if (isset($this->_related[$name])) {
             // Return related model that has already been fetched
             return $this->_related[$name];
         }
@@ -182,6 +178,9 @@ class dbObject {
                     break;
             }
         }
+
+        if (property_exists ($this->db, $name))
+            return $this->db->$name;
     }
 
     public function __isset ($name) {
