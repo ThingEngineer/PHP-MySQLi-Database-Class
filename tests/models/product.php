@@ -16,7 +16,8 @@ class product extends dbObject {
         'productName' => Array ('text','required')
     );
     protected $relations = Array (
-        'user' => Array ("hasOne", "user", 'userId')
+        'userId' => Array ("hasOne", "user"),
+        'user' => Array ("hasOne", "user", "userId")
     );
 
     public function last () {

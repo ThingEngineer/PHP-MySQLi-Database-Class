@@ -3,6 +3,8 @@ require_once ("../MysqliDb.php");
 error_reporting(E_ALL);
 
 $db = new Mysqlidb('127.0.0.1', 'root', 'root', 'testdb');
+$prefix = 't_';
+$db = new Mysqlidb('localhost', 'root', '', 'testdb');
 if(!$db) die("Database error");
 
 $mysqli = new mysqli ('127.0.0.1', 'root', 'root', 'testdb');
@@ -10,15 +12,13 @@ $db = new Mysqlidb($mysqli);
 
 $db = new Mysqlidb(Array (
                 'host' => '127.0.0.1',
-                'username' => 'root', 
+                'username' => 'root',
                 'password' => 'root',
-                'db'=> 'testdb',
+                'db' => 'testdb',
+                'prefix' => $prefix,
                 'charset' => null));
 if(!$db) die("Database error");
 
-
-$prefix = 't_';
-$db->setPrefix($prefix);
 $db->setTrace(true);
 
 $tables = Array (
@@ -110,6 +110,11 @@ function createTable ($name, $data) {
 foreach ($tables as $name => $fields) {
     $db->rawQuery("DROP TABLE ".$prefix.$name);
     createTable ($prefix.$name, $fields);
+}
+
+if (!$db->ping()) {
+    echo "db is not up";
+    exit;
 }
 
 // insert test with autoincrement

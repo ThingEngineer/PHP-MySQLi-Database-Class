@@ -24,13 +24,13 @@ class MysqliDb
      * 
      * @var string
      */
-    public static $prefix;
+    public static $prefix = '';
     /**
      * MySQLi instance
      *
      * @var mysqli
      */
-    protected static $_mysqli;
+    protected $_mysqli;
     /**
      * The SQL query to be prepared and executed
      *
@@ -152,10 +152,9 @@ class MysqliDb
                 $$key = $val;
         }
         // if host were set as mysqli socket
-        if (is_object ($host)) {
-            self::$_mysqli = $host;
-            return $this;
-        } else
+        if (is_object ($host))
+            $this->_mysqli = $host;
+        else
             $this->host = $host;
 
         $this->username = $username;
@@ -168,12 +167,8 @@ class MysqliDb
             $this->isSubQuery = true;
             return;
         }
-
-        // for subqueries we do not need database connection and redefine root instance
-        if (!is_object ($host))
-            $this->connect();
-
-        $this->setPrefix();
+        if (isset ($prefix))
+            $this->setPrefix ($prefix);
         self::$_instance = $this;
     }
 
@@ -189,12 +184,23 @@ class MysqliDb
         if (empty ($this->host))
             die ('Mysql host is not set');
 
-        self::$_mysqli = new mysqli ($this->host, $this->username, $this->password, $this->db, $this->port)
+        $this->_mysqli = new mysqli ($this->host, $this->username, $this->password, $this->db, $this->port)
             or die('There was a problem connecting to the database');
 
         if ($this->charset)
-            self::$_mysqli->set_charset ($this->charset);
+            $this->_mysqli->set_charset ($this->charset);
     }
+
+    /**
+     * A method to get mysqli object or create it in case needed
+     */
+    public function mysqli ()
+    {
+        if (!$this->_mysqli)
+            $this->connect();
+        return $this->_mysqli;
+    }
+
     /**
      * A method of returning the static instance to allow access to the
      * instantiated object from within another class.
@@ -644,7 +650,7 @@ class MysqliDb
      */
     public function getInsertId()
     {
-        return self::$_mysqli->insert_id;
+        return $this->mysqli()->insert_id;
     }
 
     /**
@@ -656,7 +662,7 @@ class MysqliDb
      */
     public function escape($str)
     {
-        return self::$_mysqli->real_escape_string($str);
+        return $this->mysqli()->real_escape_string($str);
     }
 
     /**
@@ -668,7 +674,7 @@ class MysqliDb
      * @return bool True if connection is up
      */
     public function ping() {
-        return self::$_mysqli->ping();
+        return $this->mysqli()->ping();
     }
 
     /**
@@ -877,11 +883,11 @@ class MysqliDb
             array_push($results, $x);
         }
         // stored procedures sometimes can return more then 1 resultset
-        if (self::$_mysqli->more_results())
-            self::$_mysqli->next_result();
+        if ($this->mysqli()->more_results())
+            $this->mysqli()->next_result();
 
         if (in_array ('SQL_CALC_FOUND_ROWS', $this->_queryOptions)) {
-            $stmt = self::$_mysqli->query ('SELECT FOUND_ROWS()');
+            $stmt = $this->mysqli()->query ('SELECT FOUND_ROWS()');
             $totalCount = $stmt->fetch_row();
             $this->totalCount = $totalCount[0];
         }
@@ -1075,8 +1081,8 @@ class MysqliDb
      */
     protected function _prepareQuery()
     {
-        if (!$stmt = self::$_mysqli->prepare($this->_query)) {
-            trigger_error("Problem preparing query ($this->_query) " . self::$_mysqli->error, E_USER_ERROR);
+        if (!$stmt = $this->mysqli()->prepare($this->_query)) {
+            trigger_error("Problem preparing query ($this->_query) " . $this->mysqli()->error, E_USER_ERROR);
         }
         if ($this->traceEnabled)
             $this->traceStartQ = microtime (true);
@@ -1091,8 +1097,8 @@ class MysqliDb
     {
         if (!$this->isSubQuery)
             return;
-        if (self::$_mysqli)
-            self::$_mysqli->close();
+        if ($this->_mysqli)
+            $this->_mysqli->close();
     }
 
     /**
@@ -1152,7 +1158,9 @@ class MysqliDb
      * @return string
      */
     public function getLastError () {
-        return trim ($this->_stmtError . " " . self::$_mysqli->error);
+        if (!$this->_mysqli)
+            return "mysqli is null";
+        return trim ($this->_stmtError . " " . $this->mysqli()->error);
     }
 
     /**
@@ -1265,7 +1273,8 @@ class MysqliDb
      */
     public function copy ()
     {
-        $copy = clone $this;
+        $copy = unserialize (serialize ($this));
+        $copy->_mysqli = $this->_mysqli;
         return $copy;
     }
 
@@ -1276,7 +1285,7 @@ class MysqliDb
      * @uses register_shutdown_function(array($this, "_transaction_shutdown_check"))
      */
     public function startTransaction () {
-        self::$_mysqli->autocommit (false);
+        $this->mysqli()->autocommit (false);
         $this->_transaction_in_progress = true;
         register_shutdown_function (array ($this, "_transaction_status_check"));
     }
@@ -1288,9 +1297,9 @@ class MysqliDb
      * @uses mysqli->autocommit(true);
      */
     public function commit () {
-        self::$_mysqli->commit ();
+        $this->mysqli()->commit ();
         $this->_transaction_in_progress = false;
-        self::$_mysqli->autocommit (true);
+        $this->mysqli()->autocommit (true);
     }
 
     /**
@@ -1300,9 +1309,9 @@ class MysqliDb
      * @uses mysqli->autocommit(true);
      */
     public function rollback () {
-      self::$_mysqli->rollback ();
+      $this->mysqli()->rollback ();
       $this->_transaction_in_progress = false;
-      self::$_mysqli->autocommit (true);
+      $this->mysqli()->autocommit (true);
     }
 
     /**
@@ -1342,13 +1351,5 @@ class MysqliDb
         return __CLASS__ . "->" . $caller["function"] . "() >>  file \"" .
                 str_replace ($this->traceStripPrefix, '', $caller["file"] ) . "\" line #" . $caller["line"] . " " ;
     }
-    /**
-     * Get mysqli instance
-     *
-     * @return mysqli Mysqli instance
-     */
-    public static function getMysqli () {
-        return static::$_mysqli;
-    }
 } // END class
-
+?>

@@ -40,12 +40,6 @@ class dbObject {
      */
     private $db;
     /**
-     * Loaded related object storage
-     *
-     * @var array
-     */
-    private $_related = Array();
-    /**
      * Models path
      *
      * @var modelPath
@@ -112,7 +106,7 @@ class dbObject {
      * @param array $data Data to preload on object creation
      */
     public function __construct ($data = null) {
-        $this->db = new MysqliDb(MysqliDb::getMysqli());
+        $this->db = MysqliDb::getInstance();
         if (empty ($this->dbTable))
             $this->dbTable = get_class ($this);
 
@@ -137,31 +131,24 @@ class dbObject {
      * @return mixed
      */
     public function __get ($name) {
-
-        if (isset ($this->data[$name])) {
+        if (isset ($this->data[$name]) && $this->data[$name] instanceof dbObject)
             return $this->data[$name];
-        }
-
-        if (isset($this->_related[$name])) {
-            // Return related model that has already been fetched
-            return $this->_related[$name];
-        }
 
         if (property_exists ($this, 'relations') && isset ($this->relations[$name])) {
             $relationType = strtolower ($this->relations[$name][0]);
             $modelName = $this->relations[$name][1];
             switch ($relationType) {
                 case 'hasone':
-                    $key = $this->relations[$name][2];
+                    $key = isset ($this->relations[$name][2]) ? $this->relations[$name][2] : $name;
                     $obj = new $modelName;
                     $obj->returnType = $this->returnType;
-                    return $this->_related[$name] = $obj->byId($this->data[$key]);
+                    return $this->data[$name] = $obj->byId($this->data[$key]);
                     break;
                 case 'hasmany':
                     $key = $this->relations[$name][2];
                     $obj = new $modelName;
                     $obj->returnType = $this->returnType;
-                    return $this->_related[$name] = $obj->where($key, $this->data[$this->primaryKey]);
+                    return $obj->where($key, $this->data[$this->primaryKey]);
                     break;
                 case 'hasmanythrough':
                     $pivotTable = $this->relations[$name][2];
@@ -177,6 +164,10 @@ class dbObject {
                 default:
                     break;
             }
+        }
+
+        if (isset ($this->data[$name])) {
+            return $this->data[$name];
         }
 
         if (property_exists ($this->db, $name))
@@ -385,7 +376,7 @@ class dbObject {
     }
 
     /**
-     * Function to set witch hasOne or hasMany objects should be loaded togeather with a main object
+     * Function to set witch hasOne objects should be loaded togeather with a main object
      *
      * @access public
      * @param string $objectName Object Name
@@ -653,7 +644,7 @@ class dbObject {
             return Array();
 
         if (method_exists ($this, "preLoad"))
-            $this->preLoad ($sqlData);
+            $this->preLoad ($this->data);
 
         if (!$this->dbFields)
             return $this->data;
