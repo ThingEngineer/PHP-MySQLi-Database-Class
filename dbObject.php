@@ -159,7 +159,7 @@ class dbObject {
                     $joinStr = MysqliDb::$prefix . $obj->dbTable . ".{$obj->primaryKey} = " .
                                MysqliDb::$prefix . $pivotTable.'.'.$farKey;
                     $obj->db->join($pivotTable, $joinStr, 'LEFT');
-                    return $this->_related[$name] = $obj->where($key, $this->data[$this->primaryKey]);
+                    return $obj->where($key, $this->data[$this->primaryKey]);
                     break;
                 default:
                     break;
