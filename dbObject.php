@@ -139,17 +139,16 @@ class dbObject {
             $modelName = $this->relations[$name][1];
             switch ($relationType) {
                 case 'hasone':
+                    $key = isset ($this->relations[$name][2]) ? $this->relations[$name][2] : $name;
                     $obj = new $modelName;
                     $obj->returnType = $this->returnType;
-                    $this->data[$name] = $obj->byId($this->data[$name]);
-                    return $this->data[$name];
+                    return $this->data[$name] = $obj->byId($this->data[$key]);
                     break;
                 case 'hasmany':
                     $key = $this->relations[$name][2];
                     $obj = new $modelName;
                     $obj->returnType = $this->returnType;
-                    $this->data[$name] = $obj->where($key, $this->data[$this->primaryKey])->get();
-                    return $this->data[$name];
+                    return $this->data[$name] = $obj->where($key, $this->data[$this->primaryKey])->get();
                     break;
                 default:
                     break;
