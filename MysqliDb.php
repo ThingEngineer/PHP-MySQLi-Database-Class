@@ -188,7 +188,7 @@ class MysqliDb
             or die('There was a problem connecting to the database');
 
         if ($this->charset)
-            $this->mysqli()->set_charset ($this->charset);
+            $this->_mysqli->set_charset ($this->charset);
     }
 
     /**
@@ -1098,7 +1098,7 @@ class MysqliDb
         if (!$this->isSubQuery)
             return;
         if ($this->_mysqli)
-            $this->mysqli()->close();
+            $this->_mysqli->close();
     }
 
     /**
