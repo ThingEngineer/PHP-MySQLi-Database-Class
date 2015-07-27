@@ -634,7 +634,7 @@ class dbObject {
             return Array();
 
         if (method_exists ($this, "preLoad"))
-            $this->preLoad ($data);
+            $this->preLoad ($this->data);
 
         if (!$this->dbFields)
             return $this->data;
