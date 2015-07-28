@@ -230,7 +230,7 @@ class dbObject {
             return false;
 
         $id = $this->db->insert ($this->dbTable, $sqlData);
-        if (!empty ($this->primaryKey))
+        if (!empty ($this->primaryKey) && !isset($this->data[$this->primaryKey]))
             $this->data[$this->primaryKey] = $id;
         $this->isNew = false;
 
@@ -269,13 +269,9 @@ class dbObject {
      * @return mixed insert id or false in case of failure
      */
     public function save ($data = null) {
-        if ($this->isNew) {
-            $id = $this->insert();
-            if (isset ($this->primaryKey))
-                $this->data[$this->primaryKey] = $id;
-            return $id;
-        }
-        return $this->update($data);
+        if ($this->isNew)
+            return $this->insert();
+        return $this->update ($data);
     }
 
     /**
@@ -316,6 +312,9 @@ class dbObject {
     private function getOne ($fields = null) {
         $this->processHasOneWith ();
         $results = $this->db->ArrayBuilder()->getOne ($this->dbTable, $fields);
+        if ($this->db->count == 0)
+            return null;
+
         $this->processArrays ($results);
         $this->data = $results;
         $this->processAllWith ($results);
@@ -344,6 +343,9 @@ class dbObject {
         $objects = Array ();
         $this->processHasOneWith ();
         $results = $this->db->ArrayBuilder()->get ($this->dbTable, $limit, $fields);
+        if ($this->db->count == 0)
+            return null;
+
         foreach ($results as &$r) {
             $this->processArrays ($r);
             $this->data = $r;
@@ -557,15 +559,15 @@ class dbObject {
      * @param array $data
      */
     private function processArrays (&$data) {
-            if (isset ($this->jsonFields) && is_array ($this->jsonFields)) {
-                foreach ($this->jsonFields as $key)
-                    $data[$key] = json_decode ($data[$key]);
-            }
+        if (isset ($this->jsonFields) && is_array ($this->jsonFields)) {
+            foreach ($this->jsonFields as $key)
+                $data[$key] = json_decode ($data[$key]);
+        }
 
-            if (isset ($this->arrayFields) && is_array($this->arrayFields)) {
-                foreach ($this->arrayFields as $key)
-                    $data[$key] = explode ("|", $data[$key]);
-            }
+        if (isset ($this->arrayFields) && is_array($this->arrayFields)) {
+            foreach ($this->arrayFields as $key)
+                $data[$key] = explode ("|", $data[$key]);
+        }
     }
 
     /**
