@@ -7,7 +7,7 @@
  * @author    Alexander V. Butenko <a.butenka@gmail.com>
  * @copyright Copyright (c) 2015
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
- * @version   2.1
+ * @version   2.2
  *
  * @method int count ()
  * @method mixed byId (string $id, mixed $fields)
