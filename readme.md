@@ -7,7 +7,7 @@ MysqliDb -- Simple MySQLi wrapper and object mapper with prepared statements
 **[Update Query](#update-query)**  
 **[Select Query](#select-query)**  
 **[Delete Query](#delete-query)**  
-**[Generic Query](#generic-query-method)**  
+**[Running raw SQL queries](#running-raw-sql-queries)**
 **[Query Keywords](#query-keywords)**  
 **[Raw Query](#raw-query-method)**  
 **[Where Conditions](#where-method)**  
@@ -53,9 +53,10 @@ $db = new MysqliDb (Array (
                 'password' => 'password',
                 'db'=> 'databaseName',
                 'port' => 3306,
+                'prefix' => 'my_',
                 'charset' => 'utf8'));
 ```
-port and charset params are optional.
+prefix, port and charset params are optional.
 
 Reuse already connected mysqli:
 ```php
@@ -63,9 +64,22 @@ $mysqli = new mysqli ('host', 'username', 'password', 'databaseName');
 $db = new MysqliDb ($mysqli);
 ```
 
-Its also possible to set a table prefix:
+Its also possible to set a table prefix via separate call:
 ```php
 $db->setPrefix ('my_');
+```
+
+If you need to get already created mysqliDb object from another class or function use
+```php
+    function init () {
+        // db staying private here
+        $db = new MysqliDb ('host', 'username', 'password', 'databaseName');
+    }
+    function myfunc () {
+        // obtain db object created in init  ()
+        $db = MysqliDb::getInstance();
+        ...
+    }
 ```
 
 Next, prepare your data, and call the necessary methods. 
@@ -110,7 +124,7 @@ else
 ```
 
 ### Replace Query
-replace() method implements same API as insert();
+<a href='https://dev.mysql.com/doc/refman/5.0/en/replace.html'>Replace()</a> method implements same API as insert();
 
 ### Update Query
 ```php
@@ -176,21 +190,13 @@ echo $u->login;
 // Json return type
 $json = $db->JsonBuilder()->getOne("users");
 ```
-### Delete Query
-```php
-$db->where('id', 1);
-if($db->delete('users')) echo 'successfully deleted';
-```
 
-### Generic Query Method
-By default rawQuery() will filter out special characters so if you getting problems with it
-you might try to disable filtering function. In this case make sure that all external variables are passed to the query via bind variables
-
+### Running raw SQL queries
 ```php
 // filtering enabled
 $users = $db->rawQuery('SELECT * from users where customerId=?', Array (10));
 // filtering disabled
-//$users = $db->rawQuery('SELECT * from users where id >= ?', Array (10), false);
+//$users = $db->rawQuery('SELECT * from users where id >= ?', Array (10));
 foreach ($users as $user) {
     print_r ($user);
 }
@@ -336,6 +342,13 @@ $results = $db
 	->get('users');
 ```
 
+### Delete Query
+```php
+$db->where('id', 1);
+if($db->delete('users')) echo 'successfully deleted';
+```
+
+
 ### Ordering method
 ```php
 $db->orderBy("id","asc");
@@ -477,11 +490,6 @@ Reconnect in case mysql connection died
 ```php
 if (!$db->ping())
     $db->connect()
-```
-
-Obtain an initialized instance of the class from another class
-```php
-    $db = MysqliDb::getInstance();
 ```
 
 Get last executed SQL query.
