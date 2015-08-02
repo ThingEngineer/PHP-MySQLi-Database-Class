@@ -334,7 +334,7 @@ class dbObject {
      *
      * @access public
      * @param integer|array $limit Array to define SQL limit in format Array ($count, $offset)
-                                   or only $count
+     *                             or only $count
      * @param array|string $fields Array or coma separated list of fields to fetch
      *
      * @return array Array of dbObjects
