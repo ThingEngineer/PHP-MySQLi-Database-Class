@@ -123,6 +123,20 @@ else
     echo 'insert failed: ' . $db->getLastError();
 ```
 
+Insert with on duplicate key update
+```php
+$data = Array ("login" => "admin",
+               "firstName" => "John",
+               "lastName" => 'Doe',
+               "createdAt" => $db->now(),
+               "updatedAt" => $db->now(),
+);
+$updateColumns = Array ("updateAt");
+$lastInsertId = "id";
+$db->onDuplicate($updateColumns, $lastInsertId);
+$id = $db->insert ('users', $data);
+```
+
 ### Replace Query
 <a href='https://dev.mysql.com/doc/refman/5.0/en/replace.html'>Replace()</a> method implements same API as insert();
 

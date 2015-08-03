@@ -29,8 +29,10 @@ $tables = Array (
         'lastName' => 'char(10)',
         'password' => 'text not null',
         'createdAt' => 'datetime',
+        'updatedAt' => 'datetime',
         'expires' => 'datetime',
-        'loginCount' => 'int(10) default 0'
+        'loginCount' => 'int(10) default 0',
+		'unique key' => 'login (login)'
     ),
     'products' => Array (
         'customerId' => 'int(10) not null',
@@ -46,6 +48,7 @@ $data = Array (
                'lastName' => 'Doe',
                'password' => $db->func('SHA1(?)',Array ("secretpassword+salt")),
                'createdAt' => $db->now(),
+               'updatedAt' => $db->now(),
                'expires' => $db->now('+1Y'),
                'loginCount' => $db->inc()
         ),
@@ -55,6 +58,7 @@ $data = Array (
                'lastName' => NULL,
                'password' => $db->func('SHA1(?)',Array ("secretpassword2+salt")),
                'createdAt' => $db->now(),
+               'updatedAt' => $db->now(),
                'expires' => $db->now('+1Y'),
                'loginCount' => $db->inc(2)
         ),
@@ -65,6 +69,7 @@ $data = Array (
                'lastName' => 'D',
                'password' => $db->func('SHA1(?)',Array ("secretpassword2+salt")),
                'createdAt' => $db->now(),
+               'updatedAt' => $db->now(),
                'expires' => $db->now('+1Y'),
                'loginCount' => $db->inc(3)
         )
@@ -136,6 +141,7 @@ $badUser = Array ('login' => null,
                'lastName' => 'Doe',
                'password' => 'test',
                'createdAt' => $db->now(),
+               'updatedAt' => $db->now(),
                'expires' => $db->now('+1Y'),
                'loginCount' => $db->inc()
         );
@@ -169,6 +175,23 @@ if ($db->count != 3) {
     echo "Invalid total insert count";
     exit;
 }
+
+// insert with on duplicate key update
+$user = Array ('login' => 'user3',
+	   'active' => true,
+	   'customerId' => 11,
+	   'firstName' => 'Pete',
+	   'lastName' => 'D',
+	   'password' => $db->func('SHA1(?)',Array ("secretpassword2+salt")),
+	   'createdAt' => $db->now(),
+	   'updatedAt' => $db->now(),
+	   'expires' => $db->now('+1Y'),
+	   'loginCount' => $db->inc(3)
+	   );
+$updateColumns = Array ("updatedAt");
+$insertLastId = "id";
+$db->onDuplicate($updateColumns, "id");
+$db->insert("users", $user);
 
 // order by field
 $db->orderBy("login","asc", Array ("user3","user2","user1"));
