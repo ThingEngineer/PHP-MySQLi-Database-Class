@@ -821,20 +821,20 @@ class MysqliDb
             }
             
             foreach ($this->_updateColumns as $column) {
-				$this->_query .= "`" . $column . "` = ";
-				
-				// Simple value
-				if (!is_array ($tableData[$column])) {
-					$this->_bindParam($tableData[$column]);
-					$this->_query .= '?, ';
-					continue;
-				}
-				
-				// Function value
-				$arr = $tableData[$column];
-				$key = key($arr);
-				$val = $arr[$key];
-				switch ($key) {
+                $this->_query .= "`" . $column . "` = ";
+                
+                // Simple value
+                if (!is_array ($tableData[$column])) {
+                    $this->_bindParam($tableData[$column]);
+                    $this->_query .= '?, ';
+                    continue;
+                }
+                
+                // Function value
+                $arr = $tableData[$column];
+                $key = key($arr);
+                $val = $arr[$key];
+                switch ($key) {
                 case '[I]':
                     $this->_query .= $column . $val . ", ";
                     break;
@@ -851,7 +851,7 @@ class MysqliDb
                     break;
                 default:
                     die ("Wrong operation");
-				}
+                }
             }
             $this->_query = rtrim($this->_query, ', ');
         }

@@ -32,7 +32,7 @@ $tables = Array (
         'updatedAt' => 'datetime',
         'expires' => 'datetime',
         'loginCount' => 'int(10) default 0',
-		'unique key' => 'login (login)'
+        'unique key' => 'login (login)'
     ),
     'products' => Array (
         'customerId' => 'int(10) not null',
@@ -178,16 +178,16 @@ if ($db->count != 3) {
 
 // insert with on duplicate key update
 $user = Array ('login' => 'user3',
-	   'active' => true,
-	   'customerId' => 11,
-	   'firstName' => 'Pete',
-	   'lastName' => 'D',
-	   'password' => $db->func('SHA1(?)',Array ("secretpassword2+salt")),
-	   'createdAt' => $db->now(),
-	   'updatedAt' => $db->now(),
-	   'expires' => $db->now('+1Y'),
-	   'loginCount' => $db->inc(3)
-	   );
+       'active' => true,
+       'customerId' => 11,
+       'firstName' => 'Pete',
+       'lastName' => 'D',
+       'password' => $db->func('SHA1(?)',Array ("secretpassword2+salt")),
+       'createdAt' => $db->now(),
+       'updatedAt' => $db->now(),
+       'expires' => $db->now('+1Y'),
+       'loginCount' => $db->inc(3)
+       );
 $updateColumns = Array ("updatedAt");
 $insertLastId = "id";
 $db->onDuplicate($updateColumns, "id");
