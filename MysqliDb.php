@@ -280,15 +280,14 @@ class MysqliDb
     }
 
     /**
-     * Pass in a raw query and an array containing the parameters to bind to the prepaird statement.
+     * Execute raw SQL query.
      *
-     * @param string $query      Contains a user-provided query.
-     * @param array  $bindParams All variables to bind to the SQL statment.
-     * @param bool   $sanitize   If query should be filtered before execution
+     * @param string $query      User-provided query to execute.
+     * @param array  $bindParams Variables array to bind to the SQL statement.
      *
      * @return array Contains the returned rows from the query.
      */
-    public function rawQuery ($query, $bindParams = null, $sanitize = true)
+    public function rawQuery ($query, $bindParams = null)
     {
         $params = array(''); // Create the empty 0 index
         $this->_query = $query;
