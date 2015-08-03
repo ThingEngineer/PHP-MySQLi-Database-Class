@@ -7,7 +7,7 @@ MysqliDb -- Simple MySQLi wrapper and object mapper with prepared statements
 **[Update Query](#update-query)**  
 **[Select Query](#select-query)**  
 **[Delete Query](#delete-query)**  
-**[Running raw SQL queries](#running-raw-sql-queries)**
+**[Running raw SQL queries](#running-raw-sql-queries)**  
 **[Query Keywords](#query-keywords)**  
 **[Raw Query](#raw-query-method)**  
 **[Where Conditions](#where-method)**  
