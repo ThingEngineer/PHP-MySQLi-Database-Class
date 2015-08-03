@@ -112,6 +112,18 @@ class MysqliDb
      */
     protected $isSubQuery = false;
 
+	/**
+	 * Name of the auto increment column 
+	 *
+	 */
+    protected $lastInsertId = null;
+
+	/**
+	 * Column names for update when using onDuplicate method
+	 *
+	 */
+    protected $updateColumns = null;
+
     /**
      * Return type: 'Array' to return results as array, 'Object' as object
      * 'Json' as json string
@@ -550,6 +562,19 @@ class MysqliDb
         return $this;
     }
 
+	/** 
+     * This function store update column's name and column name of the 
+     * autoincrement column
+     * 
+     * @param Array Variable with values
+     * @param String Variable value 
+     */
+	public function onDuplicate($updateColumns, $lastInsertId = null)
+    {
+        $this->lastInsertId = $lastInsertId;
+        $this->updateColumns = $updateColumns;
+    }
+
     /**
      * This method allows you to specify multiple (method chaining optional) OR WHERE statements for SQL queries.
      *
@@ -779,6 +804,31 @@ class MysqliDb
         return true;
     }
 
+	/** 
+     * Helper function to add variables into the query statement
+     * 
+     * @param Array Variable with values
+     */
+    protected function _buildDuplicate($tableData)
+    {
+		if (is_array($this->updateColumns) && !empty($this->updateColumns)) {
+            $this->_query .= " on duplicate key update ";
+            if ($this->lastInsertId) {
+                $this->_lastQuery .= $this->lastInsertId."=LAST_INSERT_ID(".$this->lastInsertId."),";
+                $this->lastInsertId = null;
+            }
+			
+            foreach ($this->updateColumns as $value) {
+                $this->_bindParam($tableData[$value]);
+                $this->_query .= "`" . $value . "` = ?, ";
+            }
+			
+            $this->_query = rtrim($this->_query, ', ');
+			$this->lastInsertId = null;
+			$this->updateColumns = null;
+        }
+    }
+
     /**
      * Abstraction method that will compile the WHERE statement,
      * any passed update data, and the desired rows.
@@ -798,6 +848,7 @@ class MysqliDb
         $this->_buildGroupBy();
         $this->_buildOrderBy();
         $this->_buildLimit ($numRows);
+        $this->_buildDuplicate($tableData);
 
         $this->_lastQuery = $this->replacePlaceHolders ($this->_query, $this->_bindParams);
 
