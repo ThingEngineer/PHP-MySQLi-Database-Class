@@ -148,7 +148,18 @@ class dbObject {
                     $key = $this->relations[$name][2];
                     $obj = new $modelName;
                     $obj->returnType = $this->returnType;
-                    return $this->data[$name] = $obj->where($key, $this->data[$this->primaryKey])->get();
+                    return $obj->where($key, $this->data[$this->primaryKey]);
+                    break;
+                case 'hasmanythrough':
+                    $pivotTable = $this->relations[$name][2];
+                    $key = $this->relations[$name][3];
+                    $farKey = $this->relations[$name][4];
+                    $obj = new $modelName;
+                    $obj->returnType = $this->returnType;
+                    $joinStr = MysqliDb::$prefix . $obj->dbTable . ".{$obj->primaryKey} = " .
+                               MysqliDb::$prefix . $pivotTable.'.'.$farKey;
+                    $obj->db->join($pivotTable, $joinStr, 'LEFT');
+                    return $obj->where($key, $this->data[$this->primaryKey]);
                     break;
                 default:
                     break;
@@ -367,7 +378,7 @@ class dbObject {
     }
 
     /**
-     * Function to set witch hasOne or hasMany objects should be loaded togeather with a main object
+     * Function to set witch hasOne objects should be loaded togeather with a main object
      *
      * @access public
      * @param string $objectName Object Name
@@ -375,7 +386,7 @@ class dbObject {
      * @return dbObject
      */
     private function with ($objectName) {
-        if (!property_exists ($this, 'relations') && !isset ($this->relations[$name]))
+        if (!property_exists ($this, 'relations') && !isset ($this->relations[$objectName]))
             die ("No relation with name $objectName found");
 
         $this->_with[$objectName] = $this->relations[$objectName];
@@ -688,4 +699,4 @@ class dbObject {
         spl_autoload_register ("dbObject::dbObjectAutoload");
     }
 }
-?>
+

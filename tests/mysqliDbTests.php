@@ -2,17 +2,18 @@
 require_once ("../MysqliDb.php");
 error_reporting(E_ALL);
 
+$db = new Mysqlidb('127.0.0.1', 'root', 'root', 'testdb');
 $prefix = 't_';
 $db = new Mysqlidb('localhost', 'root', '', 'testdb');
 if(!$db) die("Database error");
 
-$mysqli = new mysqli ('localhost', 'root', '', 'testdb');
+$mysqli = new mysqli ('127.0.0.1', 'root', 'root', 'testdb');
 $db = new Mysqlidb($mysqli);
 
 $db = new Mysqlidb(Array (
-                'host' => 'localhost',
-                'username' => 'root', 
-                'password' => '',
+                'host' => '127.0.0.1',
+                'username' => 'root',
+                'password' => 'root',
                 'db' => 'testdb',
                 'prefix' => $prefix,
                 'charset' => null));
@@ -366,5 +367,5 @@ $db->delete("products");
 //print_r($db->rawQuery("CALL simpleproc(?)",Array("test")));
 
 print_r ($db->trace);
-echo "All done";
-?>
+echo "All done\n";
+echo "Memory usage: ".memory_get_peak_usage()."\n";

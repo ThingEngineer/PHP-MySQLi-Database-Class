@@ -27,4 +27,4 @@ class product extends dbObject {
 }
 
 
-?>
+

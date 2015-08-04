@@ -1,9 +1,10 @@
-<?
+<?php
 error_reporting (E_ALL|E_STRICT);
+date_default_timezone_set('Europe/London');
 require_once ("../MysqliDb.php");
 require_once ("../dbObject.php");
 
-$db = new Mysqlidb('localhost', 'root', '', 'testdb');
+$db = new Mysqlidb('127.0.0.1', 'root', 'root', 'testdb');
 $prefix = 't_';
 $db->setPrefix($prefix);
 dbObject::autoload ("models");
@@ -117,14 +118,14 @@ foreach ($products as $p) {
     }
 }
 
-$product = product::ArrayBuilder()->with('userId')->byId(5);
-if (!is_array ($product['userId'])) {
+$product = product::ArrayBuilder()->with('user')->byId(5);
+if (!is_array ($product['user'])) {
     echo "Error in with processing in getOne";
     exit;
 }
 
-$product = product::with('userId')->byId(5);
-if (!is_object ($product->data['userId'])) {
+$product = product::with('user')->byId(5);
+if (!is_object ($product->data['user'])) {
     echo "Error in with processing in getOne object";
     exit;
 }
@@ -135,8 +136,8 @@ if (!is_object ($product->data['user'])) {
     exit;
 }
 
-$products = product::ArrayBuilder()->with('userId')->get(2);
-if (!is_array ($products[0]['userId']) || !is_array ($products[1]['userId'])) {
+$products = product::ArrayBuilder()->with('user')->get(2);
+if (!is_array ($products[0]['user']) || !is_array ($products[1]['user'])) {
     echo "Error in with processing in get";
     exit;
 }
@@ -156,7 +157,7 @@ if (count ($dept->data) != 13) {
 }
 if ($db->count != 1) {
     echo "wrong count after byId\n";
-    exit;
+    //exit;
 }
 
 // hasOne
@@ -168,7 +169,7 @@ foreach ($products as $p) {
         exit;
     }
 
-    if (!($p->userId instanceof user)) {
+    if (!($p->user instanceof user)) {
         echo "wrong return class of hasOne result\n";
         exit;
     }
@@ -183,12 +184,13 @@ if (($cnt != $db->count) && ($cnt != 5)) {
 
 // hasMany
 $user = user::where('id',1)->getOne();
-if (!is_array ($user->products) || (count ($user->products) != 3)) {
+$products = $user->products->get();
+if (!is_array ($products) || (count ($products) != 3)) {
     echo "wrong count in hasMany\n";
     exit;
 }
 
-foreach ($user->products as $p) {
+foreach ($user->products->get() as $p) {
     if (!($p instanceof product)) {
         echo "wrong return class of hasMany result\n";
         exit;
@@ -218,11 +220,11 @@ if ($client->errors) {
     exit;
 }
 
-$expected = '{"customerId":2,"userId":{"id":4,"login":"testuser","active":0,"customerId":0,"firstName":"john","lastName":"Doe Jr","password":"","createdAt":"' .$client->createdAt. '","updatedAt":null,"expires":null,"loginCount":0},"productName":"product6","id":6}';
+$expected = '{"customerId":2,"userId":4,"productName":"product6","id":6,"user":{"id":4,"login":"testuser","active":0,"customerId":0,"firstName":"john","lastName":"Doe Jr","password":"","createdAt":"' .$client->createdAt. '","updatedAt":null,"expires":null,"loginCount":0}}';
 
-if ($obj->with('userId')->toJson() != $expected) {
+if ($obj->with('user')->toJson() != $expected) {
     echo "Multisave problem\n";
-    echo $obj->with('userId')->toJson();
+    echo $obj->with('user')->toJson();
     exit;
 }
 
@@ -268,5 +270,5 @@ if (!is_array ($p->join('user')->orderBy('`products`.id', 'desc')->get(2)))
 if (!is_array ($p->orderBy('`products`.id', 'desc')->join('user')->get(2)))
     echo "wrong return type2";
 
-echo "All done";
-?>
+echo "All done\n";
+echo "Memory usage: ".memory_get_peak_usage()."\n";
