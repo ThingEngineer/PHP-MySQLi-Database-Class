@@ -192,6 +192,15 @@ $updateColumns = Array ("updatedAt");
 $insertLastId = "id";
 $db->onDuplicate($updateColumns, "id");
 $db->insert("users", $user);
+$nUser = $db->where('login','user3')->get('users');
+if ($db->count != 1) {
+    echo "onDuplicate update failed. ";
+    exit;
+}
+if ($nUser[0]['createdAt'] == $nUser[0]['updatedAt']) {
+    echo "onDuplicate2 update failed. ";
+    exit;
+}
 
 // order by field
 $db->orderBy("login","asc", Array ("user3","user2","user1"));
