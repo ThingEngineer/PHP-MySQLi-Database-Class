@@ -113,6 +113,18 @@ class MysqliDb
     protected $isSubQuery = false;
 
     /**
+     * Name of the auto increment column 
+     *
+     */
+    protected $_lastInsertId = null;
+
+    /**
+     * Column names for update when using onDuplicate method
+     *
+     */
+    protected $_updateColumns = null;
+
+    /**
      * Return type: 'Array' to return results as array, 'Object' as object
      * 'Json' as json string
      *
@@ -235,6 +247,8 @@ class MysqliDb
         $this->returnType = 'Array';
         $this->_nestJoin = false;
         $this->_tableName = '';
+        $this->_lastInsertId = null;
+        $this->_updateColumns = null;
     }
 
     /**
@@ -549,6 +563,19 @@ class MysqliDb
         return $this;
     }
 
+    /** 
+     * This function store update column's name and column name of the 
+     * autoincrement column
+     * 
+     * @param Array Variable with values
+     * @param String Variable value 
+     */
+    public function onDuplicate($_updateColumns, $_lastInsertId = null)
+    {
+        $this->_lastInsertId = $_lastInsertId;
+        $this->_updateColumns = $_updateColumns;
+    }
+
     /**
      * This method allows you to specify multiple (method chaining optional) OR WHERE statements for SQL queries.
      *
@@ -778,6 +805,57 @@ class MysqliDb
         return true;
     }
 
+    /** 
+     * Helper function to add variables into the query statement
+     * 
+     * @param Array Variable with values
+     */
+    protected function _buildDuplicate($tableData)
+    {
+        if (is_array($this->_updateColumns) && !empty($this->_updateColumns)) {
+            $this->_query .= " on duplicate key update ";
+            if ($this->_lastInsertId) {
+                $this->_lastQuery .= $this->_lastInsertId."=LAST_INSERT_ID(".$this->_lastInsertId."),";
+                $this->_lastInsertId = null;
+            }
+            
+            foreach ($this->_updateColumns as $column) {
+                $this->_query .= "`" . $column . "` = ";
+                
+                // Simple value
+                if (!is_array ($tableData[$column])) {
+                    $this->_bindParam($tableData[$column]);
+                    $this->_query .= '?, ';
+                    continue;
+                }
+                
+                // Function value
+                $arr = $tableData[$column];
+                $key = key($arr);
+                $val = $arr[$key];
+                switch ($key) {
+                case '[I]':
+                    $this->_query .= $column . $val . ", ";
+                    break;
+                case '[F]':
+                    $this->_query .= $val[0] . ", ";
+                    if (!empty ($val[1]))
+                        $this->_bindParams ($val[1]);
+                    break;
+                case '[N]':
+                    if ($val == null)
+                        $this->_query .= "!" . $column . ", ";
+                    else
+                        $this->_query .= "!" . $val . ", ";
+                    break;
+                default:
+                    die ("Wrong operation");
+                }
+            }
+            $this->_query = rtrim($this->_query, ', ');
+        }
+    }
+
     /**
      * Abstraction method that will compile the WHERE statement,
      * any passed update data, and the desired rows.
@@ -797,6 +875,7 @@ class MysqliDb
         $this->_buildGroupBy();
         $this->_buildOrderBy();
         $this->_buildLimit ($numRows);
+        $this->_buildDuplicate($tableData);
 
         $this->_lastQuery = $this->replacePlaceHolders ($this->_query, $this->_bindParams);
 
