@@ -191,6 +191,7 @@ $user = Array ('login' => 'user3',
        );
 $updateColumns = Array ("updatedAt");
 $insertLastId = "id";
+sleep(1);
 $db->onDuplicate($updateColumns, "id");
 $db->insert("users", $user);
 $nUser = $db->where('login','user3')->get('users');
