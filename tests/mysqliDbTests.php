@@ -11,7 +11,7 @@ $db = new Mysqlidb($mysqli);
 
 $db = new Mysqlidb(Array (
                 'host' => 'localhost',
-                'username' => 'root', 
+                'username' => 'root',
                 'password' => '',
                 'db' => 'testdb',
                 'prefix' => $prefix,
@@ -102,6 +102,7 @@ $data = Array (
 function createTable ($name, $data) {
     global $db;
     //$q = "CREATE TABLE $name (id INT(9) UNSIGNED PRIMARY KEY NOT NULL";
+    $db->rawQuery("DROP TABLE IF EXISTS $name");
     $q = "CREATE TABLE $name (id INT(9) UNSIGNED PRIMARY KEY AUTO_INCREMENT";
     foreach ($data as $k => $v) {
         $q .= ", $k $v";
@@ -192,6 +193,15 @@ $updateColumns = Array ("updatedAt");
 $insertLastId = "id";
 $db->onDuplicate($updateColumns, "id");
 $db->insert("users", $user);
+$nUser = $db->where('login','user3')->get('users');
+if ($db->count != 1) {
+    echo "onDuplicate update failed. ";
+    exit;
+}
+if ($nUser[0]['createdAt'] == $nUser[0]['updatedAt']) {
+    echo "onDuplicate2 update failed. ";
+    exit;
+}
 
 // order by field
 $db->orderBy("login","asc", Array ("user3","user2","user1"));
@@ -380,7 +390,7 @@ if ($db->totalCount != 3) {
 $db->delete("users");
 $db->get("users");
 if ($db->count != 0) {
-    echo "Invalid users count after delete"; 
+    echo "Invalid users count after delete";
     exit;
 }
 $db->delete("products");
