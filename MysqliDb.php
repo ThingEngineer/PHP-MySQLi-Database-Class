@@ -1105,9 +1105,11 @@ class MysqliDb
      *
      * @return array
      */
-    protected function refValues($arr)
+    protected function refValues(Array &$arr)
     {
-        //Reference is required for PHP 5.3+
+        //Reference in the function arguments are required for HHVM to work
+        //https://github.com/facebook/hhvm/issues/5155
+        //Referenced data array is required by mysqli since PHP 5.3+
         if (strnatcmp(phpversion(), '5.3') >= 0) {
             $refs = array();
             foreach ($arr as $key => $value) {
