@@ -102,6 +102,7 @@ $data = Array (
 function createTable ($name, $data) {
     global $db;
     //$q = "CREATE TABLE $name (id INT(9) UNSIGNED PRIMARY KEY NOT NULL";
+    $db->rawQuery("DROP TABLE IF EXISTS $name");
     $q = "CREATE TABLE $name (id INT(9) UNSIGNED PRIMARY KEY AUTO_INCREMENT";
     foreach ($data as $k => $v) {
         $q .= ", $k $v";

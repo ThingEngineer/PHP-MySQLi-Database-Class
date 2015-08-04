@@ -806,57 +806,6 @@ class MysqliDb
     }
 
     /**
-     * Helper function to add variables into the query statement
-     *
-     * @param Array Variable with values
-     */
-    protected function _buildDuplicate($tableData)
-    {
-        if (is_array($this->_updateColumns) && !empty($this->_updateColumns)) {
-            $this->_query .= " on duplicate key update ";
-            if ($this->_lastInsertId) {
-                $this->_lastQuery .= $this->_lastInsertId."=LAST_INSERT_ID (".$this->_lastInsertId."),";
-                $this->_lastInsertId = null;
-            }
-
-            foreach ($this->_updateColumns as $column) {
-                $this->_query .= "`" . $column . "` = ";
-
-                // Simple value
-                if (!is_array ($tableData[$column])) {
-                    $this->_bindParam($tableData[$column]);
-                    $this->_query .= '?, ';
-                    continue;
-                }
-
-                // Function value
-                $arr = $tableData[$column];
-                $key = key($arr);
-                $val = $arr[$key];
-                switch ($key) {
-                case '[I]':
-                    $this->_query .= $column . $val . ", ";
-                    break;
-                case '[F]':
-                    $this->_query .= $val[0] . ", ";
-                    if (!empty ($val[1]))
-                        $this->_bindParams ($val[1]);
-                    break;
-                case '[N]':
-                    if ($val == null)
-                        $this->_query .= "!" . $column . ", ";
-                    else
-                        $this->_query .= "!" . $val . ", ";
-                    break;
-                default:
-                    die ("Wrong operation");
-                }
-            }
-            $this->_query = rtrim($this->_query, ', ');
-        }
-    }
-
-    /**
      * Abstraction method that will compile the WHERE statement,
      * any passed update data, and the desired rows.
      * It then builds the SQL query.
@@ -870,12 +819,12 @@ class MysqliDb
     protected function _buildQuery($numRows = null, $tableData = null)
     {
         $this->_buildJoin();
-        $this->_buildTableData ($tableData);
+        $this->_buildInsertQuery ($tableData);
         $this->_buildWhere();
         $this->_buildGroupBy();
         $this->_buildOrderBy();
         $this->_buildLimit ($numRows);
-        $this->_buildDuplicate($tableData);
+        $this->_buildOnDuplicate($tableData);
 
         $this->_lastQuery = $this->replacePlaceHolders ($this->_query, $this->_bindParams);
 
@@ -996,20 +945,9 @@ class MysqliDb
         }
     }
 
-    /**
-     * Abstraction method that will build an INSERT or UPDATE part of the query
-     */
-    protected function _buildTableData ($tableData) {
-        if (!is_array ($tableData))
-            return;
-
-        $isInsert = preg_match ('/^[INSERT|REPLACE]/', $this->_query);
-        if ($isInsert)
-            $this->_query .= ' (`' . implode(array_keys($tableData), '`, `') . '`)  VALUES (';
-        else
-            $this->_query .= " SET ";
-
-        foreach ($tableData as $column => $value) {
+    public function _buildDataPairs ($tableData, $tableColumns, $isInsert) {
+        foreach ($tableColumns as $column) {
+            $value = $tableData[$column];
             if (!$isInsert)
                 $this->_query .= "`" . $column . "` = ";
 
@@ -1021,7 +959,7 @@ class MysqliDb
 
             // Simple value
             if (!is_array ($value)) {
-                $this->_bindParam ($value);
+                $this->_bindParam($value);
                 $this->_query .= '?, ';
                 continue;
             }
@@ -1030,25 +968,59 @@ class MysqliDb
             $key = key ($value);
             $val = $value[$key];
             switch ($key) {
-                case '[I]':
-                    $this->_query .= $column . $val . ", ";
-                    break;
-                case '[F]':
-                    $this->_query .= $val[0] . ", ";
-                    if (!empty ($val[1]))
-                        $this->_bindParams ($val[1]);
-                    break;
-                case '[N]':
-                    if ($val == null)
-                        $this->_query .= "!" . $column . ", ";
-                    else
-                        $this->_query .= "!" . $val . ", ";
-                    break;
-                default:
-                    die ("Wrong operation");
+            case '[I]':
+                $this->_query .= $column . $val . ", ";
+                break;
+            case '[F]':
+                $this->_query .= $val[0] . ", ";
+                if (!empty ($val[1]))
+                    $this->_bindParams ($val[1]);
+                break;
+            case '[N]':
+                if ($val == null)
+                    $this->_query .= "!" . $column . ", ";
+                else
+                    $this->_query .= "!" . $val . ", ";
+                break;
+            default:
+                die ("Wrong operation");
             }
         }
-        $this->_query = rtrim ($this->_query, ', ');
+        $this->_query = rtrim($this->_query, ', ');
+    }
+
+    /**
+     * Helper function to add variables into the query statement
+     *
+     * @param Array Variable with values
+     */
+    protected function _buildOnDuplicate($tableData)
+    {
+        if (is_array($this->_updateColumns) && !empty($this->_updateColumns)) {
+            $this->_query .= " on duplicate key update ";
+            if ($this->_lastInsertId)
+                $this->_query .= $this->_lastInsertId . "=LAST_INSERT_ID (".$this->_lastInsertId."), ";
+
+            $this->_buildDataPairs ($tableData, $this->_updateColumns, false);
+        }
+    }
+
+    /**
+     * Abstraction method that will build an INSERT or UPDATE part of the query
+     */
+    protected function _buildInsertQuery ($tableData) {
+        if (!is_array ($tableData))
+            return;
+
+        $isInsert = preg_match ('/^[INSERT|REPLACE]/', $this->_query);
+        $dataColumns = array_keys ($tableData);
+        if ($isInsert)
+            $this->_query .= ' (`' . implode ($dataColumns, '`, `') . '`)  VALUES (';
+        else
+            $this->_query .= " SET ";
+
+        $this->_buildDataPairs ($tableData, $dataColumns, $isInsert);
+
         if ($isInsert)
             $this->_query .= ')';
     }
