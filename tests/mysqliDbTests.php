@@ -11,7 +11,7 @@ $db = new Mysqlidb($mysqli);
 
 $db = new Mysqlidb(Array (
                 'host' => 'localhost',
-                'username' => 'root', 
+                'username' => 'root',
                 'password' => '',
                 'db' => 'testdb',
                 'prefix' => $prefix,
@@ -380,7 +380,7 @@ if ($db->totalCount != 3) {
 $db->delete("users");
 $db->get("users");
 if ($db->count != 0) {
-    echo "Invalid users count after delete"; 
+    echo "Invalid users count after delete";
     exit;
 }
 $db->delete("products");
