@@ -1280,18 +1280,18 @@ class MysqliDb
 
     /**
      * Method generates incremental function call
-     * @param int increment amount. 1 by default
+     * @param int increment by int or float. 1 by default
      */
     public function inc($num = 1) {
-        return Array ("[I]" => "+" . (int)$num);
+        return Array ("[I]" => "+" . $num);
     }
 
     /**
      * Method generates decrimental function call
-     * @param int increment amount. 1 by default
+     * @param int increment by int or float. 1 by default
      */
     public function dec ($num = 1) {
-        return Array ("[I]" => "-" . (int)$num);
+        return Array ("[I]" => "-" . $num);
     }
 
     /**
