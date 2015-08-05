@@ -1283,6 +1283,9 @@ class MysqliDb
      * @param int increment by int or float. 1 by default
      */
     public function inc($num = 1) {
+        if(!is_numeric($num)){
+            trigger_error('Argument supplied to inc must be a number', E_USER_ERROR);
+        }
         return Array ("[I]" => "+" . $num);
     }
 
@@ -1291,6 +1294,9 @@ class MysqliDb
      * @param int increment by int or float. 1 by default
      */
     public function dec ($num = 1) {
+        if(!is_numeric($num)){
+            trigger_error('Argument supplied to dec must be a number', E_USER_ERROR);
+        }
         return Array ("[I]" => "-" . $num);
     }
 
