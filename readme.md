@@ -35,17 +35,12 @@ composer require joshcam/mysqli-database-class:dev-master
 ```
 
 ### Initialization
-Simple initialization with utf8 charset by default:
+Simple initialization with utf8 charset set by default:
 ```php
 $db = new MysqliDb ('host', 'username', 'password', 'databaseName');
 ```
-Or in case usage of the namespaces:
-```php
-$db = new \MysqliDb ('host', 'username', 'password', 'databaseName');
-```
 
-
-Advanced initialization. If no charset should be set charset, set it to null
+Advanced initialization:
 ```php
 $db = new MysqliDb (Array (
                 'host' => 'host',
@@ -56,15 +51,16 @@ $db = new MysqliDb (Array (
                 'prefix' => 'my_',
                 'charset' => 'utf8'));
 ```
-prefix, port and charset params are optional.
+table prefix, port and database charset params are optional.
+If no charset should be set charset, set it to null
 
-Reuse already connected mysqli:
+Also it is possible to reuse already connected mysqli object:
 ```php
 $mysqli = new mysqli ('host', 'username', 'password', 'databaseName');
 $db = new MysqliDb ($mysqli);
 ```
 
-Its also possible to set a table prefix via separate call:
+If no table prefix were set during object creation its possible to set it later with a separate call:
 ```php
 $db->setPrefix ('my_');
 ```
@@ -75,6 +71,7 @@ If you need to get already created mysqliDb object from another class or functio
         // db staying private here
         $db = new MysqliDb ('host', 'username', 'password', 'databaseName');
     }
+    ...
     function myfunc () {
         // obtain db object created in init  ()
         $db = MysqliDb::getInstance();
@@ -82,10 +79,8 @@ If you need to get already created mysqliDb object from another class or functio
     }
 ```
 
-Next, prepare your data, and call the necessary methods. 
-
 ### Objects mapping
-dbObject.php is an object mapping library built on top of mysqliDb to provide model prepresentation functionality.
+dbObject.php is an object mapping library built on top of mysqliDb to provide model representation functionality.
 See <a href='dbObject.md'>dbObject manual for more information</a>
 
 ### Insert Query
@@ -156,9 +151,9 @@ if ($db->update ('users', $data))
 else
     echo 'update failed: ' . $db->getLastError();
 ```
+
 ### Select Query
-After any select/get function calls amount or returned rows
-is stored in $count variable
+After any select/get function calls amount or returned rows is stored in $count variable
 ```php
 $users = $db->get('users'); //contains an Array of all users 
 $users = $db->get('users', 10); //contains an Array 10 users
@@ -233,7 +228,6 @@ $q = "(
 $resutls = $db->rawQuery ($q, $params);
 print_r ($results); // contains Array of returned rows
 ```
-
 
 ### Where Method
 This method allows you to specify where parameters of the query.
