@@ -1280,18 +1280,24 @@ class MysqliDb
 
     /**
      * Method generates incremental function call
-     * @param int increment amount. 1 by default
+     * @param int increment by int or float. 1 by default
      */
     public function inc($num = 1) {
-        return Array ("[I]" => "+" . (int)$num);
+        if(!is_numeric($num)){
+            trigger_error('Argument supplied to inc must be a number', E_USER_ERROR);
+        }
+        return Array ("[I]" => "+" . $num);
     }
 
     /**
      * Method generates decrimental function call
-     * @param int increment amount. 1 by default
+     * @param int increment by int or float. 1 by default
      */
     public function dec ($num = 1) {
-        return Array ("[I]" => "-" . (int)$num);
+        if(!is_numeric($num)){
+            trigger_error('Argument supplied to dec must be a number', E_USER_ERROR);
+        }
+        return Array ("[I]" => "-" . $num);
     }
 
     /**
