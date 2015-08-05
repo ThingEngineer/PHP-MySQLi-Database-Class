@@ -148,6 +148,12 @@ class MysqliDb
     public $trace = array();
 
     /**
+     * Variable for error tracking
+     */
+    protected $errTrack = false;
+    protected $routeTrack;
+
+    /**
      * @param string $host
      * @param string $username
      * @param string $password
@@ -509,6 +515,12 @@ class MysqliDb
 
         $stmt = $this->_buildQuery (null, $tableData);
         $status = $stmt->execute();
+
+         //Save possible errors into log
+        if($this->errTrack === true){
+            $this->errorTrack($tableData,"UPDATE");
+        }  
+
         $this->reset();
         $this->_stmtError = $stmt->error;
         $this->count = $stmt->affected_rows;
@@ -534,6 +546,12 @@ class MysqliDb
 
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
+
+        //Save possible errors into log
+        if($this->errTrack === true){
+            $this->errorTrack();
+        } 
+
         $this->_stmtError = $stmt->error;
         $this->reset();
 
@@ -777,6 +795,70 @@ class MysqliDb
     }
 
     /**
+     * Just to verify if any possible error during insert
+     * @param  [type] $insertData Data containing information for inserting into the DB
+     * @param  string $case_err   Case of error where it comes from
+     * @return [type]             [description]
+     */
+    private function errorTrack($insertData = null,$case_err=""){
+        
+        $msg = NULL;
+        $query = null;
+
+        if($this->_mysqli->error != NULL){
+
+        //Determinate which case is going to be evaluated
+        switch ($case_err) {
+            case "INSERT": case "UPDATE":
+                $values = "";
+
+                foreach ($insertData as $key => $value):
+                    $values .= '"'.$value.'",';
+                endforeach;
+
+                $values = substr($values, 0,-1);
+
+                $sql = explode('VALUES', $this->_query);
+
+                $query = ($sql != NULL)? $sql[0] . ' VALUES('.$values.')' : '';
+                            
+                break;
+            
+            default:
+                $query = "Problem preparing query (".$this->_query.") " . 
+                                $this->mysqli()->error;
+                break;
+        }            
+            
+            //Put the MySQLi errno in order to complement the error info
+            $msg = date("Y-m-d h:i:s ").'MySQLi errno: '.$this->_mysqli->errno.' - '.
+                            $this->_mysqli->error." \nQuery: ".$query."\n\n";
+
+            $this->createLog($msg);
+
+        }
+                
+     }
+     
+     /**
+      * Internal function to create a .txt file to save all the log
+      * collected from an specific query
+      * @param  [type] $data Data that is going to be written in the file
+      */
+    private function createLog($data){ 
+        
+        //Guardamos directorio actual
+        $actual = getcwd();
+        
+        $file = $this->routeTrack."mysqli_errors.txt";
+        
+        $fh = fopen($file, 'a') or die("Can't open/create file");
+        fwrite($fh,$data);
+        fclose($fh);
+    
+    }
+
+    /**
      * Internal function to build and execute INSERT/REPLACE calls
      *
      * @param <string $tableName The name of the table.
@@ -792,6 +874,12 @@ class MysqliDb
         $this->_query = $operation . " " . implode (' ', $this->_queryOptions) ." INTO " .self::$prefix . $tableName;
         $stmt = $this->_buildQuery (null, $insertData);
         $stmt->execute();
+
+        //Save possible errors into log
+        if($this->errTrack === true){
+            $this->errorTrack($insertData,"INSERT");        
+        }        
+
         $this->_stmtError = $stmt->error;
         $this->reset();
         $this->count = $stmt->affected_rows;
@@ -1131,11 +1219,17 @@ class MysqliDb
      */
     protected function _prepareQuery()
     {
+
         if (!$stmt = $this->mysqli()->prepare($this->_query)) {
+            
+            if($this->errTrack){
+                $this->errorTrack(); 
+            }
+        
             trigger_error("Problem preparing query ($this->_query) " . $this->mysqli()->error, E_USER_ERROR);
         }
         if ($this->traceEnabled)
-            $this->traceStartQ = microtime (true);
+            $this->traceStartQ = microtime (true);        
 
         return $stmt;
     }
@@ -1395,6 +1489,19 @@ class MysqliDb
         $this->traceStripPrefix = $stripPrefix;
         return $this;
     }
+
+    /**
+     * Save errors into a file
+     * @param bool $enabled Allow create file to save errors
+     * @param string $route Set a route to create this file
+     */
+    public function setErrTrack($enabled,$route=""){
+        $this->errTrack = $enabled;
+
+        // "/var/www/html/inc/libs/";
+        $this->routeTrack = $route;
+    }
+
     /**
      * Get where and what function was called for query stored in MysqliDB->trace
      *
