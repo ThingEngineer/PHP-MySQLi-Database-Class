@@ -207,10 +207,7 @@ $json = $db->JsonBuilder()->getOne("users");
 
 ### Running raw SQL queries
 ```php
-// filtering enabled
-$users = $db->rawQuery('SELECT * from users where customerId=?', Array (10));
-// filtering disabled
-//$users = $db->rawQuery('SELECT * from users where id >= ?', Array (10));
+$users = $db->rawQuery('SELECT * from users where id >= ?', Array (10));
 foreach ($users as $user) {
     print_r ($user);
 }
