@@ -518,7 +518,7 @@ class MysqliDb
 
          //Save possible errors into log
         if($this->errTrack === true){
-            $this->errorTrack($tableData,"UPDATE");
+            $this->errorTrack($this->_query,$tableData,"UPDATE");
         }  
 
         $this->reset();
@@ -800,41 +800,22 @@ class MysqliDb
      * @param  string $case_err   Case of error where it comes from
      * @return [type]             [description]
      */
-    private function errorTrack($insertData = null,$case_err=""){
+    private function errorTrack($query = "",$insertData = null,$case_err=""){
         
         $msg = NULL;
-        $query = null;
 
         if($this->_mysqli->error != NULL){
+        
+        $qry = $this->replacePlaceHolders($query, $insertData);
 
-        //Determinate which case is going to be evaluated
-        switch ($case_err) {
-            case "INSERT": case "UPDATE":
-                $values = "";
-
-                foreach ($insertData as $key => $value):
-                    $values .= '"'.$value.'",';
-                endforeach;
-
-                $values = substr($values, 0,-1);
-
-                $sql = explode('VALUES', $this->_query);
-
-                $query = ($sql != NULL)? $sql[0] . ' VALUES('.$values.')' : '';
-                            
-                break;
+        $query = "Problem preparing query (".$qry.") " . $this->mysqli()->error;
             
-            default:
-                $query = "Problem preparing query (".$this->_query.") " . 
-                                $this->mysqli()->error;
-                break;
-        }            
-            
-            //Put the MySQLi errno in order to complement the error info
-            $msg = date("Y-m-d h:i:s ").'MySQLi errno: '.$this->_mysqli->errno.' - '.
-                            $this->_mysqli->error." \nQuery: ".$query."\n\n";
+        //Put the MySQLi errno in order to complement the error info
+        $msg = date("Y-m-d h:i:s ").'MySQLi errno: '.
+                        $this->_mysqli->errno.' - '.
+                        $this->_mysqli->error." \nQuery: ".$query."\n\n";
 
-            $this->createLog($msg);
+        $this->createLog($msg);
 
         }
                 
@@ -877,7 +858,7 @@ class MysqliDb
 
         //Save possible errors into log
         if($this->errTrack === true){
-            $this->errorTrack($insertData,"INSERT");        
+            $this->errorTrack($this->_query,$insertData,"INSERT");        
         }        
 
         $this->_stmtError = $stmt->error;
