@@ -807,13 +807,11 @@ class MysqliDb
         if($this->_mysqli->error != NULL){
         
         $qry = $this->replacePlaceHolders($query, $insertData);
-
-        $query = "Problem preparing query (".$qry.") " . $this->mysqli()->error;
             
         //Put the MySQLi errno in order to complement the error info
         $msg = date("Y-m-d h:i:s ").'MySQLi errno: '.
                         $this->_mysqli->errno.' - '.
-                        $this->_mysqli->error." \nQuery: ".$query."\n\n";
+                        $this->_mysqli->error." \nQuery: ".$qry."\n\n";
 
         $this->createLog($msg);
 
@@ -1306,7 +1304,7 @@ class MysqliDb
                       'alias' => $this->host
                 );
         $this->reset();
-        return $val;
+        return $val;e
     }
 
     /* Helper functions */
