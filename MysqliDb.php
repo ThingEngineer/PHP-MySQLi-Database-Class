@@ -234,6 +234,37 @@ class MysqliDb
         return self::$_instance;
     }
 
+
+     /**
+     * Save errors into a file
+     * @param bool $enabled Allow create file to save errors
+     * @param string $route Set a route to create this file
+     */
+    public function setErrTrack($enabled,$route=""){
+        $this->errTrack = $enabled;
+
+        // "/var/www/html/inc/libs/";
+        $this->routeTrack = $route;
+    }
+
+     /**
+      * Internal function to create a .txt file to save all the log
+      * collected from an specific query
+      * @param  [type] $data Data that is going to be written in the file
+      */
+    protected function createLog($data){ 
+        
+        //Guardamos directorio actual
+        $actual = getcwd();
+        
+        $file = $this->routeTrack."mysqli_errors.txt";
+        
+        $fh = fopen($file, 'a') or die("Can't open/create file");
+        fwrite($fh,$data);
+        fclose($fh);
+    
+    }
+
     /**
      * Reset states after an execution
      *
@@ -243,7 +274,7 @@ class MysqliDb
     {
         if ($this->traceEnabled)
             $this->trace[] = array ($this->_lastQuery, (microtime(true) - $this->traceStartQ) , $this->_traceGetCaller());
-        
+
         if($this->errTrack && $this->_mysqli->error != NULL){
 
             //Put the MySQLi errno in order to complement the error info
@@ -794,24 +825,6 @@ class MysqliDb
 
         return " " . $operator . " (" . $subQuery['query'] . ") " . $subQuery['alias'];
     }
-     
-     /**
-      * Internal function to create a .txt file to save all the log
-      * collected from an specific query
-      * @param  [type] $data Data that is going to be written in the file
-      */
-    private function createLog($data){ 
-        
-        //Guardamos directorio actual
-        $actual = getcwd();
-        
-        $file = $this->routeTrack."mysqli_errors.txt";
-        
-        $fh = fopen($file, 'a') or die("Can't open/create file");
-        fwrite($fh,$data);
-        fclose($fh);
-    
-    }
 
     /**
      * Internal function to build and execute INSERT/REPLACE calls
@@ -1168,17 +1181,11 @@ class MysqliDb
      */
     protected function _prepareQuery()
     {
-
         if (!$stmt = $this->mysqli()->prepare($this->_query)) {
-            
-            if($this->errTrack){
-                $this->errorTrack(); 
-            }
-        
             trigger_error("Problem preparing query ($this->_query) " . $this->mysqli()->error, E_USER_ERROR);
         }
         if ($this->traceEnabled)
-            $this->traceStartQ = microtime (true);        
+            $this->traceStartQ = microtime (true);
 
         return $stmt;
     }
@@ -1235,6 +1242,7 @@ class MysqliDb
             $str = substr ($str, $pos + 1);
         }
         $newStr .= $str;
+
         return $newStr;
     }
 
@@ -1274,7 +1282,7 @@ class MysqliDb
                       'alias' => $this->host
                 );
         $this->reset();
-        return $val;e
+        return $val;
     }
 
     /* Helper functions */
@@ -1438,19 +1446,6 @@ class MysqliDb
         $this->traceStripPrefix = $stripPrefix;
         return $this;
     }
-
-    /**
-     * Save errors into a file
-     * @param bool $enabled Allow create file to save errors
-     * @param string $route Set a route to create this file
-     */
-    public function setErrTrack($enabled,$route=""){
-        $this->errTrack = $enabled;
-
-        // "/var/www/html/inc/libs/";
-        $this->routeTrack = $route;
-    }
-
     /**
      * Get where and what function was called for query stored in MysqliDB->trace
      *
