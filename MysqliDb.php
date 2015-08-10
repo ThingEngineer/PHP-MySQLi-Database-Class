@@ -152,6 +152,7 @@ class MysqliDb
      */
     protected $errTrack = false;
     protected $routeTrack;
+    protected $errMsg = '';
 
     /**
      * @param string $host
@@ -242,6 +243,18 @@ class MysqliDb
     {
         if ($this->traceEnabled)
             $this->trace[] = array ($this->_lastQuery, (microtime(true) - $this->traceStartQ) , $this->_traceGetCaller());
+        
+        if($this->errTrack && $this->_mysqli->error != NULL){
+
+            //Put the MySQLi errno in order to complement the error info
+            $this->errMsg = date("Y-m-d h:i:s ").'MySQLi errno: '.
+                        $this->_mysqli->errno.' - '.
+                        $this->_mysqli->error." \nQuery: ".
+                        $this->_lastQuery."\n\n";
+
+            $this->createLog($this->errMsg);
+
+        }
 
         $this->_where = array();
         $this->_join = array();
@@ -515,12 +528,6 @@ class MysqliDb
 
         $stmt = $this->_buildQuery (null, $tableData);
         $status = $stmt->execute();
-
-         //Save possible errors into log
-        if($this->errTrack === true){
-            $this->errorTrack($this->_query,$tableData,"UPDATE");
-        }  
-
         $this->reset();
         $this->_stmtError = $stmt->error;
         $this->count = $stmt->affected_rows;
@@ -546,12 +553,6 @@ class MysqliDb
 
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
-
-        //Save possible errors into log
-        if($this->errTrack === true){
-            $this->errorTrack();
-        } 
-
         $this->_stmtError = $stmt->error;
         $this->reset();
 
@@ -793,31 +794,6 @@ class MysqliDb
 
         return " " . $operator . " (" . $subQuery['query'] . ") " . $subQuery['alias'];
     }
-
-    /**
-     * Just to verify if any possible error during insert
-     * @param  [type] $insertData Data containing information for inserting into the DB
-     * @param  string $case_err   Case of error where it comes from
-     * @return [type]             [description]
-     */
-    private function errorTrack($query = "",$insertData = null,$case_err=""){
-        
-        $msg = NULL;
-
-        if($this->_mysqli->error != NULL){
-        
-        $qry = $this->replacePlaceHolders($query, $insertData);
-            
-        //Put the MySQLi errno in order to complement the error info
-        $msg = date("Y-m-d h:i:s ").'MySQLi errno: '.
-                        $this->_mysqli->errno.' - '.
-                        $this->_mysqli->error." \nQuery: ".$qry."\n\n";
-
-        $this->createLog($msg);
-
-        }
-                
-     }
      
      /**
       * Internal function to create a .txt file to save all the log
@@ -853,12 +829,6 @@ class MysqliDb
         $this->_query = $operation . " " . implode (' ', $this->_queryOptions) ." INTO " .self::$prefix . $tableName;
         $stmt = $this->_buildQuery (null, $insertData);
         $stmt->execute();
-
-        //Save possible errors into log
-        if($this->errTrack === true){
-            $this->errorTrack($this->_query,$insertData,"INSERT");        
-        }        
-
         $this->_stmtError = $stmt->error;
         $this->reset();
         $this->count = $stmt->affected_rows;
