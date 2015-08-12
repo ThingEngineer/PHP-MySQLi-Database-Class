@@ -525,19 +525,24 @@ if($db->has("users")) {
 }
 ``` 
 ### Helper commands
-Reconnect in case mysql connection died
+Reconnect in case mysql connection died:
 ```php
 if (!$db->ping())
     $db->connect()
 ```
 
-Get last executed SQL query.
+Get last executed SQL query:
 Please note that function returns SQL query only for debugging purposes as its execution most likely will fail due missing quotes around char variables.
 ```php
     $db->get('users');
     echo "Last executed query was ". $db->getLastQuery();
 ```
 
+Check if table exists:
+```php
+    if ($db->tableExists ('users'))
+        echo "hooray";
+```
 ### Transaction helpers
 Please keep in mind that transactions are working on innoDB tables.
 Rollback transaction if insert fails:
