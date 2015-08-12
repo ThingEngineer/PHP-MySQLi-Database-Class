@@ -441,17 +441,24 @@ class MysqliDb
      * A convenient SELECT COLUMN function to get a single column value from one row
      *
      * @param string  $tableName The name of the database table to work with.
+     * @param int     $limit     Limit of rows to select. Use null for unlimited..1 by default
      *
-     * @return string Contains the value of a returned column.
+     * @return mixed Contains the value of a returned column / array of values
      */
-    public function getValue($tableName, $column)
+    public function getValue ($tableName, $column, $limit = 1)
     {
-        $res = $this->ArrayBuilder()->get ($tableName, 1, "{$column} as retval");
+        $res = $this->ArrayBuilder()->get ($tableName, $limit, "{$column} AS retval");
 
-        if (isset($res[0]["retval"]))
+        if (!$res)
+            return null;
+
+        if (isset($res[0]["retval"]) && $limit == 1)
             return $res[0]["retval"];
 
-        return null;
+        $newRes = Array ();
+        for ($i = 0; $i < $this->count; $i++)
+            $newRes[] = $res[$i]['retval'];
+        return $newRes;
     }
 
     /**

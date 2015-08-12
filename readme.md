@@ -187,6 +187,18 @@ or select one column value or function result
 $count = $db->getValue ("users", "count(*)");
 echo "{$count} users found";
 ```
+
+select one column value or function result from multiple rows:
+``php
+$logins = $db->getValue ("users", "login", null);
+// select login from users
+$logins = $db->getValue ("users", "login", 5);
+// select login from users limit 5
+foreach ($logins as $login)
+    echo $login;
+```
+
+
 ### Defining a return type
 MysqliDb can return result in 3 different formats: Array of Array, Array of Objects and a Json string. To select a return type use ArrayBuilder(), ObjectBuilder() and JsonBuilder() methods. Note that ArrayBuilder() is a default return type
 ```php
