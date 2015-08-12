@@ -219,6 +219,28 @@ foreach ($users as $user) {
     print_r ($user);
 }
 ```
+To avoid long if checks there are couple helper functions to work with raw query select results:
+
+Get 1 row of results:
+```php
+$user = $db->rawQueryOne ('select * from users where id=?', Array(10));
+echo $user['login'];
+// Object return type
+$user = $db->ObjectBuilder()->rawQueryOne ('select * from users where id=?', Array(10));
+echo $user->login;
+```
+Get 1 column value as a string:
+```php
+$password = $db->rawQueryValue ('select password from users where id=? limit 1', Array(10));
+echo "Password is {$password}";
+NOTE: for a rawQueryValue() to return string instead of an array 'limit 1' should be added to the end of the query.
+```
+Get 1 column value from multiple rows:
+```php
+$logins = $db->rawQueryValue ('select login from users limit 10');
+foreach ($logins as $login)
+    echo $login;
+```
 
 More advanced examples:
 ```php

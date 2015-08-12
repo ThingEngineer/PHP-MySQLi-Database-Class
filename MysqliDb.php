@@ -327,6 +327,49 @@ class MysqliDb
     }
 
     /**
+     * Helper function to execute raw SQL query and return only 1 row of results.
+     * Note that function do not add 'limit 1' to the query by itself
+     * Same idea as getOne()
+     *
+     * @param string $query      User-provided query to execute.
+     * @param array  $bindParams Variables array to bind to the SQL statement.
+     *
+     * @return array Contains the returned row from the query.
+     */
+    public function rawQueryOne ($query, $bindParams = null) {
+        $res = $this->rawQuery ($query, $bindParams);
+        if (is_array ($res) && isset ($res[0]))
+            return $res[0];
+
+        return null;
+    }
+
+    /**
+     * Helper function to execute raw SQL query and return only 1 column of results.
+     * If 'limit 1' will be found, then string will be returned instead of array
+     * Same idea as getValue()
+     *
+     * @param string $query      User-provided query to execute.
+     * @param array  $bindParams Variables array to bind to the SQL statement.
+     *
+     * @return mixed Contains the returned rows from the query.
+     */
+    public function rawQueryValue ($query, $bindParams = null) {
+        $res = $this->rawQuery ($query, $bindParams);
+        if (!$res)
+            return null;
+
+        $limit = preg_match ('/limit\s+1;?$/i', $query);
+        $key = key ($res[0]);
+        if (isset($res[0][$key]) && $limit == true)
+            return $res[0][$key];
+
+        $newRes = Array ();
+        for ($i = 0; $i < $this->count; $i++)
+            $newRes[] = $res[$i][$key];
+        return $newRes;
+    }
+    /**
      *
      * @param string $query   Contains a user-provided select query.
      * @param integer|array $numRows Array to define SQL limit in format Array ($count, $offset)
