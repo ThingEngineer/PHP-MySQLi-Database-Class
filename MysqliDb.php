@@ -443,7 +443,11 @@ class MysqliDb
             $columns = '*';
 
         $column = is_array($columns) ? implode(', ', $columns) : $columns;
-        $this->_tableName = self::$prefix . $tableName;
+        if (strpos ($tableName, '.') === false)
+            $this->_tableName = self::$prefix . $tableName;
+        else
+            $this->_tableName = $tableName;
+
         $this->_query = 'SELECT ' . implode(' ', $this->_queryOptions) . ' ' .
                         $column . " FROM " . $this->_tableName;
         $stmt = $this->_buildQuery($numRows);
