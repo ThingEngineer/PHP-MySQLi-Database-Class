@@ -327,6 +327,49 @@ class MysqliDb
     }
 
     /**
+     * Helper function to execute raw SQL query and return only 1 row of results.
+     * Note that function do not add 'limit 1' to the query by itself
+     * Same idea as getOne()
+     *
+     * @param string $query      User-provided query to execute.
+     * @param array  $bindParams Variables array to bind to the SQL statement.
+     *
+     * @return array Contains the returned row from the query.
+     */
+    public function rawQueryOne ($query, $bindParams = null) {
+        $res = $this->rawQuery ($query, $bindParams);
+        if (is_array ($res) && isset ($res[0]))
+            return $res[0];
+
+        return null;
+    }
+
+    /**
+     * Helper function to execute raw SQL query and return only 1 column of results.
+     * If 'limit 1' will be found, then string will be returned instead of array
+     * Same idea as getValue()
+     *
+     * @param string $query      User-provided query to execute.
+     * @param array  $bindParams Variables array to bind to the SQL statement.
+     *
+     * @return mixed Contains the returned rows from the query.
+     */
+    public function rawQueryValue ($query, $bindParams = null) {
+        $res = $this->rawQuery ($query, $bindParams);
+        if (!$res)
+            return null;
+
+        $limit = preg_match ('/limit\s+1;?$/i', $query);
+        $key = key ($res[0]);
+        if (isset($res[0][$key]) && $limit == true)
+            return $res[0][$key];
+
+        $newRes = Array ();
+        for ($i = 0; $i < $this->count; $i++)
+            $newRes[] = $res[$i][$key];
+        return $newRes;
+    }
+    /**
      *
      * @param string $query   Contains a user-provided select query.
      * @param integer|array $numRows Array to define SQL limit in format Array ($count, $offset)
@@ -441,17 +484,24 @@ class MysqliDb
      * A convenient SELECT COLUMN function to get a single column value from one row
      *
      * @param string  $tableName The name of the database table to work with.
+     * @param int     $limit     Limit of rows to select. Use null for unlimited..1 by default
      *
-     * @return string Contains the value of a returned column.
+     * @return mixed Contains the value of a returned column / array of values
      */
-    public function getValue($tableName, $column)
+    public function getValue ($tableName, $column, $limit = 1)
     {
-        $res = $this->ArrayBuilder()->get ($tableName, 1, "{$column} as retval");
+        $res = $this->ArrayBuilder()->get ($tableName, $limit, "{$column} AS retval");
 
-        if (isset($res[0]["retval"]))
+        if (!$res)
+            return null;
+
+        if (isset($res[0]["retval"]) && $limit == 1)
             return $res[0]["retval"];
 
-        return null;
+        $newRes = Array ();
+        for ($i = 0; $i < $this->count; $i++)
+            $newRes[] = $res[$i]['retval'];
+        return $newRes;
     }
 
     /**

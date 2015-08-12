@@ -187,6 +187,18 @@ or select one column value or function result
 $count = $db->getValue ("users", "count(*)");
 echo "{$count} users found";
 ```
+
+select one column value or function result from multiple rows:
+``php
+$logins = $db->getValue ("users", "login", null);
+// select login from users
+$logins = $db->getValue ("users", "login", 5);
+// select login from users limit 5
+foreach ($logins as $login)
+    echo $login;
+```
+
+
 ### Defining a return type
 MysqliDb can return result in 3 different formats: Array of Array, Array of Objects and a Json string. To select a return type use ArrayBuilder(), ObjectBuilder() and JsonBuilder() methods. Note that ArrayBuilder() is a default return type
 ```php
@@ -206,6 +218,28 @@ $users = $db->rawQuery('SELECT * from users where id >= ?', Array (10));
 foreach ($users as $user) {
     print_r ($user);
 }
+```
+To avoid long if checks there are couple helper functions to work with raw query select results:
+
+Get 1 row of results:
+```php
+$user = $db->rawQueryOne ('select * from users where id=?', Array(10));
+echo $user['login'];
+// Object return type
+$user = $db->ObjectBuilder()->rawQueryOne ('select * from users where id=?', Array(10));
+echo $user->login;
+```
+Get 1 column value as a string:
+```php
+$password = $db->rawQueryValue ('select password from users where id=? limit 1', Array(10));
+echo "Password is {$password}";
+NOTE: for a rawQueryValue() to return string instead of an array 'limit 1' should be added to the end of the query.
+```
+Get 1 column value from multiple rows:
+```php
+$logins = $db->rawQueryValue ('select login from users limit 10');
+foreach ($logins as $login)
+    echo $login;
 ```
 
 More advanced examples:
