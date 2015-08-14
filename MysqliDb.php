@@ -961,8 +961,11 @@ class MysqliDb
                     $x[$key] = $val;
             }
             $this->count++;
-            array_push($results, $x);
+            array_push ($results, $x);
         }
+        if ($shouldStoreResult)
+            $stmt->free_result();
+        $stmt->close();
         // stored procedures sometimes can return more then 1 resultset
         if ($this->mysqli()->more_results())
             $this->mysqli()->next_result();

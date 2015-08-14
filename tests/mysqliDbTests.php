@@ -400,5 +400,6 @@ $db->delete("products");
 //print_r($db->rawQuery("CALL simpleproc(?)",Array("test")));
 
 print_r ($db->trace);
-echo "All done";
+echo "All done\n";
+echo "Memory usage: ".memory_get_peak_usage()."\n";
 ?>
