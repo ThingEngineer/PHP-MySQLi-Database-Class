@@ -1487,4 +1487,3 @@ class MysqliDb
         return $this->count == $count;
     }
 } // END class
-?>
