@@ -308,7 +308,7 @@ class MysqliDb
         $this->_query = $query;
         $stmt = $this->_prepareQuery();
 
-        if (is_array($bindParams) === true) {
+        if (is_array ($bindParams) === true) {
             foreach ($bindParams as $prop => $val) {
                 $params[0] .= $this->_determineType($val);
                 array_push($params, $bindParams[$prop]);
@@ -916,9 +916,8 @@ class MysqliDb
 
         // if $meta is false yet sqlstate is true, there's no sql error but the query is
         // most likely an update/insert/delete which doesn't produce any results
-        if(!$meta && $stmt->sqlstate) {
+        if(!$meta && $stmt->sqlstate)
             return array();
-        }
 
         $row = array();
         while ($field = $meta->fetch_field()) {
@@ -976,9 +975,8 @@ class MysqliDb
             $totalCount = $stmt->fetch_row();
             $this->totalCount = $totalCount[0];
         }
-        if ($this->returnType == 'Json') {
+        if ($this->returnType == 'Json')
             return json_encode ($results);
-        }
 
         return $results;
     }
@@ -1189,9 +1187,8 @@ class MysqliDb
      */
     protected function _prepareQuery()
     {
-        if (!$stmt = $this->mysqli()->prepare($this->_query)) {
-            throw new Exception("Problem preparing query ($this->_query) " . $this->mysqli()->error);
-        }
+        if (!$stmt = $this->mysqli()->prepare($this->_query))
+            throw new Exception ("Problem preparing query ($this->_query) " . $this->mysqli()->error);
         if ($this->traceEnabled)
             $this->traceStartQ = microtime (true);
 
@@ -1219,11 +1216,10 @@ class MysqliDb
         //Reference in the function arguments are required for HHVM to work
         //https://github.com/facebook/hhvm/issues/5155
         //Referenced data array is required by mysqli since PHP 5.3+
-        if (strnatcmp(phpversion(), '5.3') >= 0) {
+        if (strnatcmp (phpversion(), '5.3') >= 0) {
             $refs = array();
-            foreach ($arr as $key => $value) {
+            foreach ($arr as $key => $value)
                 $refs[$key] = & $arr[$key];
-            }
             return $refs;
         }
         return $arr;
@@ -1341,9 +1337,8 @@ class MysqliDb
      * @param int increment by int or float. 1 by default
      */
     public function inc($num = 1) {
-        if(!is_numeric($num)){
-            throw new Exception('Argument supplied to inc must be a number');
-        }
+        if(!is_numeric($num))
+            throw new Exception ('Argument supplied to inc must be a number');
         return Array ("[I]" => "+" . $num);
     }
 
@@ -1352,9 +1347,8 @@ class MysqliDb
      * @param int increment by int or float. 1 by default
      */
     public function dec ($num = 1) {
-        if(!is_numeric($num)){
-            throw new Exception('Argument supplied to dec must be a number');
-        }
+        if(!is_numeric($num))
+            throw new Exception ('Argument supplied to dec must be a number');
         return Array ("[I]" => "-" . $num);
     }
 
