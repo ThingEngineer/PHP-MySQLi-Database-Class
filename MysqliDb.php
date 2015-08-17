@@ -1190,7 +1190,7 @@ class MysqliDb
     protected function _prepareQuery()
     {
         if (!$stmt = $this->mysqli()->prepare($this->_query)) {
-            trigger_error("Problem preparing query ($this->_query) " . $this->mysqli()->error, E_USER_ERROR);
+            throw new Exception("Problem preparing query ($this->_query) " . $this->mysqli()->error);
         }
         if ($this->traceEnabled)
             $this->traceStartQ = microtime (true);
@@ -1315,7 +1315,7 @@ class MysqliDb
             if (!empty ($matches[2])) $items = $matches[2];
             if (!empty ($matches[3])) $type = $matches[3];
             if (!in_array($type, array_keys($types)))
-                trigger_error ("invalid interval type in '{$diff}'");
+                throw new Exception("invalid interval type in '{$diff}'");
             $func .= " ".$incr ." interval ". $items ." ".$types[$type] . " ";
         }
         return $func;
@@ -1342,7 +1342,7 @@ class MysqliDb
      */
     public function inc($num = 1) {
         if(!is_numeric($num)){
-            trigger_error('Argument supplied to inc must be a number', E_USER_ERROR);
+            throw new Exception('Argument supplied to inc must be a number');
         }
         return Array ("[I]" => "+" . $num);
     }
@@ -1353,7 +1353,7 @@ class MysqliDb
      */
     public function dec ($num = 1) {
         if(!is_numeric($num)){
-            trigger_error('Argument supplied to dec must be a number', E_USER_ERROR);
+            throw new Exception('Argument supplied to dec must be a number');
         }
         return Array ("[I]" => "-" . $num);
     }
@@ -1488,4 +1488,3 @@ class MysqliDb
         return $this->count == $count;
     }
 } // END class
-?>
