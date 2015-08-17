@@ -688,4 +688,3 @@ class dbObject {
         spl_autoload_register ("dbObject::dbObjectAutoload");
     }
 }
-?>
