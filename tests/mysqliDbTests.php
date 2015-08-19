@@ -1,23 +1,24 @@
 <?php
-require_once ("MysqliDb.php");
+require_once ("../MysqliDb.php");
 error_reporting(E_ALL);
 
+$prefix = 't_';
 $db = new Mysqlidb('localhost', 'root', '', 'testdb');
-if(!$db) die("Database error");
-
-$db = new Mysqlidb(Array (
-                'host' => 'localhost',
-                'username' => 'root', 
-                'password' => '',
-                'db'=> 'testdb',
-                'charset' => null));
 if(!$db) die("Database error");
 
 $mysqli = new mysqli ('localhost', 'root', '', 'testdb');
 $db = new Mysqlidb($mysqli);
 
-$prefix = 't_';
-$db->setPrefix($prefix);
+$db = new Mysqlidb(Array (
+                'host' => 'localhost',
+                'username' => 'root',
+                'password' => '',
+                'db' => 'testdb',
+                'prefix' => $prefix,
+                'charset' => null));
+if(!$db) die("Database error");
+
+$db->setTrace(true);
 
 $tables = Array (
     'users' => Array (
@@ -28,8 +29,10 @@ $tables = Array (
         'lastName' => 'char(10)',
         'password' => 'text not null',
         'createdAt' => 'datetime',
+        'updatedAt' => 'datetime',
         'expires' => 'datetime',
-        'loginCount' => 'int(10) default 0'
+        'loginCount' => 'int(10) default 0',
+        'unique key' => 'login (login)'
     ),
     'products' => Array (
         'customerId' => 'int(10) not null',
@@ -45,6 +48,7 @@ $data = Array (
                'lastName' => 'Doe',
                'password' => $db->func('SHA1(?)',Array ("secretpassword+salt")),
                'createdAt' => $db->now(),
+               'updatedAt' => $db->now(),
                'expires' => $db->now('+1Y'),
                'loginCount' => $db->inc()
         ),
@@ -54,6 +58,7 @@ $data = Array (
                'lastName' => NULL,
                'password' => $db->func('SHA1(?)',Array ("secretpassword2+salt")),
                'createdAt' => $db->now(),
+               'updatedAt' => $db->now(),
                'expires' => $db->now('+1Y'),
                'loginCount' => $db->inc(2)
         ),
@@ -64,6 +69,7 @@ $data = Array (
                'lastName' => 'D',
                'password' => $db->func('SHA1(?)',Array ("secretpassword2+salt")),
                'createdAt' => $db->now(),
+               'updatedAt' => $db->now(),
                'expires' => $db->now('+1Y'),
                'loginCount' => $db->inc(3)
         )
@@ -96,6 +102,7 @@ $data = Array (
 function createTable ($name, $data) {
     global $db;
     //$q = "CREATE TABLE $name (id INT(9) UNSIGNED PRIMARY KEY NOT NULL";
+    $db->rawQuery("DROP TABLE IF EXISTS $name");
     $q = "CREATE TABLE $name (id INT(9) UNSIGNED PRIMARY KEY AUTO_INCREMENT";
     foreach ($data as $k => $v) {
         $q .= ", $k $v";
@@ -108,6 +115,11 @@ function createTable ($name, $data) {
 foreach ($tables as $name => $fields) {
     $db->rawQuery("DROP TABLE ".$prefix.$name);
     createTable ($prefix.$name, $fields);
+}
+
+if (!$db->ping()) {
+    echo "db is not up";
+    exit;
 }
 
 // insert test with autoincrement
@@ -130,6 +142,7 @@ $badUser = Array ('login' => null,
                'lastName' => 'Doe',
                'password' => 'test',
                'createdAt' => $db->now(),
+               'updatedAt' => $db->now(),
                'expires' => $db->now('+1Y'),
                'loginCount' => $db->inc()
         );
@@ -157,10 +170,37 @@ $q = "drop table {$prefix}test;";
 $db->rawQuery($q);
 
 
-$db->orderBy("id","asc");
+$db->orderBy("`id`","asc");
 $users = $db->get("users");
 if ($db->count != 3) {
     echo "Invalid total insert count";
+    exit;
+}
+
+// insert with on duplicate key update
+$user = Array ('login' => 'user3',
+       'active' => true,
+       'customerId' => 11,
+       'firstName' => 'Pete',
+       'lastName' => 'D',
+       'password' => $db->func('SHA1(?)',Array ("secretpassword2+salt")),
+       'createdAt' => $db->now(),
+       'updatedAt' => $db->now(),
+       'expires' => $db->now('+1Y'),
+       'loginCount' => $db->inc(3)
+       );
+$updateColumns = Array ("updatedAt");
+$insertLastId = "id";
+sleep(1);
+$db->onDuplicate($updateColumns, "id");
+$db->insert("users", $user);
+$nUser = $db->where('login','user3')->get('users');
+if ($db->count != 1) {
+    echo "onDuplicate update failed. ";
+    exit;
+}
+if ($nUser[0]['createdAt'] == $nUser[0]['updatedAt']) {
+    echo "onDuplicate2 update failed. ";
     exit;
 }
 
@@ -340,18 +380,26 @@ if ($db->count != 5) {
     echo "invalid join with subquery count";
     exit;
 }
+
+$db->withTotalCount()->get('users', 1);
+if ($db->totalCount != 3) {
+    echo "error in totalCount";
+    exit;
+}
 ///
 //TODO: insert test
 $db->delete("users");
 $db->get("users");
 if ($db->count != 0) {
-    echo "Invalid users count after delete"; 
+    echo "Invalid users count after delete";
     exit;
 }
 $db->delete("products");
 
-echo "All done";
 
 //print_r($db->rawQuery("CALL simpleproc(?)",Array("test")));
 
+print_r ($db->trace);
+echo "All done\n";
+echo "Memory usage: ".memory_get_peak_usage()."\n";
 ?>
