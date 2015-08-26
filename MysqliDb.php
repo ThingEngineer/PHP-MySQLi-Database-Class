@@ -500,8 +500,11 @@ class MysqliDb
         if (!$res)
             return null;
 
-        if (isset($res[0]["retval"]) && $limit == 1)
-            return $res[0]["retval"];
+        if ($limit == 1) {
+            if (isset ($res[0]["retval"]))
+                return $res[0]["retval"];
+            return null;
+        }
 
         $newRes = Array ();
         for ($i = 0; $i < $this->count; $i++)
