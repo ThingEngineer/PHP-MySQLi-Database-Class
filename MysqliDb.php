@@ -960,8 +960,13 @@ class MysqliDb
                 }
             } else {
                 $x = array();
-                foreach ($row as $key => $val)
-                    $x[$key] = $val;
+                foreach ($row as $key => $val) {
+                    if (is_array($val)) {
+                        foreach ($val as $k => $v)
+                            $x[$key][$k] = $v;
+                    } else
+                        $x[$key] = $val;
+                }
             }
             $this->count++;
             array_push ($results, $x);
