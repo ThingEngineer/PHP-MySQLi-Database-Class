@@ -10,7 +10,7 @@
  * @copyright Copyright (c) 2010
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      http://github.com/joshcam/PHP-MySQLi-Database-Class 
- * @version   2.2
+ * @version   2.4
  **/
 class MysqliDb
 {
@@ -960,8 +960,13 @@ class MysqliDb
                 }
             } else {
                 $x = array();
-                foreach ($row as $key => $val)
-                    $x[$key] = $val;
+                foreach ($row as $key => $val) {
+                    if (is_array($val)) {
+                        foreach ($val as $k => $v)
+                            $x[$key][$k] = $v;
+                    } else
+                        $x[$key] = $val;
+                }
             }
             $this->count++;
             array_push ($results, $x);
