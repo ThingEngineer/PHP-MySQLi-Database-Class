@@ -210,8 +210,9 @@ class MysqliDb
         if (empty ($this->host))
             die ('Mysql host is not set');
 
-        $this->_mysqli = new mysqli ($this->host, $this->username, $this->password, $this->db, $this->port)
-            or die('There was a problem connecting to the database');
+        $this->_mysqli = new mysqli ($this->host, $this->username, $this->password, $this->db, $this->port);
+        if ($this->_mysqli->connect_error)
+            throw new Exception ('Connect Error ' . $this->_mysqli->connect_errno . ': ' . $this->_mysqli->connect_error);
 
         if ($this->charset)
             $this->_mysqli->set_charset ($this->charset);
@@ -607,7 +608,11 @@ class MysqliDb
         if ($this->isSubQuery)
             return;
 
-        $this->_query = "DELETE FROM " . self::$prefix . $tableName;
+        $table = self::$prefix . $tableName;
+        if (count ($this->_join))
+            $this->_query = "DELETE " . preg_replace ('/.* (.*)/', '$1', $table) . " FROM " . $table;
+        else
+            $this->_query = "DELETE FROM " . $table;
 
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
