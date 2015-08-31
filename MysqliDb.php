@@ -139,6 +139,19 @@ class MysqliDb
      */
     protected $_nestJoin = false;
     private $_tableName = '';
+
+    /**
+     * FOR UPDATE flag
+     * @var boolean
+     */
+    protected $_forUpdate = false;
+
+    /**
+     * LOCK IN SHARE MODE flag
+     * @var boolean
+     */
+    protected $_lockInShareMode = false;
+
     /**
      * Variables for query execution tracing
      *
@@ -247,6 +260,8 @@ class MysqliDb
         $this->_queryOptions = array();
         $this->returnType = 'Array';
         $this->_nestJoin = false;
+        $this->_forUpdate = false;
+        $this->_lockInShareMode = false;
         $this->_tableName = '';
         $this->_lastInsertId = null;
         $this->_updateColumns = null;
@@ -401,7 +416,7 @@ class MysqliDb
     public function setQueryOption ($options) {
         $allowedOptions = Array ('ALL','DISTINCT','DISTINCTROW','HIGH_PRIORITY','STRAIGHT_JOIN','SQL_SMALL_RESULT',
                           'SQL_BIG_RESULT','SQL_BUFFER_RESULT','SQL_CACHE','SQL_NO_CACHE', 'SQL_CALC_FOUND_ROWS',
-                          'LOW_PRIORITY','IGNORE','QUICK', 'MYSQLI_NESTJOIN');
+                          'LOW_PRIORITY','IGNORE','QUICK', 'MYSQLI_NESTJOIN', 'FOR UPDATE', 'LOCK IN SHARE MODE');
         if (!is_array ($options))
             $options = Array ($options);
 
@@ -412,6 +427,10 @@ class MysqliDb
 
             if ($option == 'MYSQLI_NESTJOIN')
                 $this->_nestJoin = true;
+            else if ($option == 'MYSQLI_FOR_UPDATE')
+                $this->_forUpdate = true;
+            else if ($option == 'MYSQLI_LOCK_IN_SHARE_MODE')
+                $this->_lockInShareMode = true;
             else
                 $this->_queryOptions[] = $option;
         }
@@ -632,6 +651,7 @@ class MysqliDb
     {
         $this->_lastInsertId = $_lastInsertId;
         $this->_updateColumns = $_updateColumns;
+        return $this;
     }
 
     /**
@@ -883,6 +903,10 @@ class MysqliDb
         $this->_buildOrderBy();
         $this->_buildLimit ($numRows);
         $this->_buildOnDuplicate($tableData);
+        if ($this->_forUpdate)
+            $this->_query .= ' FOR UPDATE';
+        if ($this->_lockInShareMode)
+            $this->_query .= ' LOCK IN SHARE MODE';
 
         $this->_lastQuery = $this->replacePlaceHolders ($this->_query, $this->_bindParams);
 
