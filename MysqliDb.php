@@ -632,6 +632,7 @@ class MysqliDb
     {
         $this->_lastInsertId = $_lastInsertId;
         $this->_updateColumns = $_updateColumns;
+        return $this;
     }
 
     /**
