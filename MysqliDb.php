@@ -607,7 +607,11 @@ class MysqliDb
         if ($this->isSubQuery)
             return;
 
-        $this->_query = "DELETE FROM " . self::$prefix . $tableName;
+        $table = self::$prefix . $tableName;
+        if (count ($this->_join))
+            $this->_query = "DELETE " . preg_replace ('/.* (.*)/', '$1', $table) . " FROM " . $table;
+        else
+            $this->_query = "DELETE FROM " . $table;
 
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
