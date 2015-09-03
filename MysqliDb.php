@@ -428,9 +428,9 @@ class MysqliDb
 
             if ($option == 'MYSQLI_NESTJOIN')
                 $this->_nestJoin = true;
-            else if ($option == 'MYSQLI_FOR_UPDATE')
+            else if ($option == 'FOR UPDATE')
                 $this->_forUpdate = true;
-            else if ($option == 'MYSQLI_LOCK_IN_SHARE_MODE')
+            else if ($option == 'LOCK IN SHARE MODE')
                 $this->_lockInShareMode = true;
             else
                 $this->_queryOptions[] = $option;
