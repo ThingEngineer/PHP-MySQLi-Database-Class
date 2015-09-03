@@ -417,7 +417,7 @@ class MysqliDb
     public function setQueryOption ($options) {
         $allowedOptions = Array ('ALL','DISTINCT','DISTINCTROW','HIGH_PRIORITY','STRAIGHT_JOIN','SQL_SMALL_RESULT',
                           'SQL_BIG_RESULT','SQL_BUFFER_RESULT','SQL_CACHE','SQL_NO_CACHE', 'SQL_CALC_FOUND_ROWS',
-                          'LOW_PRIORITY','IGNORE','QUICK', 'MYSQLI_NESTJOIN', 'FOR UPDATE', 'LOCK IN SHARE MODE');
+                          'LOW_PRIORITY','IGNORE','QUICK', 'MYSQLI_NESTJOIN', 'FOR_UPDATE', 'LOCK_IN_SHARE_MODE');
         if (!is_array ($options))
             $options = Array ($options);
 
@@ -428,9 +428,9 @@ class MysqliDb
 
             if ($option == 'MYSQLI_NESTJOIN')
                 $this->_nestJoin = true;
-            else if ($option == 'MYSQLI_FOR_UPDATE')
+            else if ($option == 'FOR_UPDATE')
                 $this->_forUpdate = true;
-            else if ($option == 'MYSQLI_LOCK_IN_SHARE_MODE')
+            else if ($option == 'LOCK_IN_SHARE_MODE')
                 $this->_lockInShareMode = true;
             else
                 $this->_queryOptions[] = $option;
