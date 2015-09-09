@@ -338,7 +338,7 @@ Or raw condition with variables:
 $db->where ("(id = ? or id = ?)", Array(6,2));
 $db->where ("login","mike")
 $res = $db->get ("users");
-// Gives: SELECT * FROM users WHERE (id = 2 or id = 2) and login='mike';
+// Gives: SELECT * FROM users WHERE (id = 6 or id = 2) and login='mike';
 ```
 
 
