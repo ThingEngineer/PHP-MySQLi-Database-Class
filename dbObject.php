@@ -297,7 +297,7 @@ class dbObject {
      *
      * @return dbObject|array
      */
-    private function byId ($id, $fields = null) {
+    protected function byId ($id, $fields = null) {
         $this->db->where (MysqliDb::$prefix . $this->dbTable . '.' . $this->primaryKey, $id);
         return $this->getOne ($fields);
     }
@@ -310,7 +310,7 @@ class dbObject {
      *
      * @return dbObject
      */
-    private function getOne ($fields = null) {
+    protected function getOne ($fields = null) {
         $this->processHasOneWith ();
         $results = $this->db->ArrayBuilder()->getOne ($this->dbTable, $fields);
         if ($this->db->count == 0)
@@ -340,7 +340,7 @@ class dbObject {
      *
      * @return array Array of dbObjects
      */
-    private function get ($limit = null, $fields = null) {
+    protected function get ($limit = null, $fields = null) {
         $objects = Array ();
         $this->processHasOneWith ();
         $results = $this->db->ArrayBuilder()->get ($this->dbTable, $limit, $fields);
