@@ -11,6 +11,9 @@
  * @version   2.2
  *
  * @method int count ()
+ * @method dbObject ArrayBuilder()
+ * @method dbObject JsonBuilder()
+ * @method dbObject ObjectBuilder()
  * @method mixed byId (string $id, mixed $fields)
  * @method mixed get (mixed $limit, mixed $fields)
  * @method mixed getOne (mixed $fields)
@@ -181,10 +184,9 @@ class dbObject {
      *
      * @return dbObject
      */
-    public static function JsonBuilder () {
-        $obj = new static;
-        $obj->returnType = 'Json';
-        return $obj;
+    private function JsonBuilder () {
+        $this->returnType = 'Json';
+        return $return;
     }
 
     /**
@@ -192,10 +194,9 @@ class dbObject {
      *
      * @return dbObject
      */
-    public static function ArrayBuilder () {
-        $obj = new static;
-        $obj->returnType = 'Array';
-        return $obj;
+    private function ArrayBuilder () {
+        $this->returnType = 'Array';
+        return $this;
     }
 
     /**
@@ -204,8 +205,9 @@ class dbObject {
      *
      * @return dbObject
      */
-    public static function ObjectBuilder () {
-        return new static;
+    private function ObjectBuilder () {
+        $this->returnType = 'Object';
+        return $this;
     }
 
     /**
