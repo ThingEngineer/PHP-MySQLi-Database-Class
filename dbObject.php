@@ -409,9 +409,11 @@ class dbObject {
      *
      * @return int
      */
-    private function count () {
+    protected function count () {
         $res = $this->db->ArrayBuilder()->getValue ($this->dbTable, "count(*)");
-        return $res['cnt'];
+        if (!$res)
+            return 0;
+        return $res;
     }
 
     /**
