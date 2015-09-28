@@ -141,6 +141,12 @@ if (!is_array ($products[0]['userId']) || !is_array ($products[1]['userId'])) {
     exit;
 }
 
+$products = product::with('userId')->ArrayBuilder()->get(2);
+if (!is_array ($products[0]['userId']) || !is_array ($products[1]['userId'])) {
+    echo "Error in with processing in get";
+    exit;
+}
+
 $depts = product::join('user')->orderBy('`products`.id', 'desc')->get(5);
 foreach ($depts as $d) {
     if (!is_object($d)) {
