@@ -9,7 +9,7 @@
  * @author    Alexander V. Butenko <a.butenka@gmail.com>
  * @copyright Copyright (c) 2010
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
- * @link      http://github.com/joshcam/PHP-MySQLi-Database-Class 
+ * @link      http://github.com/joshcam/PHP-MySQLi-Database-Class
  * @version   2.4
  **/
 class MysqliDb
@@ -342,6 +342,62 @@ class MysqliDb
         $this->reset();
 
         return $res;
+    }
+
+    /**
+    * Execute faster raw SQL SELECT query, using mysqli_fetch_all.
+    * see http://php.net/manual/en/mysqli-result.fetch-all.php
+    *
+    * @param $query
+    * @param int $resulttype
+    * @return array|mixed|string
+    * @throws Exception
+    */
+    public  function  rawQuerySelect ($query, $resulttype = MYSQLI_ASSOC)
+    {
+       if (!$query || strtoupper(substr(trim($query),0,6)) != 'SELECT')
+           throw new Exception ("Problem query Select ($query) , this is not a select statement." );
+
+       if ($this->traceEnabled)
+           $this->traceStartQ = microtime (true);
+
+       $calcFoundRows = false;
+       if (in_array('SQL_CALC_FOUND_ROWS', $this->_queryOptions)) {
+           $calcFoundRows = true;
+           if (!strpos($query, 'SQL_CALC_FOUND_ROWS'))
+               $query = preg_replace('/^\s*select/i', 'SELECT SQL_CALC_FOUND_ROWS', $query);
+       }
+
+       //$query = $this->mysqli()->real_escape_string($query);
+       $result = $this->mysqli()->query($query,MYSQLI_STORE_RESULT);
+
+       if (!($result instanceof mysqli_result))
+           throw new Exception ("Problem preparing query ($query) " . $this->mysqli()->error);
+
+       $this->count = $result->num_rows;
+       $this->_stmtError = $this->mysqli()->error;
+       $this->_lastQuery = $query;
+
+       // Compatibility layer with PHP < 5.3
+       if (method_exists('mysqli_result', 'fetch_all'))
+           $res = $result->fetch_all($resulttype);
+       else
+           for ($res = array(); $tmp = $result->fetch_array($resulttype);) $res[] = $tmp;
+
+       $result->free();
+
+       if ($calcFoundRows) {
+           $stmt = $this->mysqli()->query ('SELECT FOUND_ROWS()');
+           $totalCount = $stmt->fetch_row();
+           $this->totalCount = $totalCount[0];
+       }
+
+       $this->reset();
+
+       if ($this->returnType == 'Json')
+           return json_encode ($res);
+
+       return $res;
     }
 
     /**
@@ -942,6 +998,12 @@ class MysqliDb
         $parameters = array();
         $results = array();
         // See http://php.net/manual/en/mysqli-result.fetch-fields.php
+        /* Get the predefined number(252), execute the following code
+        $types = array();
+        $constants = get_defined_constants(true);
+        foreach ($constants['mysqli'] as $c => $n){if (preg_match('/^MYSQLI_TYPE_(.*)/', $c, $m)) {$types[$n] = $m[1];	}}
+        print_r($types);
+        //*/
         $mysqlLongType = 252;
         $shouldStoreResult = false;
 
@@ -1238,7 +1300,7 @@ class MysqliDb
      */
     public function __destruct()
     {
-        if (!$this->isSubQuery)
+        if ($this->isSubQuery)
             return;
         if ($this->_mysqli)
             $this->_mysqli->close();
@@ -1271,6 +1333,7 @@ class MysqliDb
      * @return string
      */
     protected function replacePlaceHolders ($str, $vals) {
+        if (empty($vals)) return $str;
         $i = 1;
         $newStr = "";
 
