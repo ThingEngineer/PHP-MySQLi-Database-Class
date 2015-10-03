@@ -186,7 +186,7 @@ class dbObject {
      */
     private function JsonBuilder () {
         $this->returnType = 'Json';
-        return $return;
+        return $this;
     }
 
     /**
