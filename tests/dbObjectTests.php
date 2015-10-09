@@ -141,6 +141,12 @@ if (!is_array ($products[0]['userId']) || !is_array ($products[1]['userId'])) {
     exit;
 }
 
+$products = product::with('userId')->ArrayBuilder()->get(2);
+if (!is_array ($products[0]['userId']) || !is_array ($products[1]['userId'])) {
+    echo "Error in with processing in get";
+    exit;
+}
+
 $depts = product::join('user')->orderBy('`products`.id', 'desc')->get(5);
 foreach ($depts as $d) {
     if (!is_object($d)) {
@@ -267,6 +273,13 @@ if (!is_array ($p->join('user')->orderBy('`products`.id', 'desc')->get(2)))
 
 if (!is_array ($p->orderBy('`products`.id', 'desc')->join('user')->get(2)))
     echo "wrong return type2";
+
+
+$json = user::jsonBuilder()->get(null, "id, login");
+if ($json != '[{"id":1,"login":"user1"},{"id":2,"login":"user2"},{"id":3,"login":"user3"},{"id":4,"login":"testuser"}]') {
+    echo "jsonbuilder fail";
+    exit;
+}
 
 echo "All done";
 ?>
