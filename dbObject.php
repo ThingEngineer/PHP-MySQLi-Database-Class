@@ -186,7 +186,7 @@ class dbObject {
      */
     private function JsonBuilder () {
         $this->returnType = 'Json';
-        return $this;
+        return $return;
     }
 
     /**
@@ -233,7 +233,7 @@ class dbObject {
             return false;
 
         $id = $this->db->insert ($this->dbTable, $sqlData);
-        if (!empty ($this->primaryKey) && !isset($this->data[$this->primaryKey]))
+        if (!empty ($this->primaryKey) && empty ($this->data[$this->primaryKey]))
             $this->data[$this->primaryKey] = $id;
         $this->isNew = false;
 
