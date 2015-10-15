@@ -126,7 +126,7 @@ $data = Array ("login" => "admin",
                "createdAt" => $db->now(),
                "updatedAt" => $db->now(),
 );
-$updateColumns = Array ("updateAt");
+$updateColumns = Array ("updatedAt");
 $lastInsertId = "id";
 $db->onDuplicate($updateColumns, $lastInsertId);
 $id = $db->insert ('users', $data);
