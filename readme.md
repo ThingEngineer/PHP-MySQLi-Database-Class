@@ -189,7 +189,7 @@ echo "{$count} users found";
 ```
 
 select one column value or function result from multiple rows:
-``php
+```php
 $logins = $db->getValue ("users", "login", null);
 // select login from users
 $logins = $db->getValue ("users", "login", 5);
