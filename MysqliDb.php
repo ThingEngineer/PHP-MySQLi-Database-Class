@@ -1094,7 +1094,15 @@ class MysqliDb
             if ($this->_lastInsertId)
                 $this->_query .= $this->_lastInsertId . "=LAST_INSERT_ID (".$this->_lastInsertId."), ";
 
-            $this->_buildDataPairs ($tableData, $this->_updateColumns, false);
+            foreach ($this->_updateColumns as $key => $val) {
+                // skip all params without a value
+                if (is_numeric ($key)) {
+                    $this->_updateColumns[$val] = '';
+                    unset ($this->_updateColumns[$key]);
+                } else
+                    $tableData[$key] = $val;
+            }
+            $this->_buildDataPairs ($tableData, array_keys ($this->_updateColumns), false);
         }
     }
 
