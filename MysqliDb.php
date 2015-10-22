@@ -153,6 +153,12 @@ class MysqliDb
     protected $_lockInShareMode = false;
 
     /**
+     * Key field for Map()'ed result array
+     * @var string
+     */
+    protected $_mapKey = null;
+
+    /**
      * Variables for query execution tracing
      *
      */
@@ -266,6 +272,7 @@ class MysqliDb
         $this->_tableName = '';
         $this->_lastInsertId = null;
         $this->_updateColumns = null;
+        $this->_mapKey = null;
     }
 
     /**
@@ -998,7 +1005,10 @@ class MysqliDb
                 }
             }
             $this->count++;
-            array_push ($results, $x);
+            if ($this->_mapKey)
+                $results[$row[$this->_mapKey]] = count ($row) > 2 ? $x : end ($x);
+            else
+                array_push ($results, $x);
         }
         if ($shouldStoreResult)
             $stmt->free_result();
@@ -1527,5 +1537,17 @@ class MysqliDb
         $this->where ('table_name', $tables, 'IN');
         $this->get ('information_schema.tables', $count);
         return $this->count == $count;
+    }
+
+    /**
+     * Return result as an associative array with $idField field value used as a record key
+     *
+     * @param String $idField field name to use for a mapped element key
+     *
+     * @return Array Returns an array($k => $v) if get(.."param1, param2"), array ($k => array ($v, $v)) otherwise
+     */
+    public function map ($idField) {
+        $this->_mapKey = $idField;
+        return $this;
     }
 } // END class
