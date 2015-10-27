@@ -1,5 +1,6 @@
-dbObject - model implementation on top of the MysqliDb
-Please note, that this library is not pretending to be a full stack ORM but a simple OOP wrapper for mysqlidb
+dbObject - model implementation on top of the MysqliDb.
+
+Please note that this library is not pretending to be a full stack ORM, but simply an OOP wrapper for `mysqlidb`.
 
 <hr>
 ###Initialization
@@ -26,7 +27,7 @@ class user extends dbObject {}
 ```
 In case autoload is set to 'models' directory, the filename should be models/user.php
 
-Class will be related to 'user' table. To change table name define correct name in the $dbTable variable:
+Class will be related to 'user' table. To change the table name, define correct name in the `$dbTable` variable:
 
 ```php
     protected $dbTable = "users";
@@ -110,11 +111,11 @@ $p->seller = $user;
 $p->save();
 ```
 
-After `save()` is called both new objects (user and product) will be saved.
+After `save()` is called, both new objects (user and product) will be saved.
 
 
 ###Update
-To update model properties just set them and call `save()` method. As well values that needed to by changed could be passed as an array to the `save()` method.
+To update model properties just set them and call `save()` method. Values that need to be changed could be passed as an array to the `save()` method as well.
 
 ```php
 $user = user::byId(1);
