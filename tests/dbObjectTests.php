@@ -4,6 +4,8 @@ require_once ("../MysqliDb.php");
 require_once ("../dbObject.php");
 
 $db = new Mysqlidb('localhost', 'root', '', 'testdb');
+$prefix = 't_';
+$db->setPrefix($prefix);
 dbObject::autoload ("models");
 
 $tables = Array (
@@ -91,8 +93,8 @@ function createTable ($name, $data) {
 
 // rawQuery test
 foreach ($tables as $name => $fields) {
-    $db->rawQuery("DROP TABLE " . $name);
-    createTable ($name, $fields);
+    $db->rawQuery("DROP TABLE " . $prefix . $name);
+    createTable ($prefix . $name, $fields);
 }
 
 foreach ($data as $name => $datas) {
@@ -121,13 +123,31 @@ if (!is_array ($product['userId'])) {
     exit;
 }
 
+$product = product::with('userId')->byId(5);
+if (!is_object ($product->data['userId'])) {
+    echo "Error in with processing in getOne object";
+    exit;
+}
+
+$product = product::with('user')->byId(5);
+if (!is_object ($product->data['user'])) {
+    echo "Error in with processing in getOne object";
+    exit;
+}
+
 $products = product::ArrayBuilder()->with('userId')->get(2);
-if (!is_array ($products[0]['userId'])) {
+if (!is_array ($products[0]['userId']) || !is_array ($products[1]['userId'])) {
     echo "Error in with processing in get";
     exit;
 }
 
-$depts = product::join('user')->orderBy('products.id', 'desc')->get(5);
+$products = product::with('userId')->ArrayBuilder()->get(2);
+if (!is_array ($products[0]['userId']) || !is_array ($products[1]['userId'])) {
+    echo "Error in with processing in get";
+    exit;
+}
+
+$depts = product::join('user')->orderBy('`products`.id', 'desc')->get(5);
 foreach ($depts as $d) {
     if (!is_object($d)) {
         echo "Return should be an object\n";
@@ -237,10 +257,10 @@ if (!user::byId(1) instanceof user)
 if (!is_array (user::ArrayBuilder()->byId(1)))
     echo "wrong return type2";
 
-if (!is_array (product::join('user')->orderBy('products.id', 'desc')->get(2)))
+if (!is_array (product::join('user')->orderBy('`products`.id', 'desc')->get(2)))
     echo "wrong return type2";
 
-if (!is_array (product::orderBy('products.id', 'desc')->join('user')->get(2)))
+if (!is_array (product::orderBy('`products`.id', 'desc')->join('user')->get(2)))
     echo "wrong return type2";
 
 $u = new user;
@@ -248,11 +268,18 @@ if (!$u->byId(1) instanceof user)
     echo "wrong return type2";
 
 $p = new product;
-if (!is_array ($p->join('user')->orderBy('products.id', 'desc')->get(2)))
+if (!is_array ($p->join('user')->orderBy('`products`.id', 'desc')->get(2)))
     echo "wrong return type2";
 
-if (!is_array ($p->orderBy('products.id', 'desc')->join('user')->get(2)))
+if (!is_array ($p->orderBy('`products`.id', 'desc')->join('user')->get(2)))
     echo "wrong return type2";
+
+
+$json = user::jsonBuilder()->get(null, "id, login");
+if ($json != '[{"id":1,"login":"user1"},{"id":2,"login":"user2"},{"id":3,"login":"user3"},{"id":4,"login":"testuser"}]') {
+    echo "jsonbuilder fail";
+    exit;
+}
 
 echo "All done";
 ?>
