@@ -1305,7 +1305,6 @@ class MysqliDb
     {
         if ($this->isSubQuery)
             return;
-        print_r ($this);
         if ($this->_mysqli) {
             $this->_mysqli->close();
             $this->_mysqli = null;
