@@ -286,8 +286,8 @@ $resutls = $db->rawQuery ($q, $params);
 print_r ($results); // contains Array of returned rows
 ```
 
-### Where Method
-This method allows you to specify where parameters of the query.
+### Where / Having Methods
+`where()`, `orWhere()`, `having()` and `orHaving()` methods allows you to specify where and having conditions of the query. All conditions supported by where() are supported by having() as well.
 
 WARNING: In order to use column to column comparisons only raw where conditions should be used as column name or functions cant be passed as a bind variable.
 
@@ -298,6 +298,14 @@ $db->where ('login', 'admin');
 $results = $db->get ('users');
 // Gives: SELECT * FROM users WHERE id=1 AND login='admin';
 ```
+
+```php
+$db->where ('id', 1);
+$db->having ('login', 'admin');
+$results = $db->get ('users');
+// Gives: SELECT * FROM users WHERE id=1 HAVING login='admin';
+```
+
 
 Regular == operator with column to column comparison:
 ```php
@@ -341,6 +349,14 @@ $db->orWhere ('firstName', 'Peter');
 $results = $db->get ('users');
 // Gives: SELECT * FROM users WHERE firstName='John' OR firstName='peter'
 ```
+
+```php
+$db->where ('firstName', 'John');
+$db->orWhere ('firstName', 'Peter');
+$results = $db->get ('users');
+// Gives: SELECT * FROM users WHERE firstName='John' OR firstName='peter'
+```
+
 
 NULL comparison:
 ```php
