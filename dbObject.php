@@ -80,13 +80,13 @@ class dbObject {
      *
      * @var int
      */
-    public $pageLimit = 20;
+    public static $pageLimit = 20;
     /**
      * Variable that holds total pages count of last paginate() query
      *
      * @var int
      */
-    public $totalPages = 0;
+    public static $totalPages = 0;
     /**
      * An array that holds insert/update/select errors
      *
@@ -427,10 +427,10 @@ class dbObject {
      * @return array
      */
     private function paginate ($page, $fields = null) {
-        $offset = $this->pageLimit * ($page - 1);
+        $offset = self::$pageLimit * ($page - 1);
         $this->db->withTotalCount();
-        $results = $this->get (Array ($this->pageLimit, $offset), $fields);
-        $this->totalPages = round ($this->db->totalCount / $this->pageLimit);
+        $results = $this->get (Array ($offset, self::$pageLimit), $fields);
+        self::$totalPages = round ($this->db->totalCount / self::$pageLimit);
 
         return $results;
     }

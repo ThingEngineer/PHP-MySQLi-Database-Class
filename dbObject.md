@@ -285,6 +285,16 @@ Object could be easily converted to a json string or an array.
     $userArray = $user->toArray();
 ```
 
+###Pagination
+Use paginate() instead of get() to fetch paginated result
+```php
+$page = 1;
+// set page limit to 2 results per page. 20 by default
+product::$pageLimit = 2;
+$products = product::arraybuilder()->paginate($page);
+echo "showing $page out of " . product::$totalPages;
+
+```
 ###Examples
 
 Please look for a use examples in <a href='tests/dbObjectTests.php'>tests file</a> and test models inside the <a href='tests/models/'>test models</a> directory

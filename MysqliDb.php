@@ -1341,6 +1341,9 @@ class MysqliDb
         $i = 1;
         $newStr = "";
 
+        if (empty ($vals))
+            return $str;
+
         while ($pos = strpos ($str, "?")) {
             $val = $vals[$i++];
             if (is_object ($val))
