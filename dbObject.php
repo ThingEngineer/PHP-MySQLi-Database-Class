@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2015
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      http://github.com/joshcam/PHP-MySQLi-Database-Class 
- * @version   2.2
+ * @version   2.5
  *
  * @method int count ()
  * @method dbObject ArrayBuilder()
