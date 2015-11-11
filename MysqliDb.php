@@ -174,6 +174,13 @@ class MysqliDb
     public $trace = array();
 
     /**
+     * Variable for error tracking
+     */
+    protected $errTrack = false;
+    protected $routeTrack;
+    protected $errMsg = '';
+
+    /**
      * @param string $host
      * @param string $username
      * @param string $password
@@ -254,6 +261,37 @@ class MysqliDb
         return self::$_instance;
     }
 
+
+     /**
+     * Save errors into a file
+     * @param bool $enabled Allow create file to save errors
+     * @param string $route Set a route to create this file
+     */
+    public function setErrTrack($enabled,$route=""){
+        $this->errTrack = $enabled;
+
+        // "/var/www/html/inc/libs/";
+        $this->routeTrack = $route;
+    }
+
+     /**
+      * Internal function to create a .txt file to save all the log
+      * collected from an specific query
+      * @param  [type] $data Data that is going to be written in the file
+      */
+    protected function createLog($data){ 
+        
+        //Guardamos directorio actual
+        $actual = getcwd();
+        
+        $file = $this->routeTrack."mysqli_errors.txt";
+        
+        $fh = fopen($file, 'a') or die("Can't open/create file");
+        fwrite($fh,$data);
+        fclose($fh);
+    
+    }
+
     /**
      * Reset states after an execution
      *
@@ -263,6 +301,18 @@ class MysqliDb
     {
         if ($this->traceEnabled)
             $this->trace[] = array ($this->_lastQuery, (microtime(true) - $this->traceStartQ) , $this->_traceGetCaller());
+
+        if($this->errTrack && $this->_mysqli->error != NULL){
+
+            //Put the MySQLi errno in order to complement the error info
+            $this->errMsg = date("Y-m-d h:i:s ").'MySQLi errno: '.
+                        $this->_mysqli->errno.' - '.
+                        $this->_mysqli->error." \nQuery: ".
+                        $this->_lastQuery."\n\n";
+
+            $this->createLog($this->errMsg);
+
+        }
 
         $this->_where = array();
         $this->_having = array();
@@ -1354,6 +1404,7 @@ class MysqliDb
             $str = substr ($str, $pos + 1);
         }
         $newStr .= $str;
+
         return $newStr;
     }
 
