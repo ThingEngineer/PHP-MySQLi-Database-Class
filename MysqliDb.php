@@ -1,5 +1,4 @@
 <?php
-
 /**
  * MysqliDb Class
  *
@@ -13,112 +12,102 @@
  * @link      http://github.com/joshcam/PHP-MySQLi-Database-Class 
  * @version   2.6-master
  */
+
 class MysqliDb
 {
 
     /**
      * Static instance of self
-     *
      * @var MysqliDb
      */
     protected static $_instance;
 
     /**
      * Table prefix
-     *
      * @var string
      */
     public static $prefix = '';
 
     /**
      * MySQLi instance
-     *
      * @var mysqli
      */
     protected $_mysqli;
 
     /**
      * The SQL query to be prepared and executed
-     *
      * @var string
      */
     protected $_query;
 
     /**
      * The previously executed SQL query
-     *
      * @var string
      */
     protected $_lastQuery;
 
     /**
      * The SQL query options required after SELECT, INSERT, UPDATE or DELETE
-     *
      * @var string
      */
     protected $_queryOptions = array();
 
     /**
      * An array that holds where joins
-     *
      * @var array
      */
     protected $_join = array();
 
     /**
      * An array that holds where conditions
-     *
      * @var array
      */
     protected $_where = array();
 
     /**
      * An array that holds having conditions
-     *
      * @var array
      */
     protected $_having = array();
 
     /**
      * Dynamic type list for order by condition value
+     * @var array
      */
     protected $_orderBy = array();
 
     /**
      * Dynamic type list for group by condition value
+     * @var array
      */
     protected $_groupBy = array();
 
     /**
      * Dynamic array that holds a combination of where condition/table data value types and parameter references
-     *
      * @var array
      */
     protected $_bindParams = array(''); // Create the empty 0 index
+
     /**
      * Variable which holds an amount of returned rows during get/getOne/select queries
-     *
      * @var string
      */
     public $count = 0;
 
     /**
      * Variable which holds an amount of returned rows during get/getOne/select queries with withTotalCount()
-     *
      * @var string
      */
     public $totalCount = 0;
 
     /**
      * Variable which holds last statement error
-     *
      * @var string
      */
     protected $_stmtError;
 
     /**
      * Database credentials
-     *
      * @var string
      */
     protected $host;
@@ -130,46 +119,50 @@ class MysqliDb
 
     /**
      * Is Subquery object
-     *
+     * @var bool
      */
     protected $isSubQuery = false;
 
     /**
      * Name of the auto increment column
-     *
+     * @var int
      */
     protected $_lastInsertId = null;
 
     /**
      * Column names for update when using onDuplicate method
-     *
+     * @var array
      */
     protected $_updateColumns = null;
 
     /**
-     * Return type: 'Array' to return results as array, 'Object' as object
-     * 'Json' as json string
-     *
+     * Return type: 'array' to return results as array, 'object' as object
+     * 'json' as json string
      * @var string
      */
-    public $returnType = 'Array';
+    public $returnType = 'array';
 
     /**
      * Should join() results be nested by table
-     * @var boolean
+     * @var bool
      */
     protected $_nestJoin = false;
+
+    /**
+     * Table name (with prefix, if used)
+     * @var string 
+     */
     private $_tableName = '';
 
     /**
      * FOR UPDATE flag
-     * @var boolean
+     * @var bool
      */
     protected $_forUpdate = false;
 
     /**
      * LOCK IN SHARE MODE flag
-     * @var boolean
+     * @var bool
      */
     protected $_lockInShareMode = false;
 
@@ -181,7 +174,6 @@ class MysqliDb
 
     /**
      * Variables for query execution tracing
-     *
      */
     protected $traceStartQ;
     protected $traceEnabled;
@@ -194,6 +186,7 @@ class MysqliDb
      * @param string $password
      * @param string $db
      * @param int $port
+     * @param string $charset
      */
     public function __construct($host = null, $username = null, $password = null, $db = null, $port = null, $charset = 'utf8')
     {
@@ -234,6 +227,7 @@ class MysqliDb
      * A method to connect to the database
      * 
      * @throws Exception
+     * @return void
      */
     public function connect()
     {
@@ -242,7 +236,7 @@ class MysqliDb
         }
 
         if (empty($this->host)) {
-            throw new Exception('Mysql host is not set');
+            throw new Exception('MySQL host is not set');
         }
 
         $this->_mysqli = new mysqli($this->host, $this->username, $this->password, $this->db, $this->port);
@@ -258,6 +252,8 @@ class MysqliDb
 
     /**
      * A method to get mysqli object or create it in case needed
+     * 
+     * @return mysqli
      */
     public function mysqli()
     {
@@ -274,7 +270,7 @@ class MysqliDb
      *
      * @uses $db = MySqliDb::getInstance();
      *
-     * @return object Returns the current instance.
+     * @return MysqliDb Returns the current instance.
      */
     public static function getInstance()
     {
@@ -284,7 +280,7 @@ class MysqliDb
     /**
      * Reset states after an execution
      *
-     * @return object Returns the current instance.
+     * @return MysqliDb Returns the current instance.
      */
     protected function reset()
     {
@@ -300,7 +296,7 @@ class MysqliDb
         $this->_bindParams = array(''); // Create the empty 0 index
         $this->_query = null;
         $this->_queryOptions = array();
-        $this->returnType = 'Array';
+        $this->returnType = 'array';
         $this->_nestJoin = false;
         $this->_forUpdate = false;
         $this->_lockInShareMode = false;
@@ -311,36 +307,36 @@ class MysqliDb
     }
 
     /**
-     * Helper function to create dbObject with Json return type
+     * Helper function to create dbObject with JSON return type
      *
-     * @return object
+     * @return MysqliDb
      */
-    public function JsonBuilder()
+    public function jsonBuilder()
     {
-        $this->returnType = 'Json';
+        $this->returnType = 'json';
         return $this;
     }
 
     /**
-     * Helper function to create dbObject with Array return type
+     * Helper function to create dbObject with array return type
      * Added for consistency as thats default output type
      *
-     * @return object
+     * @return MysqliDb
      */
-    public function ArrayBuilder()
+    public function arrayBuilder()
     {
-        $this->returnType = 'Array';
+        $this->returnType = 'array';
         return $this;
     }
 
     /**
-     * Helper function to create dbObject with Object return type.
+     * Helper function to create dbObject with object return type.
      *
-     * @return object
+     * @return MysqliDb
      */
-    public function ObjectBuilder()
+    public function objectBuilder()
     {
-        $this->returnType = 'Object';
+        $this->returnType = 'object';
         return $this;
     }
 
@@ -348,7 +344,8 @@ class MysqliDb
      * Method to set a prefix
      *
      * @param string $prefix     Contains a tableprefix
-     * @return object
+     * 
+     * @return MysqliDb
      */
     public function setPrefix($prefix = '')
     {
@@ -397,7 +394,7 @@ class MysqliDb
      * @param string $query      User-provided query to execute.
      * @param array  $bindParams Variables array to bind to the SQL statement.
      *
-     * @return array Contains the returned row from the query.
+     * @return array|null Contains the returned row from the query.
      */
     public function rawQueryOne($query, $bindParams = null)
     {
@@ -440,9 +437,10 @@ class MysqliDb
     }
 
     /**
-     *
+     * A method to perform select query
+     * 
      * @param string $query   Contains a user-provided select query.
-     * @param integer|array $numRows Array to define SQL limit in format Array ($count, $offset)
+     * @param int|array $numRows Array to define SQL limit in format Array ($count, $offset)
      *
      * @return array Contains the returned rows from the query.
      */
@@ -463,7 +461,8 @@ class MysqliDb
      *
      * @uses $MySqliDb->setQueryOption('name');
      *
-     * @param string/array $options The optons name of the query.
+     * @param string|array $options The optons name of the query.
+     * 
      * @throws Exception
      * @return MysqliDb
      */
@@ -512,8 +511,9 @@ class MysqliDb
      * A convenient SELECT * function.
      *
      * @param string  $tableName The name of the database table to work with.
-     * @param integer|array $numRows Array to define SQL limit in format Array ($count, $offset)
+     * @param int|array $numRows Array to define SQL limit in format Array ($count, $offset)
      *                               or only $count
+     * @param string $columns Desired columns
      *
      * @return array Contains the returned rows from the select query.
      */
@@ -551,7 +551,8 @@ class MysqliDb
      * A convenient SELECT * function to get one record.
      *
      * @param string  $tableName The name of the database table to work with.
-     *
+     * @param string  $columns Desired columns
+     * 
      * @return array Contains the returned rows from the select query.
      */
     public function getOne($tableName, $columns = '*')
@@ -573,6 +574,7 @@ class MysqliDb
      * A convenient SELECT COLUMN function to get a single column value from one row
      *
      * @param string  $tableName The name of the database table to work with.
+     * @param string  $column    The desired column 
      * @param int     $limit     Limit of rows to select. Use null for unlimited..1 by default
      *
      * @return mixed Contains the value of a returned column / array of values
@@ -602,10 +604,10 @@ class MysqliDb
     /**
      * Insert method to add new row
      *
-     * @param <string $tableName The name of the table.
+     * @param string $tableName The name of the table.
      * @param array $insertData Data containing information for inserting into the DB.
      *
-     * @return boolean Boolean indicating whether the insert query was completed succesfully.
+     * @return bool Boolean indicating whether the insert query was completed succesfully.
      */
     public function insert($tableName, $insertData)
     {
@@ -615,10 +617,10 @@ class MysqliDb
     /**
      * Replace method to add new row
      *
-     * @param <string $tableName The name of the table.
+     * @param string $tableName The name of the table.
      * @param array $insertData Data containing information for inserting into the DB.
      *
-     * @return boolean Boolean indicating whether the insert query was completed succesfully.
+     * @return bool Boolean indicating whether the insert query was completed succesfully.
      */
     public function replace($tableName, $insertData)
     {
@@ -645,7 +647,7 @@ class MysqliDb
      * @param string $tableName The name of the database table to work with.
      * @param array  $tableData Array of data to update the desired row.
      *
-     * @return boolean
+     * @return bool
      */
     public function update($tableName, $tableData)
     {
@@ -668,10 +670,10 @@ class MysqliDb
      * Delete query. Call the "where" method first.
      *
      * @param string  $tableName The name of the database table to work with.
-     * @param integer|array $numRows Array to define SQL limit in format Array ($count, $offset)
+     * @param int|array $numRows Array to define SQL limit in format Array ($count, $offset)
      *                               or only $count
      *
-     * @return boolean Indicates success. 0 or 1.
+     * @return bool Indicates success. 0 or 1.
      */
     public function delete($tableName, $numRows = null)
     {
@@ -702,6 +704,8 @@ class MysqliDb
      *
      * @param string $whereProp  The name of the database field.
      * @param mixed  $whereValue The value of the database field.
+     * @param string $operator Comparison operator. Default is =
+     * @param string $cond Condition of where statement (OR, AND)
      *
      * @return MysqliDb
      */
@@ -717,7 +721,7 @@ class MysqliDb
             $cond = '';
         }
 
-        $this->_where[] = Array($cond, $whereProp, $operator, $whereValue);
+        $this->_where[] = array($cond, $whereProp, $operator, $whereValue);
         return $this;
     }
 
@@ -725,13 +729,15 @@ class MysqliDb
      * This function store update column's name and column name of the
      * autoincrement column
      *
-     * @param Array Variable with values
-     * @param String Variable value
+     * @param array $updateColumns Variable with values
+     * @param string $lastInsertId Variable value
+     * 
+     * @return MysqliDb
      */
-    public function onDuplicate($_updateColumns, $_lastInsertId = null)
+    public function onDuplicate($updateColumns, $lastInsertId = null)
     {
-        $this->_lastInsertId = $_lastInsertId;
-        $this->_updateColumns = $_updateColumns;
+        $this->_lastInsertId = $lastInsertId;
+        $this->_updateColumns = $updateColumns;
         return $this;
     }
 
@@ -742,6 +748,7 @@ class MysqliDb
      *
      * @param string $whereProp  The name of the database field.
      * @param mixed  $whereValue The value of the database field.
+     * @param string $operator Comparison operator. Default is =
      *
      * @return MysqliDb
      */
@@ -749,13 +756,15 @@ class MysqliDb
     {
         return $this->where($whereProp, $whereValue, $operator, 'OR');
     }
-    /*
+    
+    /**
      * This method allows you to specify multiple (method chaining optional) AND HAVING statements for SQL queries.
      *
      * @uses $MySqliDb->having('SUM(tags) > 10')
      *
      * @param string $havingProp  The name of the database field.
      * @param mixed  $havingValue The value of the database field.
+     * @param string $operator Comparison operator. Default is =
      *
      * @return MysqliDb
      */
@@ -763,10 +772,10 @@ class MysqliDb
     public function having($havingProp, $havingValue = null, $operator = null)
     {
         if ($operator) {
-            $havingValue = Array($operator => $havingValue);
+            $havingValue = array($operator => $havingValue);
         }
 
-        $this->_having[] = Array("AND", $havingValue, $havingProp);
+        $this->_having[] = array("AND", $havingValue, $havingProp);
         return $this;
     }
 
@@ -777,6 +786,7 @@ class MysqliDb
      *
      * @param string $havingProp  The name of the database field.
      * @param mixed  $havingValue The value of the database field.
+     * @param string $operator Comparison operator. Default is =
      *
      * @return MysqliDb
      */
@@ -798,6 +808,7 @@ class MysqliDb
      * @param string $joinTable The name of the table.
      * @param string $joinCondition the condition.
      * @param string $joinType 'LEFT', 'INNER' etc.
+     * 
      * @throws Exception
      * @return MysqliDb
      */
@@ -826,6 +837,8 @@ class MysqliDb
      *
      * @param string $orderByField The name of the database field.
      * @param string $orderByDirection Order direction.
+     * @param array $customFields Fieldset for ORDER BY FIELD() ordering
+     * 
      * @throws Exception
      * @return MysqliDb
      */
@@ -877,7 +890,7 @@ class MysqliDb
     /**
      * This methods returns the ID of the last inserted item
      *
-     * @return integer The last inserted item ID.
+     * @return int The last inserted item ID.
      */
     public function getInsertId()
     {
@@ -957,12 +970,13 @@ class MysqliDb
     /**
      * Helper function to add variables into bind parameters array in bulk
      *
-     * @param Array Variable with values
+     * @param array $values Variable with values
      */
     protected function _bindParams($values)
     {
-        foreach ($values as $value)
+        foreach ($values as $value) {
             $this->_bindParam($value);
+        }
     }
 
     /**
@@ -970,7 +984,10 @@ class MysqliDb
      * its SQL part of the query according to operator in ' $operator ?' or
      * ' $operator ($subquery) ' formats
      *
-     * @param Array Variable with values
+     * @param string $operator
+     * @param mixed $value Variable with values
+     * 
+     * @return string
      */
     protected function _buildPair($operator, $value)
     {
@@ -988,10 +1005,11 @@ class MysqliDb
     /**
      * Internal function to build and execute INSERT/REPLACE calls
      *
-     * @param <string $tableName The name of the table.
+     * @param string $tableName The name of the table.
      * @param array $insertData Data containing information for inserting into the DB.
+     * @param string $operation Type of operation (INSERT, REPLACE)
      *
-     * @return boolean Boolean indicating whether the insert query was completed succesfully.
+     * @return bool Boolean indicating whether the insert query was completed succesfully.
      */
     private function _buildInsert($tableName, $insertData, $operation)
     {
@@ -1022,7 +1040,7 @@ class MysqliDb
      * any passed update data, and the desired rows.
      * It then builds the SQL query.
      *
-     * @param integer|array $numRows Array to define SQL limit in format Array ($count, $offset)
+     * @param int|array $numRows Array to define SQL limit in format Array ($count, $offset)
      *                               or only $count
      * @param array $tableData Should contain an array of data for updating the database.
      *
@@ -1038,6 +1056,7 @@ class MysqliDb
         $this->_buildOrderBy();
         $this->_buildLimit($numRows);
         $this->_buildOnDuplicate($tableData);
+        
         if ($this->_forUpdate) {
             $this->_query .= ' FOR UPDATE';
         }
@@ -1116,7 +1135,7 @@ class MysqliDb
         $this->count = 0;
 
         while ($stmt->fetch()) {
-            if ($this->returnType == 'Object') {
+            if ($this->returnType == 'object') {
                 $result = new stdClass ();
                 foreach ($row as $key => $val) {
                     if (is_array($val)) {
@@ -1124,8 +1143,9 @@ class MysqliDb
                         foreach ($val as $k => $v) {
                             $result->$key->$k = $v;
                         }
-                    } else
+                    } else {
                         $result->$key = $val;
+                    }
                 }
             } else {
                 $result = array();
@@ -1134,15 +1154,17 @@ class MysqliDb
                         foreach ($val as $k => $v) {
                             $result[$key][$k] = $v;
                         }
-                    } else
+                    } else {
                         $result[$key] = $val;
+                    }
                 }
             }
             $this->count++;
-            if ($this->_mapKey)
+            if ($this->_mapKey) {
                 $results[$row[$this->_mapKey]] = count($row) > 2 ? $result : end($result);
-            else
+            } else {
                 array_push($results, $result);
+            }
         }
 
         if ($shouldStoreResult) {
@@ -1162,7 +1184,7 @@ class MysqliDb
             $this->totalCount = $totalCount[0];
         }
 
-        if ($this->returnType == 'Json') {
+        if ($this->returnType == 'json') {
             return json_encode($results);
         }
 
@@ -1171,6 +1193,8 @@ class MysqliDb
 
     /**
      * Abstraction method that will build an JOIN part of the query
+     * 
+     * @return void
      */
     protected function _buildJoin()
     {
@@ -1192,6 +1216,11 @@ class MysqliDb
     }
 
     /**
+     * Insert/Update query helper
+     * 
+     * @param array $tableData
+     * @param array $tableColumns
+     * @param bool $isInsert INSERT operation flag
      * 
      * @throws Exception
      */
@@ -1231,10 +1260,11 @@ class MysqliDb
                     }
                     break;
                 case '[N]':
-                    if ($val == null)
+                    if ($val == null) {
                         $this->_query .= "!" . $column . ", ";
-                    else
+                    } else {
                         $this->_query .= "!" . $val . ", ";
+                    }
                     break;
                 default:
                     throw new Exception("Wrong operation");
@@ -1246,12 +1276,12 @@ class MysqliDb
     /**
      * Helper function to add variables into the query statement
      *
-     * @param Array Variable with values
+     * @param array $tableData Variable with values
      */
     protected function _buildOnDuplicate($tableData)
     {
         if (is_array($this->_updateColumns) && !empty($this->_updateColumns)) {
-            $this->_query .= " on duplicate key update ";
+            $this->_query .= " ON DUPLICATE KEY UPDATE ";
             if ($this->_lastInsertId) {
                 $this->_query .= $this->_lastInsertId . "=LAST_INSERT_ID (" . $this->_lastInsertId . "), ";
             }
@@ -1261,8 +1291,9 @@ class MysqliDb
                 if (is_numeric($key)) {
                     $this->_updateColumns[$val] = '';
                     unset($this->_updateColumns[$key]);
-                } else
+                } else {
                     $tableData[$key] = $val;
+                }
             }
             $this->_buildDataPairs($tableData, array_keys($this->_updateColumns), false);
         }
@@ -1270,6 +1301,8 @@ class MysqliDb
 
     /**
      * Abstraction method that will build an INSERT or UPDATE part of the query
+     * 
+     * @param array $tableData
      */
     protected function _buildInsertQuery($tableData)
     {
@@ -1294,6 +1327,9 @@ class MysqliDb
 
     /**
      * Abstraction method that will build the part of the WHERE conditions
+     * 
+     * @param string $operator
+     * @param array $conditions
      */
     protected function _buildCondition($operator, &$conditions)
     {
@@ -1346,6 +1382,7 @@ class MysqliDb
     /**
      * Abstraction method that will build the GROUP BY part of the WHERE statement
      *
+     * @return void
      */
     protected function _buildGroupBy()
     {
@@ -1365,6 +1402,7 @@ class MysqliDb
     /**
      * Abstraction method that will build the LIMIT part of the WHERE statement
      *
+     * @return void
      */
     protected function _buildOrderBy()
     {
@@ -1387,8 +1425,10 @@ class MysqliDb
     /**
      * Abstraction method that will build the LIMIT part of the WHERE statement
      *
-     * @param integer|array $numRows Array to define SQL limit in format Array ($count, $offset)
+     * @param int|array $numRows Array to define SQL limit in format Array ($count, $offset)
      *                               or only $count
+     * 
+     * @return void
      */
     protected function _buildLimit($numRows)
     {
@@ -1424,6 +1464,8 @@ class MysqliDb
 
     /**
      * Close connection
+     * 
+     * @return void
      */
     public function __destruct()
     {
@@ -1438,11 +1480,13 @@ class MysqliDb
     }
 
     /**
+     * Referenced data array is required by mysqli since PHP 5.3+
+     * 
      * @param array $arr
      *
      * @return array
      */
-    protected function refValues(Array &$arr)
+    protected function refValues(array &$arr)
     {
         //Reference in the function arguments are required for HHVM to work
         //https://github.com/facebook/hhvm/issues/5155
@@ -1459,8 +1503,9 @@ class MysqliDb
 
     /**
      * Function to replace ? with variables from bind variable
+     * 
      * @param string $str
-     * @param Array $vals
+     * @param array $vals
      *
      * @return string
      */
@@ -1531,16 +1576,17 @@ class MysqliDb
         $this->reset();
         return $val;
     }
+        
     /* Helper functions */
 
     /**
      * Method returns generated interval function as a string
      *
-     * @param string interval in the formats:
+     * @param string $diff interval in the formats:
      *        "1", "-1d" or "- 1 day" -- For interval - 1 day
      *        Supported intervals [s]econd, [m]inute, [h]hour, [d]day, [M]onth, [Y]ear
      *        Default null;
-     * @param string Initial date
+     * @param string $func Initial date
      *
      * @return string
      */
@@ -1576,11 +1622,11 @@ class MysqliDb
     /**
      * Method returns generated interval function as an insert/update function
      *
-     * @param string interval in the formats:
+     * @param string $diff interval in the formats:
      *        "1", "-1d" or "- 1 day" -- For interval - 1 day
      *        Supported intervals [s]econd, [m]inute, [h]hour, [d]day, [M]onth, [Y]ear
      *        Default null;
-     * @param string Initial date
+     * @param string $func Initial date
      *
      * @return array
      */
@@ -1591,8 +1637,11 @@ class MysqliDb
 
     /**
      * Method generates incremental function call
-     * @param int increment by int or float. 1 by default
+     * 
+     * @param int $num increment by int or float. 1 by default
+     * 
      * @throws Exception
+     * @return array
      */
     public function inc($num = 1)
     {
@@ -1604,7 +1653,10 @@ class MysqliDb
 
     /**
      * Method generates decrimental function call
-     * @param int increment by int or float. 1 by default
+     * 
+     * @param int $num increment by int or float. 1 by default
+     * 
+     * @return array
      */
     public function dec($num = 1)
     {
@@ -1616,7 +1668,10 @@ class MysqliDb
 
     /**
      * Method generates change boolean function call
-     * @param string column name. null by default
+     * 
+     * @param string $col column name. null by default
+     * 
+     * @return array
      */
     public function not($col = null)
     {
@@ -1625,15 +1680,23 @@ class MysqliDb
 
     /**
      * Method generates user defined function call
-     * @param string user function body
+     * 
+     * @param string $expr user function body
+     * @param array $bindParams
+     * 
+     * @return array
      */
     public function func($expr, $bindParams = null)
     {
-        return array("[F]" => Array($expr, $bindParams));
+        return array("[F]" => array($expr, $bindParams));
     }
 
     /**
      * Method creates new mysqlidb object for a subquery generation
+     * 
+     * @param string $subQueryAlias
+     * 
+     * @return MysqliDb
      */
     public static function subQuery($subQueryAlias = "")
     {
@@ -1643,7 +1706,7 @@ class MysqliDb
     /**
      * Method returns a copy of a mysqlidb subquery object
      *
-     * @param object new mysqlidb object
+     * @return MysqliDb new mysqlidb object
      */
     public function copy()
     {
@@ -1710,7 +1773,9 @@ class MysqliDb
      *
      * @param bool $enabled Enable execution time tracking
      * @param string $stripPrefix Prefix to strip from the path in exec log
-     * */
+     * 
+     * @return MysqliDb
+     */
     public function setTrace($enabled, $stripPrefix = null)
     {
         $this->traceEnabled = $enabled;
@@ -1740,7 +1805,7 @@ class MysqliDb
      *
      * @param array $tables Table name or an Array of table names to check
      *
-     * @returns boolean True if table exists
+     * @return bool True if table exists
      */
     public function tableExists($tables)
     {
@@ -1761,10 +1826,12 @@ class MysqliDb
 
     /**
      * Return result as an associative array with $idField field value used as a record key
+     * 
+     * Array Returns an array($k => $v) if get(.."param1, param2"), array ($k => array ($v, $v)) otherwise
+     * 
+     * @param string $idField field name to use for a mapped element key
      *
-     * @param String $idField field name to use for a mapped element key
-     *
-     * @return Array Returns an array($k => $v) if get(.."param1, param2"), array ($k => array ($v, $v)) otherwise
+     * @return MysqliDb
      */
     public function map($idField)
     {
