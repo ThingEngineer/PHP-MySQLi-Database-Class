@@ -198,6 +198,17 @@ foreach ($logins as $login)
     echo $login;
 ```
 
+###Pagination
+Use paginate() instead of get() to fetch paginated result
+```php
+$page = 1;
+// set page limit to 2 results per page. 20 by default
+$db->pageLimit = 2;
+$products = $db->arraybuilder()->paginate("products", $page);
+echo "showing $page out of " . $db->totalPages;
+
+```
+
 ### Result transformation / map
 Instead of getting an pure array of results its possible to get result in an associative array with a needed key. If only 2 fields to fetch will be set in get(),
 method will return result in array($k => $v) and array ($k => array ($v, $v)) in rest of the cases.

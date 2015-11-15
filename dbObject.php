@@ -427,12 +427,10 @@ class dbObject {
      * @return array
      */
     private function paginate ($page, $fields = null) {
-        $offset = self::$pageLimit * ($page - 1);
-        $this->db->withTotalCount();
-        $results = $this->get (Array ($offset, self::$pageLimit), $fields);
-        self::$totalPages = round ($this->db->totalCount / self::$pageLimit);
-
-        return $results;
+        $this->db->pageLimit = self::$pageLimit;
+        $res = $this->db->paginate ($this->dbTable, $page, $fields);
+        self::$totalPages = $this->db->totalPages;
+        return $res;
     }
 
     /**
