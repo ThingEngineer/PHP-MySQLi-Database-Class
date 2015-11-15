@@ -181,6 +181,20 @@ class MysqliDb
     public $trace = array();
 
     /**
+     * Per page limit for pagination
+     *
+     * @var int
+     */
+
+    public $pageLimit = 20;
+    /**
+     * Variable that holds total pages count of last paginate() query
+     *
+     * @var int
+     */
+    public $totalPages = 0;
+
+    /**
      * @param string $host
      * @param string $username
      * @param string $password
@@ -1837,6 +1851,22 @@ class MysqliDb
     {
         $this->_mapKey = $idField;
         return $this;
+    }
+
+    /**
+     * Pagination wraper to get()
+     *
+     * @access public
+     * @param string  $table The name of the database table to work with
+     * @param int $page Page number
+     * @param array|string $fields Array or coma separated list of fields to fetch
+     * @return array
+     */
+    public function paginate ($table, $page, $fields = null) {
+        $offset = $this->pageLimit * ($page - 1);
+        $res = $this->withTotalCount()->get ($table, Array ($offset, $this->pageLimit), $fields);
+        $this->totalPages = round($this->totalCount / $this->pageLimit);
+        return $res;
     }
 }
 
