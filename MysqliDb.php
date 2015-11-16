@@ -1865,7 +1865,7 @@ class MysqliDb
     public function paginate ($table, $page, $fields = null) {
         $offset = $this->pageLimit * ($page - 1);
         $res = $this->withTotalCount()->get ($table, Array ($offset, $this->pageLimit), $fields);
-        $this->totalPages = round($this->totalCount / $this->pageLimit);
+        $this->totalPages = ceil($this->totalCount / $this->pageLimit);
         return $res;
     }
 }
