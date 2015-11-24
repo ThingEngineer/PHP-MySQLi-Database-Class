@@ -1225,7 +1225,9 @@ class MysqliDb
                 $joinStr = $joinTable;
             }
 
-            $this->_query .= " " . $joinType . " JOIN " . $joinStr . " on " . $joinCondition;
+            $this->_query .= " " . $joinType . " JOIN " . $joinStr . 
+                (false === stripos('using', $joinCondition) ? " " : " on ") 
+                . $joinCondition;
         }
     }
 
