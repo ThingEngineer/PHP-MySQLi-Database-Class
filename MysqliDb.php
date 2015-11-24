@@ -1226,7 +1226,7 @@ class MysqliDb
             }
 
             $this->_query .= " " . $joinType . " JOIN " . $joinStr . 
-                (false === stripos('using', $joinCondition) ? " " : " on ") 
+                (false !== stripos($joinCondition, 'using') ? " " : " on ")
                 . $joinCondition;
         }
     }
