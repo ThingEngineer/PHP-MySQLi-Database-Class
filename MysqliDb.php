@@ -660,10 +660,12 @@ class MysqliDb
      *
      * @param string $tableName The name of the database table to work with.
      * @param array  $tableData Array of data to update the desired row.
+     * @param int|array $numRows Array to define SQL limit in format Array ($count, $offset)
+     *                           or only $count
      *
      * @return bool
      */
-    public function update($tableName, $tableData)
+    public function update($tableName, $tableData, $numRows = null)
     {
         if ($this->isSubQuery) {
             return;
@@ -671,7 +673,7 @@ class MysqliDb
 
         $this->_query = "UPDATE " . self::$prefix . $tableName;
 
-        $stmt = $this->_buildQuery(null, $tableData);
+        $stmt = $this->_buildQuery($numRows, $tableData);
         $status = $stmt->execute();
         $this->reset();
         $this->_stmtError = $stmt->error;
