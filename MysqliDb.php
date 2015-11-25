@@ -660,8 +660,7 @@ class MysqliDb
      *
      * @param string $tableName The name of the database table to work with.
      * @param array  $tableData Array of data to update the desired row.
-     * @param int|array $numRows Array to define SQL limit in format Array ($count, $offset)
-     *                           or only $count
+     * @param int    $numRows   Limit on the number of rows that can be updated.
      *
      * @return bool
      */
