@@ -152,6 +152,12 @@ else
     echo 'update failed: ' . $db->getLastError();
 ```
 
+`update()` also support limit parameter:
+```php
+$db->update ('users', $data, 10);
+// Gives: UPDATE users SET ... LIMIT 10
+```
+
 ### Select Query
 After any select/get function calls amount or returned rows is stored in $count variable
 ```php
