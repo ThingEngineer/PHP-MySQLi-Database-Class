@@ -45,7 +45,7 @@ Retrieving objects from the database is pretty much the same process as a mysqli
 ```php
 //$users = dbObject::table('users')->get();
 $users = user::get();
-foreach (users as $u) {
+foreach ($users as $u) {
   echo $u->login;
 }
 ```
@@ -53,7 +53,7 @@ foreach (users as $u) {
 ## Using Where Condition And A Limit
 ```php
 $users = user::where("login", "demo")->get(Array (10, 20));
-foreach (users as $u) ...
+foreach ($users as $u) ...
 ```
 
 ##Retrieving A Model By Primary Key
