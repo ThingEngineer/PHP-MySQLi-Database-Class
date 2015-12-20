@@ -784,13 +784,19 @@ class MysqliDb
      * @return MysqliDb
      */
 
-    public function having($havingProp, $havingValue = null, $operator = null)
+    public function having($havingProp, $havingValue = 'DBNULL', $operator = '=', $cond = 'AND')
     {
-        if ($operator) {
-            $havingValue = array($operator => $havingValue);
+        // forkaround for an old operation api
+        if (is_array($havingValue) && ($key = key($havingValue)) != "0") {
+            $operator = $key;
+            $havingValue = $havingValue[$key];
         }
 
-        $this->_having[] = array("AND", $havingValue, $havingProp);
+        if (count($this->_having) == 0) {
+            $cond = '';
+        }
+
+        $this->_having[] = array($cond, $havingProp, $operator, $havingValue);
         return $this;
     }
 
@@ -807,12 +813,7 @@ class MysqliDb
      */
     public function orHaving($havingProp, $havingValue = null, $operator = null)
     {
-        if ($operator) {
-            $havingValue = Array($operator => $havingValue);
-        }
-
-        $this->_having[] = Array("OR", $havingValue, $havingProp);
-        return $this;
+        return $this->having($havingProp, $havingValue, $operator, 'OR');
     }
 
     /**
