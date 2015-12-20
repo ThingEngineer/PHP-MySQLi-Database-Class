@@ -1469,6 +1469,7 @@ class MysqliDb
     protected function _prepareQuery()
     {
         if (!$stmt = $this->mysqli()->prepare($this->_query)) {
+            $this->reset();
             throw new Exception("Problem preparing query ($this->_query) " . $this->mysqli()->error);
         }
 
