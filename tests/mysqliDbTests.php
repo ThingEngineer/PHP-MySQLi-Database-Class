@@ -360,6 +360,8 @@ if ($c != 3) {
     echo "copy with subquery count failed";
     exit;
 }
+unset ($cnt);
+
 $data = $db->get('users');
 if (count($data) != 3) {
     echo "copy with subquery data count failed";

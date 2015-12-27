@@ -1731,7 +1731,7 @@ class MysqliDb
     public function copy()
     {
         $copy = unserialize(serialize($this));
-        $copy->_mysqli = $this->_mysqli;
+        $copy->_mysqli = null;
         return $copy;
     }
 
