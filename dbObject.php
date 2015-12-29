@@ -17,7 +17,7 @@
  * @method mixed paginate (int $page, array $fields)
  * @method dbObject query ($query, $numRows)
  * @method dbObject rawQuery ($query, $bindParams, $sanitize)
- * @method dbObject join (string $objectName, string $key, string $joinType)
+ * @method dbObject join (string $objectName, string $key, string $joinType, string $primaryKey)
  * @method dbObject with (string $objectName)
  * @method dbObject groupBy (string $groupByField)
  * @method dbObject orderBy ($orderByField, $orderbyDirection, $customFields)
@@ -391,15 +391,19 @@ class dbObject {
      * @param string $objectName Object Name
      * @param string $key Key for a join from primary object
      * @param string $joinType SQL join type: LEFT, RIGHT,  INNER, OUTER
+	 * @param string $primaryKey SQL join On Second primaryKey
      *
      * @return dbObject
      */
-    private function join ($objectName, $key = null, $joinType = 'LEFT') {
+    private function join ($objectName, $key = null, $joinType = 'LEFT', $primaryKey = null) {
         $joinObj = new $objectName;
         if (!$key)
             $key = $objectName . "id";
+		if (!$primaryKey)
+            $primaryKey = $joinObj->primaryKey;
+		
         $joinStr = MysqliDb::$prefix . $this->dbTable . ".{$key} = " .
-                    MysqliDb::$prefix . "{$joinObj->dbTable}.{$joinObj->primaryKey}";
+                    MysqliDb::$prefix . "{$joinObj->dbTable}.{$primaryKey}";
         $this->db->join ($joinObj->dbTable, $joinStr, $joinType);
         return $this;
     }
