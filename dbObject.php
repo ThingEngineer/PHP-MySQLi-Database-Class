@@ -391,7 +391,7 @@ class dbObject {
      * @param string $objectName Object Name
      * @param string $key Key for a join from primary object
      * @param string $joinType SQL join type: LEFT, RIGHT,  INNER, OUTER
-	 * @param string $primaryKey SQL join On Second primaryKey
+     * @param string $primaryKey SQL join On Second primaryKey
      *
      * @return dbObject
      */
@@ -399,7 +399,7 @@ class dbObject {
         $joinObj = new $objectName;
         if (!$key)
             $key = $objectName . "id";
-		if (!$primaryKey)
+	if (!$primaryKey)
             $primaryKey = $joinObj->primaryKey;
 		
         $joinStr = MysqliDb::$prefix . $this->dbTable . ".{$key} = " .
