@@ -18,7 +18,7 @@ MysqliDb -- Simple MySQLi wrapper and object mapper with prepared statements
 **[Subqueries](#subqueries)**  
 **[EXISTS / NOT EXISTS condition](#exists--not-exists-condition)**  
 **[Has method](#has-method)**  
-**[Helper Functions](#helper-commands)**  
+**[Helper Methods](#helper-methods)**  
 **[Transaction Helpers](#transaction-helpers)**  
 
 ### Installation
@@ -582,7 +582,7 @@ if($db->has("users")) {
     return "Wrong user/password";
 }
 ``` 
-### Helper commands
+### Helper methods
 Reconnect in case mysql connection died:
 ```php
 if (!$db->ping())
@@ -601,6 +601,12 @@ Check if table exists:
     if ($db->tableExists ('users'))
         echo "hooray";
 ```
+
+mysqli_real_escape_string() wrapper:
+```php
+    $escaped = $db->escape ("' and 1=1");
+```
+
 ### Transaction helpers
 Please keep in mind that transactions are working on innoDB tables.
 Rollback transaction if insert fails:
