@@ -16,7 +16,7 @@
  * @method dbObject ObjectBuilder()
  * @method mixed byId (string $id, mixed $fields)
  * @method mixed get (mixed $limit, mixed $fields)
- * @method mixed getOne (mixed $fields)processAllWith
+ * @method mixed getOne (mixed $fields)
  * @method mixed paginate (int $page, array $fields)
  * @method dbObject query ($query, $numRows)
  * @method dbObject rawQuery ($query, $bindParams, $sanitize)
