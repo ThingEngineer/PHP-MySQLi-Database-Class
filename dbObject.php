@@ -527,7 +527,13 @@ class dbObject {
                     $data[$name] = $this->$name;
                     continue;
                 } 
-                if ($data[$table][$primaryKey] === null) {
+                $hasOne = false;
+                foreach ($data[$table] as $field=>$value) {
+                    if ($hasOne === true) continue;
+                    if ($value !== null) $hasOne = true;
+                }
+				
+                if ($hasOne === false) {
                     $data[$name] = null;
                 } else {
                     if ($this->returnType == 'Object') {
