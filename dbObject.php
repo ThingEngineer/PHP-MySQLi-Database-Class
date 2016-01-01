@@ -16,7 +16,7 @@
  * @method dbObject ObjectBuilder()
  * @method mixed byId (string $id, mixed $fields)
  * @method mixed get (mixed $limit, mixed $fields)
- * @method mixed getOne (mixed $fields)
+ * @method mixed getOne (mixed $fields)processAllWith
  * @method mixed paginate (int $page, array $fields)
  * @method dbObject query ($query, $numRows)
  * @method dbObject rawQuery ($query, $bindParams, $sanitize)
@@ -521,18 +521,23 @@ class dbObject {
             if ($relationType == 'hasone') {
                 $obj = new $modelName;
                 $table = $obj->dbTable;
-
+                $primaryKey = $obj->primaryKey;
+				
                 if (!isset ($data[$table])) {
                     $data[$name] = $this->$name;
                     continue;
-                }
-                if ($this->returnType == 'Object') {
-                    $item = new $modelName ($data[$table]);
-                    $item->returnType = $this->returnType;
-                    $item->isNew = false;
-                    $data[$name] = $item;
+                } 
+                if ($data[$table][$primaryKey] === null) {
+                    $data[$name] = null;
                 } else {
-                    $data[$name] = $data[$table];
+                    if ($this->returnType == 'Object') {
+                        $item = new $modelName ($data[$table]);
+                        $item->returnType = $this->returnType;
+                        $item->isNew = false
+                        $data[$name] = $item;
+                    } else {
+                        $data[$name] = $data[$table];
+                    }
                 }
                 unset ($data[$table]);
             }
