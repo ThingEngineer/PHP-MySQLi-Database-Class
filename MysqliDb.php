@@ -1331,7 +1331,9 @@ class MysqliDb
         $isInsert = preg_match('/^[INSERT|REPLACE]/', $this->_query);
         $dataColumns = array_keys($tableData);
         if ($isInsert) {
-            $this->_query .= ' (`' . implode($dataColumns, '`, `') . '`)  VALUES (';
+            if (isset ($dataColumns[0]))
+                $this->_query .= ' (`' . implode($dataColumns, '`, `') . '`) ';
+            $this->_query .= ' VALUES (';
         } else {
             $this->_query .= " SET ";
         }
