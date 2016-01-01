@@ -533,7 +533,7 @@ class dbObject {
                     if ($this->returnType == 'Object') {
                         $item = new $modelName ($data[$table]);
                         $item->returnType = $this->returnType;
-                        $item->isNew = false
+                        $item->isNew = false;
                         $data[$name] = $item;
                     } else {
                         $data[$name] = $data[$table];
