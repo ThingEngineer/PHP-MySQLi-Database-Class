@@ -377,9 +377,9 @@ $results = $db->get ('users');
 
 NULL comparison:
 ```php
-$db->where ("lastName", NULL, '<=>');
+$db->where ("lastName", NULL, 'IS NOT');
 $results = $db->get("users");
-// Gives: SELECT * FROM users where lastName <=> NULL
+// Gives: SELECT * FROM users where lastName IS NOT NULL
 ```
 
 Also you can use raw where conditions:
