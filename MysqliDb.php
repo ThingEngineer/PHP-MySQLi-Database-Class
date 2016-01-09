@@ -1758,9 +1758,10 @@ class MysqliDb
      */
     public function commit()
     {
-        $this->mysqli()->commit();
+        $result = $this->mysqli()->commit();
         $this->_transaction_in_progress = false;
         $this->mysqli()->autocommit(true);
+        return $result;
     }
 
     /**
@@ -1771,9 +1772,10 @@ class MysqliDb
      */
     public function rollback()
     {
-        $this->mysqli()->rollback();
+        $result = $this->mysqli()->rollback();
         $this->_transaction_in_progress = false;
         $this->mysqli()->autocommit(true);
+        return $result;
     }
 
     /**
