@@ -1035,12 +1035,17 @@ class MysqliDb
 
         $this->_query = $operation . " " . implode(' ', $this->_queryOptions) . " INTO " . self::$prefix . $tableName;
         $stmt = $this->_buildQuery(null, $insertData);
-        $stmt->execute();
+        $status = $stmt->execute();
         $this->_stmtError = $stmt->error;
+        $haveOnDuplicate = !empty ($this->_updateColumns);
         $this->reset();
         $this->count = $stmt->affected_rows;
 
         if ($stmt->affected_rows < 1) {
+            // in case of onDuplicate() usage, if no rows were inserted
+            if ($status && $haveOnDuplicate) {
+                return true;
+            }
             return false;
         }
 
