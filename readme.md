@@ -9,8 +9,7 @@ MysqliDb -- Simple MySQLi wrapper and object mapper with prepared statements
 **[Delete Query](#delete-query)**  
 **[Running raw SQL queries](#running-raw-sql-queries)**  
 **[Query Keywords](#query-keywords)**  
-**[Raw Query](#raw-query-method)**  
-**[Where Conditions](#where-method)**  
+**[Where Conditions](#where--having-methods)**  
 **[Order Conditions](#ordering-method)**  
 **[Group Conditions](#grouping-method)**  
 **[Properties Sharing](#properties-sharing)**  
