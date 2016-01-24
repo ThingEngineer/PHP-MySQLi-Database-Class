@@ -1253,7 +1253,11 @@ class MysqliDb
             $value = $tableData[$column];
 
             if (!$isInsert) {
-                $this->_query .= "`" . $column . "` = ";
+                if(strpos($column,'.')===false) {
+                    $this->_query .= "`" . $column . "` = ";
+                } else {
+                    $this->_query .= str_replace('.','.`',$column) . "` = ";
+                }
             }
 
             // Subquery value
