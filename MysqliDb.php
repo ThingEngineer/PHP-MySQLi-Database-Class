@@ -377,6 +377,16 @@ class MysqliDb
      */
     public function rawQuery($query, $bindParams = null)
     {
+
+        if ($this->isSubQuery){
+
+            $this->_query = $query;
+            if (is_array($bindParams))
+                $this->_bindParams($bindParams);
+
+            return $this;
+        }
+
         $params = array(''); // Create the empty 0 index
         $this->_query = $query;
         $stmt = $this->_prepareQuery();
