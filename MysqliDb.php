@@ -1396,7 +1396,7 @@ class MysqliDb
                     if (is_array($val)) {
                         $this->_bindParams($val);
                     } elseif ($val === null) {
-                        $this->_query .= $operator . " NULL";
+                        $this->_query .= ' ' . $operator . " NULL";
                     } elseif ($val != 'DBNULL' || $val == '0') {
                         $this->_query .= $this->_buildPair($operator, $val);
                     }
