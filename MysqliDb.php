@@ -473,11 +473,91 @@ class MysqliDb
     /**
      * A method to execute a procedure
      *
-     * @param String $name MySql's procedure name
+     * @param String $name MySql's procedure's name
+     * @param Array $inputs params of the procedure
+     * @param Array $outputs params of output of the procedure
+     *
+     * @return Array Contains the result and outputs of the procedure
      */
     public function callProcedure( $name, $inputs = [], $outputs = [] )
     {
-        // Magic here =)
+        $inputs = $this->_validParams( $inputs );
+        $params = array_merge( $inputs, $outputs );
+        $query  = "CALL `$name` (". implode( ',',$params ) .')';
+        $return = [ 'result' => [], 'outputs' => [] ];
+
+        // Execute Procedure
+        if (! $this->mysqli()->multi_query( $query ) ) {
+            $this->_stmtError = $this->mysqli()->error;
+            throw new Exception( $this->_stmtError );
+        }
+
+        // Get Procedure's Resulset
+        while( $this->mysqli()->more_results() ) {
+
+            $this->mysqli()->next_result();
+            if ( $result = $this->mysqli()->store_result() ) {
+
+                $queryData = [];
+                while ( $fetch = $result->fetch_assoc() ) {
+                    $queryData[] = $fetch;
+                }
+                $return['result'] = array_merge( $return['result'], $queryData );
+                $result->free();
+            }
+        }
+
+        // Get Procedure's outputs
+        if ( count( $outputs ) > 0 ) {
+            $query = 'SELECT '.implode( ',', $outputs );
+            $rQuery = $this->query( $query );
+            $return['outputs'] = isset( $rQuery[0] ) ? $rQuery[0] : $return['outputs'];
+        }
+
+        return $return;
+    }
+
+    /**
+     * A method to execute a function
+     *
+     * @param String $name MySql's function's name
+     * @param Array $inputs params of the function
+     *
+     * @return Array Contains the result of the function
+     */
+    public function callFunction( $name, $inputs = [] ) {
+        $inputs = $this->_validParams( $inputs );
+        $return = [];
+
+        // Execute Function...
+        $query = "SELECT `$name` (". implode( ',',$inputs ) .') AS `return`';
+        $rQuery = $this->query( $query );
+        $return = isset( $rQuery[0] ) ? $rQuery[0] : $return;
+
+        return $return;
+    }
+
+    /**
+     * Function to validate the params of a procedure|function
+     *
+     * @param  array  $params params
+     * @return [type]         [description]
+     */
+    private function _validParams( $params = [] ) {
+        if (! is_array( $params ) ) {
+            $this->reset();
+            throw new Exception('Procedure|Function params cant be empty!');
+        }
+
+        if ( empty( $params ) ) {
+            return $params;
+        }
+
+        foreach ( $params as $key => &$param ) {
+            $param = "'". $this->mysqli()->real_escape_string( $param ) ."'";
+        }
+
+        return $params;
     }
 
     /**
