@@ -1,5 +1,5 @@
 {
-	"name": "supr3m/mysqli-database-class",
+	"name": "joshcam/mysqli-database-class",
 	"description": "PHP MySQL Wrapper and object mapper which utilizes MySQLi and prepared statements",
 	"license": "GPL-3.0",
     "authors": [
