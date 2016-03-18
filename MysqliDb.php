@@ -281,6 +281,8 @@ class MysqliDb
      * A method of returning the static instance to allow access to the
      * instantiated object from within another class.
      * Inheriting this class would require reloading connection info.
+     * 
+     * If no instance exists, create a new connection and return it.
      *
      * @uses $db = MySqliDb::getInstance();
      *
@@ -288,7 +290,7 @@ class MysqliDb
      */
     public static function getInstance()
     {
-        return self::$_instance;
+        return is_null(self::$_instance) ? new static() : self::$_instance;
     }
 
     /**
