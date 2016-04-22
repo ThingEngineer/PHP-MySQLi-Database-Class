@@ -19,6 +19,7 @@ MysqliDb -- Simple MySQLi wrapper and object mapper with prepared statements
 **[Has method](#has-method)**  
 **[Helper Methods](#helper-methods)**  
 **[Transaction Helpers](#transaction-helpers)**  
+**[Error Helpers](#error-helpers)**
 
 ### Installation
 To utilize this class, first import MysqliDb.php into your project, and require it.
@@ -619,6 +620,17 @@ if (!$db->insert ('myTable', $insertData)) {
     //OK
     $db->commit();
 }
+```
+
+### Error helpers
+After you executed a query you have options to check if there was an error. You can get the MySQL error string or the error code for the last executed query. 
+```php
+$db->where('login', 'admin')->update('users', ['firstName' => 'Jack']);
+
+if ($db->getLastErrno() === 0)
+    echo 'Update succesfull';
+else
+    echo 'Update failed. Error: '. $db->getLastError();
 ```
 
 ### Query exectution time benchmarking
