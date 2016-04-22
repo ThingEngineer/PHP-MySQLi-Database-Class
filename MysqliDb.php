@@ -107,7 +107,7 @@ class MysqliDb
     protected $_stmtError;
 
     /**
-     * Variable which holds last statement error number
+     * Variable which holds last statement error code
      *
      * @var int
      */
@@ -1597,7 +1597,7 @@ class MysqliDb
     }
 
     /**
-     * Method returns mysql error number
+     * Method returns mysql error code
      *
      * @return int
      */
