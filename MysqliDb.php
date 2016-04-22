@@ -108,7 +108,6 @@ class MysqliDb
 
     /**
      * Variable which holds last statement error code
-     *
      * @var int
      */
     protected $_stmtErrno;
@@ -1598,7 +1597,6 @@ class MysqliDb
 
     /**
      * Method returns mysql error code
-     *
      * @return int
      */
     public function getLastErrno () {
