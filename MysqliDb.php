@@ -876,7 +876,7 @@ class MysqliDb
 
         if (is_array($customFields)) {
             foreach ($customFields as $key => $value) {
-                $customFields[$key] = preg_replace("/[^-a-z0-9\.\(\),_`]+/i", '', $value);
+                $customFields[$key] = preg_replace("/[^-a-z0-9\.\(\),_` ]+/i", '', $value);
             }
 
             $orderByField = 'FIELD (' . $orderByField . ', "' . implode('","', $customFields) . '")';
