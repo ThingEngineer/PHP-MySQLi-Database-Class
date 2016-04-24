@@ -107,6 +107,12 @@ class MysqliDb
     protected $_stmtError;
 
     /**
+     * Variable which holds last statement error code
+     * @var int
+     */
+    protected $_stmtErrno;
+
+    /**
      * Database credentials
      * @var string
      */
@@ -393,6 +399,7 @@ class MysqliDb
         $stmt->execute();
         $this->count = $stmt->affected_rows;
         $this->_stmtError = $stmt->error;
+        $this->_stmtErrno = $stmt->errno;
         $this->_lastQuery = $this->replacePlaceHolders($this->_query, $params);
         $res = $this->_dynamicBindResults($stmt);
         $this->reset();
@@ -464,6 +471,7 @@ class MysqliDb
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
         $this->_stmtError = $stmt->error;
+        $this->_stmtErrno = $stmt->errno;
         $res = $this->_dynamicBindResults($stmt);
         $this->reset();
 
@@ -555,6 +563,7 @@ class MysqliDb
 
         $stmt->execute();
         $this->_stmtError = $stmt->error;
+        $this->_stmtErrno = $stmt->errno;
         $res = $this->_dynamicBindResults($stmt);
         $this->reset();
 
@@ -676,6 +685,7 @@ class MysqliDb
         $status = $stmt->execute();
         $this->reset();
         $this->_stmtError = $stmt->error;
+        $this->_stmtErrno = $stmt->errno;
         $this->count = $stmt->affected_rows;
 
         return $status;
@@ -707,6 +717,7 @@ class MysqliDb
         $stmt = $this->_buildQuery($numRows);
         $stmt->execute();
         $this->_stmtError = $stmt->error;
+        $this->_stmtErrno = $stmt->errno;
         $this->reset();
 
         return ($stmt->affected_rows > 0);
@@ -1037,6 +1048,7 @@ class MysqliDb
         $stmt = $this->_buildQuery(null, $insertData);
         $status = $stmt->execute();
         $this->_stmtError = $stmt->error;
+        $this->_stmtErrno = $stmt->errno;
         $haveOnDuplicate = !empty ($this->_updateColumns);
         $this->reset();
         $this->count = $stmt->affected_rows;
@@ -1400,7 +1412,7 @@ class MysqliDb
                     if (is_array($val)) {
                         $this->_bindParams($val);
                     } elseif ($val === null) {
-                        $this->_query .= $operator . " NULL";
+                        $this->_query .= ' ' . $operator . " NULL";
                     } elseif ($val != 'DBNULL' || $val == '0') {
                         $this->_query .= $this->_buildPair($operator, $val);
                     }
@@ -1585,6 +1597,14 @@ class MysqliDb
             return "mysqli is null";
         }
         return trim($this->_stmtError . " " . $this->mysqli()->error);
+    }
+
+    /**
+     * Method returns mysql error code
+     * @return int
+     */
+    public function getLastErrno () {
+        return $this->_stmtErrno;
     }
 
     /**
