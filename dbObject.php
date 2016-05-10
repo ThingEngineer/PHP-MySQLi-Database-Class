@@ -401,11 +401,15 @@ class dbObject {
         $joinObj = new $objectName;
         if (!$key)
             $key = $objectName . "id";
-	if (!$primaryKey)
-            $primaryKey = $joinObj->primaryKey;
+
+        if (!$primaryKey)
+            $primaryKey = MysqliDb::$prefix . $joinObj->dbTable . "." . $joinObj->primaryKey;
 		
-        $joinStr = MysqliDb::$prefix . $this->dbTable . ".{$key} = " .
-                    MysqliDb::$prefix . "{$joinObj->dbTable}.{$primaryKey}";
+        if (!strchr ($key, '.'))
+            $joinStr = MysqliDb::$prefix . $this->dbTable . ".{$key} = " . $primaryKey;
+        else
+            $joinStr = MysqliDb::$prefix . "{$key} = " . $primaryKey;
+
         $this->db->join ($joinObj->dbTable, $joinStr, $joinType);
         return $this;
     }

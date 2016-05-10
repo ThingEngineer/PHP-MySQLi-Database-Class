@@ -887,7 +887,7 @@ class MysqliDb
 
         if (is_array($customFields)) {
             foreach ($customFields as $key => $value) {
-                $customFields[$key] = preg_replace("/[^-a-z0-9\.\(\),_`]+/i", '', $value);
+                $customFields[$key] = preg_replace("/[^-a-z0-9\.\(\),_` ]+/i", '', $value);
             }
 
             $orderByField = 'FIELD (' . $orderByField . ', "' . implode('","', $customFields) . '")';
@@ -1265,7 +1265,11 @@ class MysqliDb
             $value = $tableData[$column];
 
             if (!$isInsert) {
-                $this->_query .= "`" . $column . "` = ";
+                if(strpos($column,'.')===false) {
+                    $this->_query .= "`" . $column . "` = ";
+                } else {
+                    $this->_query .= str_replace('.','.`',$column) . "` = ";
+                }
             }
 
             // Subquery value
