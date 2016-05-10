@@ -10,7 +10,7 @@
  * @copyright Copyright (c) 2010
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      http://github.com/joshcam/PHP-MySQLi-Database-Class 
- * @version   2.6-master
+ * @version   2.6
  */
 
 class MysqliDb
@@ -1493,7 +1493,7 @@ class MysqliDb
     protected function _prepareQuery()
     {
         if (!$stmt = $this->mysqli()->prepare($this->_query)) {
-            $msg = "Problem preparing query ($this->_query) " . $this->mysqli()->error;
+            $msg = $this->mysqli()->error . " query: " . $this->_query;
             $this->reset();
             throw new Exception($msg);
         }
@@ -1868,11 +1868,10 @@ class MysqliDb
             return false;
         }
 
-        array_walk($tables, function (&$value, $key) {
-            $value = self::$prefix . $value;
-        });
+        foreach ($tables as $i => $value)
+            $tables[$i] = self::$prefix . $value;
         $this->where('table_schema', $this->db);
-        $this->where('table_name', $tables, 'IN');
+        $this->where('table_name', $tables, 'in');
         $this->get('information_schema.tables', $count);
         return $this->count == $count;
     }
