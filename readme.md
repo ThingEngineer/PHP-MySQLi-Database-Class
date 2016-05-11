@@ -21,6 +21,14 @@ MysqliDb -- Simple MySQLi wrapper and object mapper with prepared statements
 **[Transaction Helpers](#transaction-helpers)**  
 **[Error Helpers](#error-helpers)**
 
+## Support Me
+
+This software is developed during my free time and I will be glad if somebody will support me.
+
+Everyone's time should be valuable, so please consider donating.
+
+[Donate with paypal](https://www.paypal.com/us/cgi-bin/webscr?cmd=_flow&SESSION=DLEZVX5RQEQPwU6vmIa06kkApYCVcd5fFHV646Huwr6R47xOowSMzLseIRG&dispatch=5885d80a13c0db1f8e263663d3faee8dcce3e160f5b9538489e17951d2c62172)
+
 ### Installation
 To utilize this class, first import MysqliDb.php into your project, and require it.
 
