@@ -2,15 +2,21 @@
 require_once ("../MysqliDb.php");
 error_reporting(E_ALL);
 
+function pretty_print($array) {
+  echo '<pre>';
+  print_r($array);
+  echo '</pre>';
+}
+
 $prefix = 't_';
-$db = new Mysqlidb('localhost', 'root', '', 'testdb');
+$db = new Mysqlidb('localhost:3306', 'root', '', 'testdb');
 if(!$db) die("Database error");
 
-$mysqli = new mysqli ('localhost', 'root', '', 'testdb');
+$mysqli = new mysqli ('localhost:3306', 'root', '', 'testdb');
 $db = new Mysqlidb($mysqli);
 
 $db = new Mysqlidb(Array (
-                'host' => 'localhost',
+                'host' => 'localhost:3306',
                 'username' => 'root',
                 'password' => '',
                 'db' => 'testdb',
@@ -322,6 +328,34 @@ if ($db->count != 2) {
     exit;
 }
 ///
+$db->join("users u", "p.userId=u.id", "LEFT");
+$db->joinWhere('t_users u', 'u.id', 'non existant value');
+$products = $db->get ("products p", null, "u.login, p.productName");
+if ($db->count != 5) {
+  echo 'Invalid product count on joinWhere';
+  exit;
+}
+foreach($products as $product) {
+  if ($product['login']) {
+    echo 'Invalid login result on joinWhere';
+    exit;
+  }
+}
+///
+$db->join("users u", "p.userId=u.id", "LEFT");
+$db->joinOrWhere('t_users u', 'u.id', 'non existant value');
+$products = $db->get ("products p", null, "u.login, p.productName");
+if ($db->count != 5) {
+  echo 'Invalid product count on joinOrWhere';
+  exit;
+}
+foreach($products as $product) {
+  if (!$product['login']) {
+    echo 'Invalid login result on joinWhere';
+    exit;
+  }
+}
+///
 $db->where("id = ? or id = ?", Array(1,2));
 $res = $db->get ("users");
 if ($db->count != 2) {
@@ -422,7 +456,10 @@ $db->delete("products");
 
 //print_r($db->rawQuery("CALL simpleproc(?)",Array("test")));
 
-print_r ($db->trace);
+echo '<pre>';
+pretty_print($db->trace);
+echo '</pre>';
 echo "All done\n";
 echo "Memory usage: ".memory_get_peak_usage()."\n";
+
 ?>
