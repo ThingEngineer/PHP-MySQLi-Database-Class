@@ -9,14 +9,14 @@ function pretty_print($array) {
 }
 
 $prefix = 't_';
-$db = new Mysqlidb('localhost:3306', 'root', '', 'testdb');
+$db = new Mysqlidb('localhost', 'root', '', 'testdb');
 if(!$db) die("Database error");
 
-$mysqli = new mysqli ('localhost:3306', 'root', '', 'testdb');
+$mysqli = new mysqli ('localhost', 'root', '', 'testdb');
 $db = new Mysqlidb($mysqli);
 
 $db = new Mysqlidb(Array (
-                'host' => 'localhost:3306',
+                'host' => 'localhost',
                 'username' => 'root',
                 'password' => '',
                 'db' => 'testdb',

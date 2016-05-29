@@ -11,7 +11,7 @@ require_once("libs/MysqliDb.php");
 require_once("libs/dbObject.php");
 
 // db instance
-$db = new Mysqlidb('localhost:3306', 'user', '', 'testdb');
+$db = new Mysqlidb('localhost', 'user', '', 'testdb');
 // enable class autoloading
 dbObject::autoload("models");
 ```

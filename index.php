@@ -80,7 +80,7 @@ function action_mod () {
     $data = $db->getOne ("users");
 }
 
-$db = new Mysqlidb ('localhost:3306', 'root', '', 'testdb');
+$db = new Mysqlidb ('localhost', 'root', '', 'testdb');
 if ($_GET) {
     $f = "action_".$_GET['action'];
     if (function_exists ($f)) {
