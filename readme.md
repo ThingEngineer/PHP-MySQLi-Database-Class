@@ -1,15 +1,15 @@
-MysqliDb -- Simple MySQLi wrapper with prepared statements
+MysqliDb -- Simple MySQLi wrapper and object mapper with prepared statements
 <hr>
 ### Table of Contents
 **[Initialization](#initialization)**  
+**[Objects mapping](#objects-mapping)**  
 **[Insert Query](#insert-query)**  
 **[Update Query](#update-query)**  
 **[Select Query](#select-query)**  
 **[Delete Query](#delete-query)**  
-**[Generic Query](#generic-query-method)**  
+**[Running raw SQL queries](#running-raw-sql-queries)**  
 **[Query Keywords](#query-keywords)**  
-**[Raw Query](#raw-query-method)**  
-**[Where Conditions](#where-method)**  
+**[Where Conditions](#where--having-methods)**  
 **[Order Conditions](#ordering-method)**  
 **[Group Conditions](#grouping-method)**  
 **[Properties Sharing](#properties-sharing)**  
@@ -17,8 +17,17 @@ MysqliDb -- Simple MySQLi wrapper with prepared statements
 **[Subqueries](#subqueries)**  
 **[EXISTS / NOT EXISTS condition](#exists--not-exists-condition)**  
 **[Has method](#has-method)**  
-**[Helper Functions](#helper-commands)**  
+**[Helper Methods](#helper-methods)**  
 **[Transaction Helpers](#transaction-helpers)**  
+**[Error Helpers](#error-helpers)**
+
+## Support Me
+
+This software is developed during my free time and I will be glad if somebody will support me.
+
+Everyone's time should be valuable, so please consider donating.
+
+[Donate with paypal](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=a%2ebutenka%40gmail%2ecom&lc=DO&item_name=mysqlidb&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted)
 
 ### Installation
 To utilize this class, first import MysqliDb.php into your project, and require it.
@@ -34,17 +43,12 @@ composer require joshcam/mysqli-database-class:dev-master
 ```
 
 ### Initialization
-Simple initialization with utf8 charset by default:
+Simple initialization with utf8 charset set by default:
 ```php
 $db = new MysqliDb ('host', 'username', 'password', 'databaseName');
 ```
-Or in case usage of the namespaces:
-```php
-$db = new \MysqliDb ('host', 'username', 'password', 'databaseName');
-```
 
-
-Advanced initialization. If no charset should be set charset, set it to null
+Advanced initialization:
 ```php
 $db = new MysqliDb (Array (
                 'host' => 'host',
@@ -52,22 +56,40 @@ $db = new MysqliDb (Array (
                 'password' => 'password',
                 'db'=> 'databaseName',
                 'port' => 3306,
+                'prefix' => 'my_',
                 'charset' => 'utf8'));
 ```
-port and charset params are optional.
+table prefix, port and database charset params are optional.
+If no charset should be set charset, set it to null
 
-Reuse already connected mysqli:
+Also it is possible to reuse already connected mysqli object:
 ```php
 $mysqli = new mysqli ('host', 'username', 'password', 'databaseName');
 $db = new MysqliDb ($mysqli);
 ```
 
-Its also possible to set a table prefix:
+If no table prefix were set during object creation its possible to set it later with a separate call:
 ```php
 $db->setPrefix ('my_');
 ```
 
-Next, prepare your data, and call the necessary methods. 
+If you need to get already created mysqliDb object from another class or function use
+```php
+    function init () {
+        // db staying private here
+        $db = new MysqliDb ('host', 'username', 'password', 'databaseName');
+    }
+    ...
+    function myfunc () {
+        // obtain db object created in init  ()
+        $db = MysqliDb::getInstance();
+        ...
+    }
+```
+
+### Objects mapping
+dbObject.php is an object mapping library built on top of mysqliDb to provide model representation functionality.
+See <a href='dbObject.md'>dbObject manual for more information</a>
 
 ### Insert Query
 Simple example
@@ -102,8 +124,24 @@ if ($id)
     echo 'user was created. Id=' . $id;
 else
     echo 'insert failed: ' . $db->getLastError();
-
 ```
+
+Insert with on duplicate key update
+```php
+$data = Array ("login" => "admin",
+               "firstName" => "John",
+               "lastName" => 'Doe',
+               "createdAt" => $db->now(),
+               "updatedAt" => $db->now(),
+);
+$updateColumns = Array ("updatedAt");
+$lastInsertId = "id";
+$db->onDuplicate($updateColumns, $lastInsertId);
+$id = $db->insert ('users', $data);
+```
+
+### Replace Query
+<a href='https://dev.mysql.com/doc/refman/5.0/en/replace.html'>Replace()</a> method implements same API as insert();
 
 ### Update Query
 ```php
@@ -122,9 +160,14 @@ else
     echo 'update failed: ' . $db->getLastError();
 ```
 
+`update()` also support limit parameter:
+```php
+$db->update ('users', $data, 10);
+// Gives: UPDATE users SET ... LIMIT 10
+```
+
 ### Select Query
-After any select/get function calls amount or returned rows
-is stored in $count variable
+After any select/get function calls amount or returned rows is stored in $count variable
 ```php
 $users = $db->get('users'); //contains an Array of all users 
 $users = $db->get('users', 10); //contains an Array 10 users
@@ -159,24 +202,92 @@ $count = $db->getValue ("users", "count(*)");
 echo "{$count} users found";
 ```
 
-### Delete Query
+select one column value or function result from multiple rows:
 ```php
-$db->where('id', 1);
-if($db->delete('users')) echo 'successfully deleted';
+$logins = $db->getValue ("users", "login", null);
+// select login from users
+$logins = $db->getValue ("users", "login", 5);
+// select login from users limit 5
+foreach ($logins as $login)
+    echo $login;
 ```
 
-### Generic Query Method
-By default rawQuery() will filter out special characters so if you getting problems with it
-you might try to disable filtering function. In this case make sure that all external variables are passed to the query via bind variables
+###Pagination
+Use paginate() instead of get() to fetch paginated result
+```php
+$page = 1;
+// set page limit to 2 results per page. 20 by default
+$db->pageLimit = 2;
+$products = $db->arraybuilder()->paginate("products", $page);
+echo "showing $page out of " . $db->totalPages;
+
+```
+
+### Result transformation / map
+Instead of getting an pure array of results its possible to get result in an associative array with a needed key. If only 2 fields to fetch will be set in get(),
+method will return result in array($k => $v) and array ($k => array ($v, $v)) in rest of the cases.
 
 ```php
-// filtering enabled
-$users = $db->rawQuery('SELECT * from users where customerId=?', Array (10));
-// filtering disabled
-//$users = $db->rawQuery('SELECT * from users where id >= ?', Array (10), false);
+$user = $db->map ('login')->ObjectBuilder()->getOne ('users', 'login, id');
+Array
+(
+    [user1] => 1
+)
+
+$user = $db->map ('login')->ObjectBuilder()->getOne ('users', 'id,login,createdAt');
+Array
+(
+    [user1] => stdClass Object
+        (
+            [id] => 1
+            [login] => user1
+            [createdAt] => 2015-10-22 22:27:53
+        )
+
+)
+```
+
+### Defining a return type
+MysqliDb can return result in 3 different formats: Array of Array, Array of Objects and a Json string. To select a return type use ArrayBuilder(), ObjectBuilder() and JsonBuilder() methods. Note that ArrayBuilder() is a default return type
+```php
+// Array return type
+$= $db->getOne("users");
+echo $u['login'];
+// Object return type
+$u = $db->ObjectBuilder()->getOne("users");
+echo $u->login;
+// Json return type
+$json = $db->JsonBuilder()->getOne("users");
+```
+
+### Running raw SQL queries
+```php
+$users = $db->rawQuery('SELECT * from users where id >= ?', Array (10));
 foreach ($users as $user) {
     print_r ($user);
 }
+```
+To avoid long if checks there are couple helper functions to work with raw query select results:
+
+Get 1 row of results:
+```php
+$user = $db->rawQueryOne ('select * from users where id=?', Array(10));
+echo $user['login'];
+// Object return type
+$user = $db->ObjectBuilder()->rawQueryOne ('select * from users where id=?', Array(10));
+echo $user->login;
+```
+Get 1 column value as a string:
+```php
+$password = $db->rawQueryValue ('select password from users where id=? limit 1', Array(10));
+echo "Password is {$password}";
+NOTE: for a rawQueryValue() to return string instead of an array 'limit 1' should be added to the end of the query.
+```
+Get 1 column value from multiple rows:
+```php
+$logins = $db->rawQueryValue ('select login from users limit 10');
+foreach ($logins as $login)
+    echo $login;
 ```
 
 More advanced examples:
@@ -200,9 +311,8 @@ $resutls = $db->rawQuery ($q, $params);
 print_r ($results); // contains Array of returned rows
 ```
 
-
-### Where Method
-This method allows you to specify where parameters of the query.
+### Where / Having Methods
+`where()`, `orWhere()`, `having()` and `orHaving()` methods allows you to specify where and having conditions of the query. All conditions supported by where() are supported by having() as well.
 
 WARNING: In order to use column to column comparisons only raw where conditions should be used as column name or functions cant be passed as a bind variable.
 
@@ -213,6 +323,14 @@ $db->where ('login', 'admin');
 $results = $db->get ('users');
 // Gives: SELECT * FROM users WHERE id=1 AND login='admin';
 ```
+
+```php
+$db->where ('id', 1);
+$db->having ('login', 'admin');
+$results = $db->get ('users');
+// Gives: SELECT * FROM users WHERE id=1 HAVING login='admin';
+```
+
 
 Regular == operator with column to column comparison:
 ```php
@@ -257,11 +375,19 @@ $results = $db->get ('users');
 // Gives: SELECT * FROM users WHERE firstName='John' OR firstName='peter'
 ```
 
+```php
+$db->where ('firstName', 'John');
+$db->orWhere ('firstName', 'Peter');
+$results = $db->get ('users');
+// Gives: SELECT * FROM users WHERE firstName='John' OR firstName='peter'
+```
+
+
 NULL comparison:
 ```php
-$db->where ("lastName", NULL, '<=>');
+$db->where ("lastName", NULL, 'IS NOT');
 $results = $db->get("users");
-// Gives: SELECT * FROM users where lastName <=> NULL
+// Gives: SELECT * FROM users where lastName IS NOT NULL
 ```
 
 Also you can use raw where conditions:
@@ -276,7 +402,7 @@ Or raw condition with variables:
 $db->where ("(id = ? or id = ?)", Array(6,2));
 $db->where ("login","mike")
 $res = $db->get ("users");
-// Gives: SELECT * FROM users WHERE (id = 2 or id = 2) and login='mike';
+// Gives: SELECT * FROM users WHERE (id = 6 or id = 2) and login='mike';
 ```
 
 
@@ -289,23 +415,25 @@ echo "Showing {$count} from {$db->totalCount}";
 ```
 
 ### Query Keywords
-To add LOW PRIORITY | DELAYED | HIGH PRIORITY | IGNORE and the rest of mysql keywords to INSERT , SELECT , UPDATE, DELETE query:
+To add LOW PRIORITY | DELAYED | HIGH PRIORITY | IGNORE and the rest of the mysql keywords to INSERT (), REPLACE (), GET (), UPDATE (), DELETE() method or FOR UPDATE | LOCK IN SHARE MODE into SELECT ():
 ```php
-$db->setQueryOption('LOW_PRIORITY');
-$db->insert($table,$param);
+$db->setQueryOption ('LOW_PRIORITY')->insert ($table, $param);
 // GIVES: INSERT LOW_PRIORITY INTO table ...
+```
+```php
+$db->setQueryOption ('FOR UPDATE')->get ('users');
+// GIVES: SELECT * FROM USERS FOR UPDATE;
 ```
 
 Also you can use an array of keywords:
 ```php
-$db->setQueryOption(Array('LOW_PRIORITY', 'IGNORE'));
-$db->insert($table,$param);
+$db->setQueryOption (Array('LOW_PRIORITY', 'IGNORE'))->insert ($table,$param);
 // GIVES: INSERT LOW_PRIORITY IGNORE INTO table ...
 ```
 
 Same way keywords could be used in SELECT queries as well:
 ```php
-$db->setQueryOption('SQL_NO_CACHE');
+$db->setQueryOption ('SQL_NO_CACHE');
 $db->get("users");
 // GIVES: SELECT SQL_NO_CACHE * FROM USERS;
 ```
@@ -319,6 +447,13 @@ $results = $db
 	->get('users');
 ```
 
+### Delete Query
+```php
+$db->where('id', 1);
+if($db->delete('users')) echo 'successfully deleted';
+```
+
+
 ### Ordering method
 ```php
 $db->orderBy("id","asc");
@@ -328,11 +463,25 @@ $results = $db->get('users');
 // Gives: SELECT * FROM users ORDER BY id ASC,login DESC, RAND ();
 ```
 
-order by values example:
+Order by values example:
 ```php
 $db->orderBy('userGroup', 'ASC', array('superuser', 'admin', 'users'));
 $db->get('users');
 // Gives: SELECT * FROM users ORDER BY FIELD (userGroup, 'superuser', 'admin', 'users') ASC;
+```
+
+If you are using setPrefix () functionality and need to use table names in orderBy() method make sure that table names are escaped with ``.
+
+```php
+$db->setPrefix ("t_");
+$db->orderBy ("users.id","asc");
+$results = $db->get ('users');
+// WRONG: That will give: SELECT * FROM t_users ORDER BY users.id ASC;
+
+$db->setPrefix ("t_");
+$db->orderBy ("`users`.id", "asc");
+$results = $db->get ('users');
+// CORRECT: That will give: SELECT * FROM t_users ORDER BY t_users.id ASC;
 ```
 
 ### Grouping method
@@ -441,23 +590,29 @@ if($db->has("users")) {
     return "Wrong user/password";
 }
 ``` 
-### Helper commands
-Reconnect in case mysql connection died
+### Helper methods
+Reconnect in case mysql connection died:
 ```php
 if (!$db->ping())
     $db->connect()
 ```
 
-Obtain an initialized instance of the class from another class
-```php
-    $db = MysqliDb::getInstance();
-```
-
-Get last executed SQL query.
+Get last executed SQL query:
 Please note that function returns SQL query only for debugging purposes as its execution most likely will fail due missing quotes around char variables.
 ```php
     $db->get('users');
     echo "Last executed query was ". $db->getLastQuery();
+```
+
+Check if table exists:
+```php
+    if ($db->tableExists ('users'))
+        echo "hooray";
+```
+
+mysqli_real_escape_string() wrapper:
+```php
+    $escaped = $db->escape ("' and 1=1");
 ```
 
 ### Transaction helpers
@@ -473,6 +628,17 @@ if (!$db->insert ('myTable', $insertData)) {
     //OK
     $db->commit();
 }
+```
+
+### Error helpers
+After you executed a query you have options to check if there was an error. You can get the MySQL error string or the error code for the last executed query. 
+```php
+$db->where('login', 'admin')->update('users', ['firstName' => 'Jack']);
+
+if ($db->getLastErrno() === 0)
+    echo 'Update succesfull';
+else
+    echo 'Update failed. Error: '. $db->getLastError();
 ```
 
 ### Query exectution time benchmarking
