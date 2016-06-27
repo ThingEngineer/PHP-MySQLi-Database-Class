@@ -373,6 +373,32 @@ class MysqliDb
         return $this;
     }
 
+	/**
+	 * Pushes a unprepared statement to the mysqli stack.
+	 * WARNING: Use with caution.
+	 * This method does not escape strings by default so make sure you'll never use it in production.
+	 * 
+	 * @author Jonas Barascu
+	 * @param [[Type]] $query [[Description]]
+	 */
+	private function queryUnprepared($query, $escapeQuery = false)
+	{	
+		// Should we escape?
+		if($escapeQuery) {
+			$query = $this->mysqli()->real_escape_string($query);
+		}
+		// Execute query
+		$stmt = $this->mysqli()->query($query);
+
+		// Failed?
+		if(!$stmt){
+			throw new Exception("Unprepared Query Failed, ERRNO: ".$this->mysqli()->errno." (".$this->mysqli()->error.")");
+		};
+		
+		// return stmt for future use
+		return $stmt;
+	}
+	
     /**
      * Execute raw SQL query.
      *
@@ -856,6 +882,93 @@ class MysqliDb
 
         return $this;
     }
+	
+	
+	/**
+	 * This is a basic method which allows you to import raw .CSV data into a table
+	 * Please check out http://dev.mysql.com/doc/refman/5.7/en/load-data.html for a valid .csv file.
+	 
+	 * @author Jonas Barascu (Noneatme)
+	 * @param string $importTable        The database table where the data will be imported into.
+	 * @param string $importFile         The file to be imported. Please use double backslashes \\ and make sure you
+	 *                                   use an absolute path.
+	 * @param string $terminateCharField The char which will be used to separate the data in a row.
+	 * @param string $terminateCharLine  The char which marks the EOL. (PHP_EOL is also possible)
+	 * @param string $ignoreLines        The ammount of lines to ignore. Useful if your #0 row marks the data structure.
+	 *                                                                                                        
+	 * @return boolean
+	 */
+	public function loadData($importTable, $importFile, $importSettings = 
+							  Array("fieldChar" => ';', "lineChar" => '\r\n', "linesToIgnore" => 1))
+	{
+		// Define default success var
+		$success = false;
+		
+		// We have to check if the file exists
+		if(file_exists($importFile)) {
+			// Create default values
+			$terminateCharField 	= ';';		// Default is ;
+			$terminateCharLine 		= PHP_EOL;	// Default \r\n or PHP_EOL (*nix is \n)
+			$ignoreLines			= 1;		// Default 1
+			
+			// Check the import settings 
+			if(gettype($importSettings) == "array") {
+				if(isset($importSettings["fieldChar"])) {
+					$terminateCharField = $importSettings["fieldChar"];
+				}
+				if(isset($importSettings["lineChar"])) {
+					$terminateCharLine = $importSettings["lineChar"];
+				}
+				if(isset($importSettings["linesToIgnore"])) {
+					$ignoreLines = $importSettings["linesToIgnore"];
+				}
+			}
+			
+			// Add the prefix to the import table
+			$table = self::$prefix . $importTable;
+			
+			// Add 1 more slash to every slash so maria will interpret it as a path
+			$importFile = str_replace("\\", "\\\\", $importFile);  
+			
+			// Build SQL Syntax
+			$sqlSyntax = sprintf('LOAD DATA INFILE \'%s\' INTO TABLE %s', 
+						$importFile, $table);
+			
+			// FIELDS
+			$sqlSyntax .= sprintf(' FIELDS TERMINATED BY \'%s\'', $terminateCharField);
+			if(isset($importSettings["fieldEnclosure"])){
+				$sqlSyntax .= sprintf(' ENCLOSED BY \'%s\'', $importSettings["fieldEnclosure"]);
+			}
+			
+			// LINES
+			$sqlSyntax .= sprintf(' LINES TERMINATED BY \'%s\'', $terminateCharLine);
+			if(isset($importSettings["lineStarting"])){
+				$sqlSyntax .= sprintf(' STARTING BY \'%s\'', $importSettings["lineStarting"]);
+			}
+			
+			// IGNORE LINES
+			$sqlSyntax .= sprintf(' IGNORE %d LINES', $ignoreLines);
+			
+			// Exceute the query unprepared because LOAD DATA only works with unprepared statements.
+			$result = $this->queryUnprepared($sqlSyntax);
+			
+			// Are there rows modified?
+			if($result) {
+				$success = true;
+			}
+			// Something went wrong
+			else {
+				$success = false; 
+			}
+		}
+		else {
+			// Throw an exception
+			throw new Exception("importCSV -> importFile ".$importFile." does not exists!");
+		}
+		
+		// Let the user know if the import failed / succeeded
+		return $success;
+	}
 
     /**
      * This method allows you to specify multiple (method chaining optional) ORDER BY statements for SQL queries.
