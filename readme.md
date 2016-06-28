@@ -23,7 +23,7 @@ MysqliDb -- Simple MySQLi wrapper and object mapper with prepared statements
 **[Has method](#has-method)**  
 **[Helper Methods](#helper-methods)**  
 **[Transaction Helpers](#transaction-helpers)**  
-**[Error Helpers](#error-helpers)**
+**[Error Helpers](#error-helpers)**  
 **>> _[Table Locking](#table-locking)_**  
 
 ## Support Me
