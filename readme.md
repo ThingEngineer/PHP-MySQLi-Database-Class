@@ -1,7 +1,6 @@
 MysqliDb -- Simple MySQLi wrapper and object mapper with prepared statements
 <hr>
 ### Table of Contents
-(All _italic_ categories has been implemented by me.)
 
 **[Initialization](#initialization)**  
 **[Objects mapping](#objects-mapping)**  
@@ -9,8 +8,8 @@ MysqliDb -- Simple MySQLi wrapper and object mapper with prepared statements
 **[Update Query](#update-query)**  
 **[Select Query](#select-query)**  
 **[Delete Query](#delete-query)**  
-**>> _[Insert Data](#insert-data)_**  
-**>> _[Insert XML](#insert-xml)_**  
+**[Insert Data](#insert-data)**  
+**[Insert XML](#insert-xml)**  
 **[Running raw SQL queries](#running-raw-sql-queries)**  
 **[Query Keywords](#query-keywords)**  
 **[Where Conditions](#where--having-methods)**  
@@ -24,7 +23,7 @@ MysqliDb -- Simple MySQLi wrapper and object mapper with prepared statements
 **[Helper Methods](#helper-methods)**  
 **[Transaction Helpers](#transaction-helpers)**  
 **[Error Helpers](#error-helpers)**  
-**>> _[Table Locking](#table-locking)_**  
+**[Table Locking](#table-locking)**  
 
 ## Support Me
 
@@ -745,5 +744,3 @@ $db->setLockMethod("READ")->lock(array("users", "log"));
 This will lock the tables **users** and **log** for **READ** access only.
 Make sure you use **unlock()* afterwards or your tables will remain locked!
 
-
-Last edited by Noneatme on June 28.
