@@ -969,6 +969,65 @@ class MysqliDb
 		// Let the user know if the import failed / succeeded
 		return $success;
 	}
+	
+	
+	public function loadXML($importTable, $importFile, $importSettings = 
+							Array("linesToIgnore" => 0)) 
+	{
+		// Define default success var
+		$success = false;
+
+		// We have to check if the file exists
+		if(file_exists($importFile)) {
+			// Create default values
+			$ignoreLines			= 0;			// Default 0
+
+			// Check the import settings 
+			if(gettype($importSettings) == "array") {
+				
+				if(isset($importSettings["linesToIgnore"])) {
+					$ignoreLines = $importSettings["linesToIgnore"];
+				}
+			}
+
+			// Add the prefix to the import table
+			$table = self::$prefix . $importTable;
+
+			// Add 1 more slash to every slash so maria will interpret it as a path
+			$importFile = str_replace("\\", "\\\\", $importFile);  
+
+			// Build SQL Syntax
+			$sqlSyntax = sprintf('LOAD XML INFILE \'%s\' INTO TABLE %s', 
+								 $importFile, $table);
+
+			// FIELDS
+			if(isset($importSettings["rowTag"])) {
+				$sqlSyntax .= sprintf(' ROWS IDENTIFIED BY \'%s\'', $importSettings["rowTag"]);
+			}
+			
+			// IGNORE LINES
+			$sqlSyntax .= sprintf(' IGNORE %d LINES', $ignoreLines);
+
+			// Exceute the query unprepared because LOAD XML only works with unprepared statements.
+			$result = $this->queryUnprepared($sqlSyntax);
+
+			// Are there rows modified?
+			if($result) {
+				$success = true;
+			}
+			// Something went wrong
+			else {
+				$success = false; 
+			}
+		}
+		else {
+			// Throw an exception
+			throw new Exception("importXML -> importFile ".$importFile." does not exists!");
+		}
+
+		// Let the user know if the import failed / succeeded
+		return $success;
+	}
 
     /**
      * This method allows you to specify multiple (method chaining optional) ORDER BY statements for SQL queries.
