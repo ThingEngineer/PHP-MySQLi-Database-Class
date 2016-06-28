@@ -903,11 +903,7 @@ class MysqliDb
 	 * @author Jonas Barascu (Noneatme)
 	 * @param string $importTable        The database table where the data will be imported into.
 	 * @param string $importFile         The file to be imported. Please use double backslashes \\ and make sure you
-	 *                                   use an absolute path.
-	 * @param string $terminateCharField The char which will be used to separate the data in a row.
-	 * @param string $terminateCharLine  The char which marks the EOL. (PHP_EOL is also possible)
-	 * @param string $ignoreLines        The ammount of lines to ignore. Useful if your #0 row marks the data structure.
-	 *                                                                                                        
+	 * @param string $importSettings 	 An Array defining the import settings as described in the README.md
 	 * @return boolean
 	 */
 	public function loadData($importTable, $importFile, $importSettings = 
@@ -987,8 +983,10 @@ class MysqliDb
 	 * Check out the LOAD XML syntax for your MySQL server.
 	 *
 	 * @author Jonas Barascu
-	 * @param  string  $importTable The table in which the data will be imported to.
-	 * @param  string  $importFile  The file which contains the .XML data.
+	 * @param  string  $importTable    The table in which the data will be imported to.
+	 * @param  string  $importFile     The file which contains the .XML data.
+	 * @param  string  $importSettings An Array defining the import settings as described in the README.md
+	 *                                                                                           
 	 * @return boolean Returns true if the import succeeded, false if it failed.
 	 */
 	public function loadXML($importTable, $importFile, $importSettings = Array("linesToIgnore" => 0))
@@ -1003,7 +1001,6 @@ class MysqliDb
 
 			// Check the import settings 
 			if(gettype($importSettings) == "array") {
-				
 				if(isset($importSettings["linesToIgnore"])) {
 					$ignoreLines = $importSettings["linesToIgnore"];
 				}
@@ -1018,7 +1015,6 @@ class MysqliDb
 			// Build SQL Syntax
 			$sqlSyntax = sprintf('LOAD XML INFILE \'%s\' INTO TABLE %s', 
 								 $importFile, $table);
-
 			// FIELDS
 			if(isset($importSettings["rowTag"])) {
 				$sqlSyntax .= sprintf(' ROWS IDENTIFIED BY \'%s\'', $importSettings["rowTag"]);
@@ -1158,11 +1154,10 @@ class MysqliDb
 				}
 			}
 		}
-		else
-		{
+		else{
 			// Build the table prefix
 			$table = self::$prefix . $table;
-
+			
 			// Build the query
 			$this->_query = "LOCK TABLES ".$table." ".$this->_tableLockMethod;
 		}

@@ -1,5 +1,0 @@
-#Mac OS X files
-.DS_Store
-
-#Vim trash
-*.swptests/csvimport/test.import.php
