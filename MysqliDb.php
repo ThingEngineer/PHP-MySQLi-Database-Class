@@ -970,9 +970,16 @@ class MysqliDb
 		return $success;
 	}
 	
-	
-	public function loadXML($importTable, $importFile, $importSettings = 
-							Array("linesToIgnore" => 0)) 
+	/**
+	 * This method is usefull for importing XML files into a specific table.
+	 * Check out the LOAD XML syntax for your MySQL server.
+	 *
+	 * @author Jonas Barascu
+	 * @param  string  $importTable The table in which the data will be imported to.
+	 * @param  string  $importFile  The file which contains the .XML data.
+	 * @return boolean Returns true if the import succeeded, false if it failed.
+	 */
+	public function loadXML($importTable, $importFile, $importSettings = Array("linesToIgnore" => 0))
 	{
 		// Define default success var
 		$success = false;
