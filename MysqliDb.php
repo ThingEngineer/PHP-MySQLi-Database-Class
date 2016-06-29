@@ -968,6 +968,9 @@ class MysqliDb
 			else {
 				$success = false; 
 			}
+			
+			// Free result
+			$result->free();
 		}
 		else {
 			// Throw an exception
@@ -1034,6 +1037,9 @@ class MysqliDb
 			else {
 				$success = false; 
 			}
+			
+			// Free result
+			$result->free();
 		}
 		else {
 			// Throw an exception
@@ -1178,6 +1184,9 @@ class MysqliDb
 		else {
 			throw new Exception("Locking of table ".$table." failed");
 		}
+		
+		// Free result
+		$result->free();
 
 		// Return the success value
 		return false;
@@ -1211,7 +1220,9 @@ class MysqliDb
 			throw new Exception("Unlocking of tables failed");
 		}
 		
-	
+		// Free result
+		$result->free();
+		
 		// Return self
 		return $this;
 	}
