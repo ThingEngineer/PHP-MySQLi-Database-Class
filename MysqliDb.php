@@ -904,9 +904,6 @@ class MysqliDb
 	 */
 	public function loadData($importTable, $importFile, $importSettings = null)
 	{
-		// Define default success var
-		$success = false;
-		
 		// We have to check if the file exists
 		if(!file_exists($importFile)) {
 			// Throw an exception
@@ -916,16 +913,14 @@ class MysqliDb
 		
 		// Define the default values
 		// We will merge it later
-		$settings 				= Array("fieldChar" => ';', "lineChar" => '\r\n', "linesToIgnore" => 1);
+		$settings 				= Array("fieldChar" => ';', "lineChar" => PHP_EOL, "linesToIgnore" => 1);
 		
 		// Check the import settings 
 		if(gettype($importSettings) == "array") {
 			// Merge the default array with the custom one
 			$settings = array_merge($settings, $importSettings);
 		}
-		
-		echo(var_dump($settings));
-		
+	
 		// Add the prefix to the import table
 		$table = self::$prefix . $importTable;
 		
@@ -950,12 +945,10 @@ class MysqliDb
 			
 		// IGNORE LINES
 		$sqlSyntax .= sprintf(' IGNORE %d LINES', $settings["linesToIgnore"]);
-		
-		echo($sqlSyntax);
-		
+	
 		// Exceute the query unprepared because LOAD DATA only works with unprepared statements.
 		$result = $this->queryUnprepared($sqlSyntax);
-		
+
 		// Are there rows modified?
 		// Let the user know if the import failed / succeeded
 		return (bool) $result;
@@ -974,9 +967,6 @@ class MysqliDb
 	 */
 	public function loadXml($importTable, $importFile, $importSettings = null)
 	{
-		// Define default success var
-		$success = false;
-
 		// We have to check if the file exists
 		if(!file_exists($importFile)) {
 			// Does not exists
@@ -984,7 +974,6 @@ class MysqliDb
 			return;
 		}
 		
-	
 		// Create default values
 		$settings 			= Array("linesToIgnore" => 0);
 
