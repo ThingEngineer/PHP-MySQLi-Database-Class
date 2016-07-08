@@ -88,7 +88,19 @@ class MysqliDb
      * @var array
      */
     protected $_groupBy = array();
-
+	
+	/**
+	 * Dynamic type list for tempromary locking tables. 
+	 * @var array
+	 */
+	protected $_tableLocks = array();
+	
+	/**
+	 * Variable which holds the current table lock method.
+	 * @var string
+	 */
+	protected $_tableLockMethod = "READ";
+	
     /**
      * Dynamic array that holds a combination of where condition/table data value types and parameter references
      * @var array
@@ -381,6 +393,28 @@ class MysqliDb
         return $this;
     }
 
+	/**
+	 * Pushes a unprepared statement to the mysqli stack.
+	 * WARNING: Use with caution.
+	 * This method does not escape strings by default so make sure you'll never use it in production.
+	 * 
+	 * @author Jonas Barascu
+	 * @param [[Type]] $query [[Description]]
+	 */
+	private function queryUnprepared($query)
+	{	
+		// Execute query
+		$stmt = $this->mysqli()->query($query);
+
+		// Failed?
+		if(!$stmt){
+			throw new Exception("Unprepared Query Failed, ERRNO: ".$this->mysqli()->errno." (".$this->mysqli()->error.")");
+		};
+		
+		// return stmt for future use
+		return $stmt;
+	}
+	
     /**
      * Execute raw SQL query.
      *
@@ -864,6 +898,123 @@ class MysqliDb
 
         return $this;
     }
+	
+	
+	/**
+	 * This is a basic method which allows you to import raw .CSV data into a table
+	 * Please check out http://dev.mysql.com/doc/refman/5.7/en/load-data.html for a valid .csv file.
+	 
+	 * @author Jonas Barascu (Noneatme)
+	 * @param string $importTable        The database table where the data will be imported into.
+	 * @param string $importFile         The file to be imported. Please use double backslashes \\ and make sure you
+	 * @param string $importSettings 	 An Array defining the import settings as described in the README.md
+	 * @return boolean
+	 */
+	public function loadData($importTable, $importFile, $importSettings = null)
+	{
+		// We have to check if the file exists
+		if(!file_exists($importFile)) {
+			// Throw an exception
+			throw new Exception("importCSV -> importFile ".$importFile." does not exists!");
+			return;
+		}
+		
+		// Define the default values
+		// We will merge it later
+		$settings 				= Array("fieldChar" => ';', "lineChar" => PHP_EOL, "linesToIgnore" => 1);
+		
+		// Check the import settings 
+		if(gettype($importSettings) == "array") {
+			// Merge the default array with the custom one
+			$settings = array_merge($settings, $importSettings);
+		}
+	
+		// Add the prefix to the import table
+		$table = self::$prefix . $importTable;
+		
+		// Add 1 more slash to every slash so maria will interpret it as a path
+		$importFile = str_replace("\\", "\\\\", $importFile);  
+		
+		// Build SQL Syntax
+		$sqlSyntax = sprintf('LOAD DATA INFILE \'%s\' INTO TABLE %s', 
+					$importFile, $table);
+		
+		// FIELDS
+		$sqlSyntax .= sprintf(' FIELDS TERMINATED BY \'%s\'', $settings["fieldChar"]);
+		if(isset($settings["fieldEnclosure"])) {
+			$sqlSyntax .= sprintf(' ENCLOSED BY \'%s\'', $settings["fieldEnclosure"]);
+		}
+		
+		// LINES
+		$sqlSyntax .= sprintf(' LINES TERMINATED BY \'%s\'', $settings["lineChar"]);
+		if(isset($settings["lineStarting"])) {
+			$sqlSyntax .= sprintf(' STARTING BY \'%s\'', $settings["lineStarting"]);
+		}
+			
+		// IGNORE LINES
+		$sqlSyntax .= sprintf(' IGNORE %d LINES', $settings["linesToIgnore"]);
+	
+		// Exceute the query unprepared because LOAD DATA only works with unprepared statements.
+		$result = $this->queryUnprepared($sqlSyntax);
+
+		// Are there rows modified?
+		// Let the user know if the import failed / succeeded
+		return (bool) $result;
+	}
+	
+	/**
+	 * This method is usefull for importing XML files into a specific table.
+	 * Check out the LOAD XML syntax for your MySQL server.
+	 *
+	 * @author Jonas Barascu
+	 * @param  string  $importTable    The table in which the data will be imported to.
+	 * @param  string  $importFile     The file which contains the .XML data.
+	 * @param  string  $importSettings An Array defining the import settings as described in the README.md
+	 *                                                                                           
+	 * @return boolean Returns true if the import succeeded, false if it failed.
+	 */
+	public function loadXml($importTable, $importFile, $importSettings = null)
+	{
+		// We have to check if the file exists
+		if(!file_exists($importFile)) {
+			// Does not exists
+			throw new Exception("loadXml: Import file does not exists");
+			return;
+		}
+		
+		// Create default values
+		$settings 			= Array("linesToIgnore" => 0);
+
+		// Check the import settings 
+		if(gettype($importSettings) == "array") {
+			$settings = array_merge($settings, $importSettings);
+		}
+
+		// Add the prefix to the import table
+		$table = self::$prefix . $importTable;
+		
+		// Add 1 more slash to every slash so maria will interpret it as a path
+		$importFile = str_replace("\\", "\\\\", $importFile);  
+		
+		// Build SQL Syntax
+		$sqlSyntax = sprintf('LOAD XML INFILE \'%s\' INTO TABLE %s', 
+								 $importFile, $table);
+		
+		// FIELDS
+		if(isset($settings["rowTag"])) {
+			$sqlSyntax .= sprintf(' ROWS IDENTIFIED BY \'%s\'', $settings["rowTag"]);
+		}
+			
+		// IGNORE LINES
+		$sqlSyntax .= sprintf(' IGNORE %d LINES', $settings["linesToIgnore"]);
+		
+		// Exceute the query unprepared because LOAD XML only works with unprepared statements.
+		$result = $this->queryUnprepared($sqlSyntax);
+
+		// Are there rows modified?
+		// Let the user know if the import failed / succeeded
+		return (bool) $result;
+	}
 
     /**
      * This method allows you to specify multiple (method chaining optional) ORDER BY statements for SQL queries.
@@ -921,7 +1072,123 @@ class MysqliDb
         $this->_groupBy[] = $groupByField;
         return $this;
     }
+	
+	
+	/**
+	 * This method sets the current table lock method.
+	 * 
+	 * @author Jonas Barascu
+	 * @param  string   $method The table lock method. Can be READ or WRITE.
+	 *                                                                 
+	 * @throws Exception
+	 * @return MysqliDb
+	 */
+	public function setLockMethod($method)
+	{
+		// Switch the uppercase string
+		switch(strtoupper($method)) {
+			// Is it READ or WRITE?
+			case "READ" || "WRITE":
+				// Succeed
+				$this->_tableLockMethod = $method;
+				break;
+			default:
+				// Else throw an exception
+				throw new Exception("Bad lock type: Can be either READ or WRITE");
+				break;
+		}
+		return $this;
+	}
+	
+	/**
+	 * Locks a table for R/W action.
+	 * 
+	 * @author Jonas Barascu
+	 * @param string  $table The table to be locked. Can be a table or a view.
+	 *                       
+	 * @throws Exception
+	 * @return MysqliDb if succeeeded;
+	 */
+	public function lock($table)
+	{
+		// Main Query
+		$this->_query = "LOCK TABLES";
+		
+		// Is the table an array?
+		if(gettype($table) == "array") {
+			// Loop trough it and attach it to the query
+			foreach($table as $key => $value) {
+				if(gettype($value) == "string") {
+					if($key > 0) {
+						$this->_query .= ",";
+					}
+					$this->_query .= " ".self::$prefix.$value." ".$this->_tableLockMethod;
+				}
+			}
+		}
+		else{
+			// Build the table prefix
+			$table = self::$prefix . $table;
+			
+			// Build the query
+			$this->_query = "LOCK TABLES ".$table." ".$this->_tableLockMethod;
+		}
 
+		// Exceute the query unprepared because LOCK only works with unprepared statements.
+		$result = $this->queryUnprepared($this->_query);
+			
+		// Reset the query
+		$this->reset();
+
+		// Are there rows modified?
+		if($result) {	
+			// Return true
+			// We can't return ourself because if one table gets locked, all other ones get unlocked!
+			return true;
+		}
+		// Something went wrong
+		else {
+			throw new Exception("Locking of table ".$table." failed");
+		}
+
+		// Return the success value
+		return false;
+	}
+	
+	/**
+	 * Unlocks all tables in a database.
+	 * Also commits transactions.
+	 * 
+	 * @author Jonas Barascu
+	 * @return MysqliDb
+	 */
+	public function unlock()
+	{
+		// Build the query
+		$this->_query = "UNLOCK TABLES";
+
+		// Exceute the query unprepared because UNLOCK and LOCK only works with unprepared statements.
+		$result = $this->queryUnprepared($this->_query);
+
+		// Reset the query
+		$this->reset();
+
+		// Are there rows modified?
+		if($result) {
+			// return self
+			return $this;
+		}
+		// Something went wrong
+		else {
+			throw new Exception("Unlocking of tables failed");
+		}
+		
+	
+		// Return self
+		return $this;
+	}
+
+	
     /**
      * This methods returns the ID of the last inserted item
      *
