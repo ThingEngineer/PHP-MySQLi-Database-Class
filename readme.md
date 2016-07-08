@@ -500,6 +500,24 @@ $products = $db->get ("products p", null, "u.name, p.productName");
 print_r ($products);
 ```
 
+### Join Conditions
+Add AND condition to join statement
+```php
+$db->join("users u", "p.tenantID=u.tenantID", "LEFT");
+$db->joinWhere("users u", "u.tenantID", 5);
+$products = $db->get ("products p", null, "u.name, p.productName");
+print_r ($products);
+// Gives: SELECT  u.login, p.productName FROM products p LEFT JOIN users u ON (p.tenantID=u.tenantID AND u.tenantID = 5)
+```
+Add OR condition to join statement
+```php
+$db->join("users u", "p.tenantID=u.tenantID", "LEFT");
+$db->joinOrWhere("users u", "u.tenantID", 5);
+$products = $db->get ("products p", null, "u.name, p.productName");
+print_r ($products);
+// Gives: SELECT  u.login, p.productName FROM products p LEFT JOIN users u ON (p.tenantID=u.tenantID OR u.tenantID = 5)
+```
+
 ### Properties sharing
 Its is also possible to copy properties
 

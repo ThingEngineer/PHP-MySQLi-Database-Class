@@ -65,6 +65,13 @@ class MysqliDb
     protected $_where = array();
 
     /**
+     * An array that holds where join ands
+     *
+     * @var array
+     */
+    protected $_joinAnd = array();
+
+    /**
      * An array that holds having conditions
      * @var array
      */
@@ -311,6 +318,7 @@ class MysqliDb
         $this->_where = array();
         $this->_having = array();
         $this->_join = array();
+        $this->_joinAnd = array();
         $this->_orderBy = array();
         $this->_groupBy = array();
         $this->_bindParams = array(''); // Create the empty 0 index
@@ -1081,6 +1089,7 @@ class MysqliDb
      */
     protected function _buildQuery($numRows = null, $tableData = null)
     {
+        // $this->_buildJoinOld();
         $this->_buildJoin();
         $this->_buildInsertQuery($tableData);
         $this->_buildCondition('WHERE', $this->_where);
@@ -1229,7 +1238,7 @@ class MysqliDb
      * 
      * @return void
      */
-    protected function _buildJoin()
+    protected function _buildJoinOld()
     {
         if (empty($this->_join)) {
             return;
@@ -1905,6 +1914,106 @@ class MysqliDb
         $res = $this->withTotalCount()->get ($table, Array ($offset, $this->pageLimit), $fields);
         $this->totalPages = ceil($this->totalCount / $this->pageLimit);
         return $res;
+    }
+
+    /**
+     * This method allows you to specify multiple (method chaining optional) AND WHERE statements for the join table on part of the SQL query.
+     *
+     * @uses $dbWrapper->joinWhere('user u', 'u.id', 7)->where('user u', 'u.title', 'MyTitle');
+     *
+     * @param string $whereJoin  The name of the table followed by its prefix.
+     * @param string $whereProp  The name of the database field.
+     * @param mixed  $whereValue The value of the database field.
+     *
+     * @return dbWrapper
+     */
+    public function joinWhere($whereJoin, $whereProp, $whereValue = 'DBNULL', $operator = '=', $cond = 'AND')
+    {
+        $this->_joinAnd[$whereJoin][] = Array ($cond, $whereProp, $operator, $whereValue);
+        return $this;
+    }
+
+    /**
+     * This method allows you to specify multiple (method chaining optional) OR WHERE statements for the join table on part of the SQL query.
+     *
+     * @uses $dbWrapper->joinWhere('user u', 'u.id', 7)->where('user u', 'u.title', 'MyTitle');
+     *
+     * @param string $whereJoin  The name of the table followed by its prefix.
+     * @param string $whereProp  The name of the database field.
+     * @param mixed  $whereValue The value of the database field.
+     *
+     * @return dbWrapper
+     */
+    public function joinOrWhere($whereJoin, $whereProp, $whereValue = 'DBNULL', $operator = '=', $cond = 'AND')
+    {
+        return $this->joinWhere($whereJoin, $whereProp, $whereValue, $operator, 'OR');
+    }
+
+    /**
+     * Abstraction method that will build an JOIN part of the query
+     */
+    protected function _buildJoin () {
+        if (empty ($this->_join))
+            return;
+
+        foreach ($this->_join as $data) {
+            list ($joinType,  $joinTable, $joinCondition) = $data;
+
+            if (is_object ($joinTable))
+                $joinStr = $this->_buildPair ("", $joinTable);
+            else
+                $joinStr = $joinTable;
+
+            $this->_query .= " " . $joinType. " JOIN " . $joinStr ." on " . $joinCondition;
+
+            // Add join and query
+            if (!empty($this->_joinAnd) && isset($this->_joinAnd[$joinStr])) {
+                foreach($this->_joinAnd[$joinStr] as $join_and_cond) {
+                    list ($concat, $varName, $operator, $val) = $join_and_cond;
+                    $this->_query .= " " . $concat ." " . $varName;
+                    $this->conditionToSql($operator, $val);
+                }
+            }
+        }
+    }
+
+    /**
+     * Convert a condition and value into the sql string
+     * @param  String $operator The where constraint operator
+     * @param  String $val    The where constraint value
+     */
+    private function conditionToSql($operator, $val) {
+        switch (strtolower ($operator)) {
+            case 'not in':
+            case 'in':
+                $comparison = ' ' . $operator. ' (';
+                if (is_object ($val)) {
+                    $comparison .= $this->_buildPair ("", $val);
+                } else {
+                    foreach ($val as $v) {
+                        $comparison .= ' ?,';
+                        $this->_bindParam ($v);
+                    }
+                }
+                $this->_query .= rtrim($comparison, ',').' ) ';
+                break;
+            case 'not between':
+            case 'between':
+                $this->_query .= " $operator ? AND ? ";
+                $this->_bindParams ($val);
+                break;
+            case 'not exists':
+            case 'exists':
+                $this->_query.= $operator . $this->_buildPair ("", $val);
+                break;
+            default:
+                if (is_array ($val))
+                    $this->_bindParams ($val);
+                else if ($val === null)
+                    $this->_query .= $operator . " NULL";
+                else if ($val != 'DBNULL' || $val == '0')
+                    $this->_query .= $this->_buildPair ($operator, $val);
+        }
     }
 }
 
