@@ -393,12 +393,8 @@ class MysqliDb
 	 * @author Jonas Barascu
 	 * @param [[Type]] $query [[Description]]
 	 */
-	private function queryUnprepared($query, $escapeQuery = false)
+	private function queryUnprepared($query)
 	{	
-		// Should we escape?
-		if($escapeQuery) {
-			$query = $this->mysqli()->real_escape_string($query);
-		}
 		// Execute query
 		$stmt = $this->mysqli()->query($query);
 
@@ -906,76 +902,63 @@ class MysqliDb
 	 * @param string $importSettings 	 An Array defining the import settings as described in the README.md
 	 * @return boolean
 	 */
-	public function loadData($importTable, $importFile, $importSettings = 
-							  Array("fieldChar" => ';', "lineChar" => '\r\n', "linesToIgnore" => 1))
+	public function loadData($importTable, $importFile, $importSettings = null)
 	{
 		// Define default success var
 		$success = false;
 		
 		// We have to check if the file exists
-		if(file_exists($importFile)) {
-			// Create default values
-			$terminateCharField 	= ';';		// Default is ;
-			$terminateCharLine 		= PHP_EOL;	// Default \r\n or PHP_EOL (*nix is \n)
-			$ignoreLines			= 1;		// Default 1
-			
-			// Check the import settings 
-			if(gettype($importSettings) == "array") {
-				if(isset($importSettings["fieldChar"])) {
-					$terminateCharField = $importSettings["fieldChar"];
-				}
-				if(isset($importSettings["lineChar"])) {
-					$terminateCharLine = $importSettings["lineChar"];
-				}
-				if(isset($importSettings["linesToIgnore"])) {
-					$ignoreLines = $importSettings["linesToIgnore"];
-				}
-			}
-			
-			// Add the prefix to the import table
-			$table = self::$prefix . $importTable;
-			
-			// Add 1 more slash to every slash so maria will interpret it as a path
-			$importFile = str_replace("\\", "\\\\", $importFile);  
-			
-			// Build SQL Syntax
-			$sqlSyntax = sprintf('LOAD DATA INFILE \'%s\' INTO TABLE %s', 
-						$importFile, $table);
-			
-			// FIELDS
-			$sqlSyntax .= sprintf(' FIELDS TERMINATED BY \'%s\'', $terminateCharField);
-			if(isset($importSettings["fieldEnclosure"])){
-				$sqlSyntax .= sprintf(' ENCLOSED BY \'%s\'', $importSettings["fieldEnclosure"]);
-			}
-			
-			// LINES
-			$sqlSyntax .= sprintf(' LINES TERMINATED BY \'%s\'', $terminateCharLine);
-			if(isset($importSettings["lineStarting"])){
-				$sqlSyntax .= sprintf(' STARTING BY \'%s\'', $importSettings["lineStarting"]);
-			}
-			
-			// IGNORE LINES
-			$sqlSyntax .= sprintf(' IGNORE %d LINES', $ignoreLines);
-			
-			// Exceute the query unprepared because LOAD DATA only works with unprepared statements.
-			$result = $this->queryUnprepared($sqlSyntax);
-			
-			// Are there rows modified?
-			if($result) {
-				$success = true;
-			}
-			// Something went wrong
-			else {
-				$success = false; 
-			}
-		}
-		else {
+		if(!file_exists($importFile)) {
 			// Throw an exception
 			throw new Exception("importCSV -> importFile ".$importFile." does not exists!");
+			return;
 		}
 		
+		// Define the default values
+		// We will merge it later
+		$settings 				= Array("fieldChar" => ';', "lineChar" => '\r\n', "linesToIgnore" => 1);
+		
+		// Check the import settings 
+		if(gettype($importSettings) == "array") {
+			// Merge the default array with the custom one
+			$settings = array_merge($settings, $importSettings);
+		}
+		
+		echo(var_dump($settings));
+		
+		// Add the prefix to the import table
+		$table = self::$prefix . $importTable;
+		
+		// Add 1 more slash to every slash so maria will interpret it as a path
+		$importFile = str_replace("\\", "\\\\", $importFile);  
+		
+		// Build SQL Syntax
+		$sqlSyntax = sprintf('LOAD DATA INFILE \'%s\' INTO TABLE %s', 
+					$importFile, $table);
+		
+		// FIELDS
+		$sqlSyntax .= sprintf(' FIELDS TERMINATED BY \'%s\'', $settings["fieldChar"]);
+		if(isset($settings["fieldEnclosure"])) {
+			$sqlSyntax .= sprintf(' ENCLOSED BY \'%s\'', $settings["fieldEnclosure"]);
+		}
+		
+		// LINES
+		$sqlSyntax .= sprintf(' LINES TERMINATED BY \'%s\'', $settings["lineChar"]);
+		if(isset($settings["lineStarting"])) {
+			$sqlSyntax .= sprintf(' STARTING BY \'%s\'', $settings["lineStarting"]);
+		}
+			
+		// IGNORE LINES
+		$sqlSyntax .= sprintf(' IGNORE %d LINES', $settings["linesToIgnore"]);
+		
+		echo($sqlSyntax);
+		
+		// Exceute the query unprepared because LOAD DATA only works with unprepared statements.
+		$result = $this->queryUnprepared($sqlSyntax);
+		
+		// Are there rows modified?
 		// Let the user know if the import failed / succeeded
-		return $success;
+		return (bool) $result;
 	}
 	
 	/**
@@ -989,59 +972,51 @@ class MysqliDb
 	 *                                                                                           
 	 * @return boolean Returns true if the import succeeded, false if it failed.
 	 */
-	public function loadXML($importTable, $importFile, $importSettings = Array("linesToIgnore" => 0))
+	public function loadXml($importTable, $importFile, $importSettings = null)
 	{
 		// Define default success var
 		$success = false;
 
 		// We have to check if the file exists
-		if(file_exists($importFile)) {
-			// Create default values
-			$ignoreLines			= 0;			// Default 0
+		if(!file_exists($importFile)) {
+			// Does not exists
+			throw new Exception("loadXml: Import file does not exists");
+			return;
+		}
+		
+	
+		// Create default values
+		$settings 			= Array("linesToIgnore" => 0);
 
-			// Check the import settings 
-			if(gettype($importSettings) == "array") {
-				if(isset($importSettings["linesToIgnore"])) {
-					$ignoreLines = $importSettings["linesToIgnore"];
-				}
-			}
+		// Check the import settings 
+		if(gettype($importSettings) == "array") {
+			$settings = array_merge($settings, $importSettings);
+		}
 
-			// Add the prefix to the import table
-			$table = self::$prefix . $importTable;
-
-			// Add 1 more slash to every slash so maria will interpret it as a path
-			$importFile = str_replace("\\", "\\\\", $importFile);  
-
-			// Build SQL Syntax
-			$sqlSyntax = sprintf('LOAD XML INFILE \'%s\' INTO TABLE %s', 
+		// Add the prefix to the import table
+		$table = self::$prefix . $importTable;
+		
+		// Add 1 more slash to every slash so maria will interpret it as a path
+		$importFile = str_replace("\\", "\\\\", $importFile);  
+		
+		// Build SQL Syntax
+		$sqlSyntax = sprintf('LOAD XML INFILE \'%s\' INTO TABLE %s', 
 								 $importFile, $table);
-			// FIELDS
-			if(isset($importSettings["rowTag"])) {
-				$sqlSyntax .= sprintf(' ROWS IDENTIFIED BY \'%s\'', $importSettings["rowTag"]);
-			}
+		
+		// FIELDS
+		if(isset($settings["rowTag"])) {
+			$sqlSyntax .= sprintf(' ROWS IDENTIFIED BY \'%s\'', $settings["rowTag"]);
+		}
 			
-			// IGNORE LINES
-			$sqlSyntax .= sprintf(' IGNORE %d LINES', $ignoreLines);
+		// IGNORE LINES
+		$sqlSyntax .= sprintf(' IGNORE %d LINES', $settings["linesToIgnore"]);
+		
+		// Exceute the query unprepared because LOAD XML only works with unprepared statements.
+		$result = $this->queryUnprepared($sqlSyntax);
 
-			// Exceute the query unprepared because LOAD XML only works with unprepared statements.
-			$result = $this->queryUnprepared($sqlSyntax);
-
-			// Are there rows modified?
-			if($result) {
-				$success = true;
-			}
-			// Something went wrong
-			else {
-				$success = false; 
-			}
-		}
-		else {
-			// Throw an exception
-			throw new Exception("importXML -> importFile ".$importFile." does not exists!");
-		}
-
+		// Are there rows modified?
 		// Let the user know if the import failed / succeeded
-		return $success;
+		return (bool) $result;
 	}
 
     /**
