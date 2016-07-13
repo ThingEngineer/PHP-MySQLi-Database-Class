@@ -1,12 +1,15 @@
 MysqliDb -- Simple MySQLi wrapper and object mapper with prepared statements
 <hr>
 ### Table of Contents
+
 **[Initialization](#initialization)**  
 **[Objects mapping](#objects-mapping)**  
 **[Insert Query](#insert-query)**  
 **[Update Query](#update-query)**  
 **[Select Query](#select-query)**  
 **[Delete Query](#delete-query)**  
+**[Insert Data](#insert-data)**  
+**[Insert XML](#insert-xml)**  
 **[Running raw SQL queries](#running-raw-sql-queries)**  
 **[Query Keywords](#query-keywords)**  
 **[Where Conditions](#where--having-methods)**  
@@ -19,7 +22,16 @@ MysqliDb -- Simple MySQLi wrapper and object mapper with prepared statements
 **[Has method](#has-method)**  
 **[Helper Methods](#helper-methods)**  
 **[Transaction Helpers](#transaction-helpers)**  
-**[Error Helpers](#error-helpers)**
+**[Error Helpers](#error-helpers)**  
+**[Table Locking](#table-locking)**  
+
+## Support Me
+
+This software is developed during my free time and I will be glad if somebody will support me.
+
+Everyone's time should be valuable, so please consider donating.
+
+[Donate with paypal](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=a%2ebutenka%40gmail%2ecom&lc=DO&item_name=mysqlidb&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted)
 
 ### Installation
 To utilize this class, first import MysqliDb.php into your project, and require it.
@@ -202,6 +214,55 @@ $logins = $db->getValue ("users", "login", 5);
 // select login from users limit 5
 foreach ($logins as $login)
     echo $login;
+```
+
+###Insert Data
+You can also load .CSV or .XML data into a specific table.
+To insert .csv data, use the following syntax:
+```php
+$path_to_file = "/home/john/file.csv";
+$db->loadData("users", $path_to_file);
+```
+This will load a .csv file called **file.csv** in the folder **/home/john/** (john's home directory.)
+You can also attach an optional array of options.
+Valid options are:
+
+```php
+Array(
+	"fieldChar" => ';', 	// Char which separates the data
+	"lineChar" => '\r\n', 	// Char which separates the lines
+	"linesToIgnore" => 1	// Amount of lines to ignore at the beginning of the import
+);
+```
+
+Attach them using
+```php
+$options = Array("fieldChar" => ';', "lineChar" => '\r\n', "linesToIgnore" => 1);
+$db->loadData("users", "/home/john/file.csv", $options);
+```
+
+###Insert XML
+To load XML data into a table, you can use the method **loadXML**.
+The syntax is smillar to the loadData syntax.
+```php
+$path_to_file = "/home/john/file.xml";
+$db->loadXML("users", $path_to_file);
+```
+
+You can also add optional parameters.
+Valid parameters:
+```php
+Array(
+	"linesToIgnore" => 0,		// Amount of lines / rows to ignore at the beginning of the import
+	"rowTag"	=> "<user>"	// The tag which marks the beginning of an entry
+)
+```
+
+Usage:
+```php
+$options = Array("linesToIgnore" => 0, "rowTag"	=> "<user>"):
+$path_to_file = "/home/john/file.xml";
+$db->loadXML("users", $path_to_file, $options);
 ```
 
 ###Pagination
@@ -492,6 +553,24 @@ $products = $db->get ("products p", null, "u.name, p.productName");
 print_r ($products);
 ```
 
+### Join Conditions
+Add AND condition to join statement
+```php
+$db->join("users u", "p.tenantID=u.tenantID", "LEFT");
+$db->joinWhere("users u", "u.tenantID", 5);
+$products = $db->get ("products p", null, "u.name, p.productName");
+print_r ($products);
+// Gives: SELECT  u.login, p.productName FROM products p LEFT JOIN users u ON (p.tenantID=u.tenantID AND u.tenantID = 5)
+```
+Add OR condition to join statement
+```php
+$db->join("users u", "p.tenantID=u.tenantID", "LEFT");
+$db->joinOrWhere("users u", "u.tenantID", 5);
+$products = $db->get ("products p", null, "u.name, p.productName");
+print_r ($products);
+// Gives: SELECT  u.login, p.productName FROM products p LEFT JOIN users u ON (p.tenantID=u.tenantID OR u.tenantID = 5)
+```
+
 ### Properties sharing
 Its is also possible to copy properties
 
@@ -622,6 +701,7 @@ if (!$db->insert ('myTable', $insertData)) {
 }
 ```
 
+
 ### Error helpers
 After you executed a query you have options to check if there was an error. You can get the MySQL error string or the error code for the last executed query. 
 ```php
@@ -660,3 +740,25 @@ print_r ($db->trace);
         )
 
 ```
+
+##Table Locking
+To lock tables, you can use the **lock** method together with **setLockMethod**. 
+The following example will lock the table **users** for **write** access.
+```php
+$db->setLockMethod("WRITE")->lock("users");
+```
+
+Calling another **->lock()** will remove the first lock.
+You can also use
+```php
+$db->unlock();
+```
+to unlock the previous locked tables.
+To lock multiple tables, you can use an array.
+Example:
+```php
+$db->setLockMethod("READ")->lock(array("users", "log"));
+```
+This will lock the tables **users** and **log** for **READ** access only.
+Make sure you use **unlock()* afterwards or your tables will remain locked!
+
