@@ -281,7 +281,7 @@ class MysqliDb
         $this->_mysqli = new mysqli($this->host, $this->username, $this->password, $this->db, $this->port);
 
         if ($this->_mysqli->connect_error) {
-            throw new Exception('Connect Error ' . $this->_mysqli->connect_errno . ': ' . $this->_mysqli->connect_error);
+            throw new Exception('Connect Error ' . $this->_mysqli->connect_errno . ': ' . $this->_mysqli->connect_error, $this->_mysqli->connect_errno);
         }
 
         if ($this->charset) {
@@ -408,7 +408,7 @@ class MysqliDb
 
 		// Failed?
 		if(!$stmt){
-			throw new Exception("Unprepared Query Failed, ERRNO: ".$this->mysqli()->errno." (".$this->mysqli()->error.")");
+			throw new Exception("Unprepared Query Failed, ERRNO: ".$this->mysqli()->errno." (".$this->mysqli()->error.")", $this->mysqli()->errno);
 		};
 		
 		// return stmt for future use
@@ -1136,6 +1136,7 @@ class MysqliDb
 
 		// Exceute the query unprepared because LOCK only works with unprepared statements.
 		$result = $this->queryUnprepared($this->_query);
+        $errno  = $this->mysqli()->errno;
 			
 		// Reset the query
 		$this->reset();
@@ -1148,7 +1149,7 @@ class MysqliDb
 		}
 		// Something went wrong
 		else {
-			throw new Exception("Locking of table ".$table." failed");
+			throw new Exception("Locking of table ".$table." failed", $errno);
 		}
 
 		// Return the success value
@@ -1169,6 +1170,7 @@ class MysqliDb
 
 		// Exceute the query unprepared because UNLOCK and LOCK only works with unprepared statements.
 		$result = $this->queryUnprepared($this->_query);
+        $errno  = $this->mysqli()->errno;
 
 		// Reset the query
 		$this->reset();
@@ -1180,7 +1182,7 @@ class MysqliDb
 		}
 		// Something went wrong
 		else {
-			throw new Exception("Unlocking of tables failed");
+			throw new Exception("Unlocking of tables failed", $errno);
 		}
 		
 	
