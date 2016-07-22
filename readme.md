@@ -144,6 +144,43 @@ $db->onDuplicate($updateColumns, $lastInsertId);
 $id = $db->insert ('users', $data);
 ```
 
+Insert multiple datasets at once
+```php
+$data = Array(
+    Array ("login" => "admin",
+        "firstName" => "John",
+        "lastName" => 'Doe'
+    ),
+    Array ("login" => "other",
+        "firstName" => "Another",
+        "lastName" => 'User',
+        "password" => "very_cool_hash"
+    )
+);
+$ids = $db->insertMulti('users', $data);
+if(!$ids) {
+    echo 'insert failed: ' . $db->getLastError();
+} else {
+    echo 'new users inserted with following id\'s: ' . implode(', ', $ids);
+}
+```
+
+If all datasets only have the same keys, it can be simplified
+```php
+$data = Array(
+    Array ("admin", "John", "Doe"),
+    Array ("other", "Another", "User")
+);
+$keys = Array("login", "firstName", "lastName");
+
+$ids = $db->insertMulti('users', $data, $keys);
+if(!$ids) {
+    echo 'insert failed: ' . $db->getLastError();
+} else {
+    echo 'new users inserted with following id\'s: ' . implode(', ', $ids);
+}
+```
+
 ### Replace Query
 <a href='https://dev.mysql.com/doc/refman/5.0/en/replace.html'>Replace()</a> method implements same API as insert();
 

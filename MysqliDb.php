@@ -680,6 +680,48 @@ class MysqliDb
     }
 
     /**
+     * Insert method to add several rows at once
+     *
+     * @param string $tableName The name of the table.
+     * @param array $multiInsertData Two-dimensinal Data-array containing information for inserting into the DB.
+     * @param array $dataKeys Optinal Table Key names, if not set in insertDataSet.
+     *
+     * @return bool|array Boolean indicating the insertion failed (false), else return id-array ([int])
+     */
+    public function insertMulti($tableName, array $multiInsertData, array $dataKeys = null)
+    {
+        // only auto-commit our inserts, if no transaction is currently running
+        $autoCommit = (isset($this->_transaction_in_progress) ? !$this->_transaction_in_progress : true);
+        $ids = [];
+
+        if($autoCommit) {
+            $this->startTransaction();
+        }
+
+        foreach ($multiInsertData as $insertData) {
+            if($dataKeys !== null) {
+                // apply column-names if given, else assume they're already given in the data
+                $insertData = array_combine($dataKeys, $insertData);
+            }
+
+            $id = $this->insert($tableName, $insertData);
+            if(!$id) {
+                if($autoCommit) {
+                    $this->rollback();
+                }
+                return false;
+            }
+            $ids[] = $id;
+        }
+
+        if($autoCommit) {
+            $this->commit();
+        }
+
+        return $ids;
+    }
+
+    /**
      * Replace method to add new row
      *
      * @param string $tableName The name of the table.
