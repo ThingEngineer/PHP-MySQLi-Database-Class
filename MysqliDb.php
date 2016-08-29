@@ -692,7 +692,7 @@ class MysqliDb
     {
         // only auto-commit our inserts, if no transaction is currently running
         $autoCommit = (isset($this->_transaction_in_progress) ? !$this->_transaction_in_progress : true);
-        $ids = [];
+        $ids = array();
 
         if($autoCommit) {
             $this->startTransaction();
