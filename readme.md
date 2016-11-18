@@ -750,7 +750,7 @@ else
     echo 'Update failed. Error: '. $db->getLastError();
 ```
 
-### Query exectution time benchmarking
+### Query execution time benchmarking
 To track query execution time setTrace() function should be called.
 ```php
 $db->setTrace (true);
