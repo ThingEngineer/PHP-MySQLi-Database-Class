@@ -396,8 +396,8 @@ if ($c != 3) {
 }
 unset ($cnt);
 
-$data = $db->get('users');
-if (count($data) != 3) {
+$users = $db->get('users');
+if (count($users) != 3) {
     echo "copy with subquery data count failed";
     exit;
 }
@@ -442,6 +442,47 @@ $result = $db->map ('id')->ObjectBuilder()->getOne ('users', 'id,login,createdAt
 if (key ($result) != 1 && !is_object ($result[1])) {
     echo 'map string=object failed';
     exit;
+}
+
+$expectedIDs = [
+    'users' => [5, 6, 7],
+    'products' => [6,7,8,9,10],
+];
+
+// multi-insert test with autoincrement
+foreach ($data as $name => $datas) {
+
+    // remove previous entries to ensure avoiding PRIMARY-KEY collisions here
+    $db->delete($name);
+
+    // actual insertion test
+    $ids = $db->insertMulti($name, $datas);
+
+    // check results
+    if(!$ids) {
+        echo "failed to multi-insert: ".$db->getLastQuery() ."\n". $db->getLastError();
+        exit;
+    } elseif($ids !== $expectedIDs[$name]) {
+        pretty_print($ids);
+        echo "multi-insert succeeded, but unexpected id's: ".$db->getLastQuery() ."\n". $db->getLastError();
+        exit;
+    }
+}
+
+// skip last user here, since it has other keys than the others
+unset($data['users'][2]);
+
+// multi-insert test with autoincrement and overriding column-names
+foreach ($data as $name => $datas) {
+
+    // remove previous entries to ensure avoiding PRIMARY-KEY collisions here
+    $db->delete($name);
+
+    // actual insertion test
+    if(!$db->insertMulti($name, $datas, array_keys($datas[0]))) {
+        echo "failed to multi-insert: ".$db->getLastQuery() ."\n". $db->getLastError();
+        exit;
+    }
 }
 
 ///

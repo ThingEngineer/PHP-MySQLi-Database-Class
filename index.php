@@ -118,7 +118,7 @@ if ($_GET) {
     <input type=text name='lastName' required placeholder='Last Name' value='<?php echo $data['lastName']?>'>
     <input type=password name='password' placeholder='Password'>
     <input type=submit value='New User'></td>
-<form>
+</form>
 </table>
 </center>
 </body>
