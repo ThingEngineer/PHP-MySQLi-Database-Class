@@ -261,7 +261,7 @@ class dbObject {
         $sqlData = $this->prepareData ();
         if (!$this->validate ($sqlData))
             return false;
-
+        
         $this->db->where ($this->primaryKey, $this->data[$this->primaryKey]);
         return $this->db->update ($this->dbTable, $sqlData);
     }
@@ -299,7 +299,7 @@ class dbObject {
      *
      * @return dbObject|array
      */
-    protected function byId ($id, $fields = null) {
+    private function byId ($id, $fields = null) {
         $this->db->where (MysqliDb::$prefix . $this->dbTable . '.' . $this->primaryKey, $id);
         return $this->getOne ($fields);
     }
@@ -438,6 +438,25 @@ class dbObject {
         $this->db->pageLimit = self::$pageLimit;
         $res = $this->db->paginate ($this->dbTable, $page, $fields);
         self::$totalPages = $this->db->totalPages;
+	if ($this->db->count == 0) return null;
+	    
+        foreach ($res as &$r) {
+            $this->processArrays ($r);
+            $this->data = $r;
+            $this->processAllWith ($r, false);
+            if ($this->returnType == 'Object') {
+                $item = new static ($r);
+                $item->isNew = false;
+                $objects[] = $item;
+            }
+        }
+        $this->_with = Array();
+        if ($this->returnType == 'Object')
+            return $objects;
+
+        if ($this->returnType == 'Json')
+            return json_encode ($res);
+
         return $res;
     }
 
