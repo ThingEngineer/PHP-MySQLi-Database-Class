@@ -438,7 +438,8 @@ class dbObject {
         $this->db->pageLimit = self::$pageLimit;
         $res = $this->db->paginate ($this->dbTable, $page, $fields);
         self::$totalPages = $this->db->totalPages;
-
+	if ($this->db->count == 0) return null;
+	    
         foreach ($res as &$r) {
             $this->processArrays ($r);
             $this->data = $r;
