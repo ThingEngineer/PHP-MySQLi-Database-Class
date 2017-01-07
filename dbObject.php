@@ -244,9 +244,6 @@ class dbObject {
      * @param array $data Optional update data to apply to the object
      */
     public function update ($data = null) {
-        if (empty ($this->dbFields))
-            return false;
-
         if (empty ($this->data[$this->primaryKey]))
             return false;
 
