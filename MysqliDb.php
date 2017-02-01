@@ -804,7 +804,7 @@ class MysqliDb
         $this->_stmtErrno = $stmt->errno;
         $this->reset();
 
-        return ($stmt->affected_rows > 0);
+        return ($stmt->affected_rows > -1);
     }
 
     /**
