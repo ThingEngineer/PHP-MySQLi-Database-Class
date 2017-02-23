@@ -124,6 +124,12 @@ class dbObject {
      * @return mixed
      */
     public function __set ($name, $value) {
+	if ($name === 'hidden')
+            return;
+        
+        if (property_exists ($this, 'hidden') && array_search ($name, $this->hidden) !== false)
+            return;
+	    
         $this->data[$name] = $value;
     }
 
@@ -135,8 +141,12 @@ class dbObject {
      * @return mixed
      */
     public function __get ($name) {
+        if ($name === 'hidden') /* Just in case... */
+            return null;
+        
         if (isset ($this->data[$name]) && $this->data[$name] instanceof dbObject)
-            return $this->data[$name];
+            if (property_exists ($this, 'hidden') && array_search ($name, $this->hidden) === false)
+                return $this->data[$name];
 
         if (property_exists ($this, 'relations') && isset ($this->relations[$name])) {
             $relationType = strtolower ($this->relations[$name][0]);
@@ -159,9 +169,9 @@ class dbObject {
             }
         }
 
-        if (isset ($this->data[$name])) {
-            return $this->data[$name];
-        }
+        if (isset ($this->data[$name]))
+            if (property_exists ($this, 'hidden') && array_search ($name, $this->hidden) === false)
+                return $this->data[$name];
 
         if (property_exists ($this->db, $name))
             return $this->db->$name;
