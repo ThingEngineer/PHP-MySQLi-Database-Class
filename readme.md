@@ -713,6 +713,7 @@ Please note that function returns SQL query only for debugging purposes as its e
 ```
 
 Check if table exists:
+Please note that function not work if you initialize MysqliDb using alreay connected mysqli object.
 ```php
     if ($db->tableExists ('users'))
         echo "hooray";
