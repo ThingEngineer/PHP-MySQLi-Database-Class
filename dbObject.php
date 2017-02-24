@@ -138,7 +138,7 @@ class dbObject {
      * @return mixed
      */
     public function __get ($name) {
-        if (property_exists ($this, 'hidden') && array_search ($name, $this->hidden) === false)
+        if (property_exists ($this, 'hidden') && array_search ($name, $this->hidden) !== false)
 	    return null;
 		
 	if (isset ($this->data[$name]) && $this->data[$name] instanceof dbObject)
