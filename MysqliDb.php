@@ -10,7 +10,7 @@
  * @copyright Copyright (c) 2010-2016
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      http://github.com/joshcam/PHP-MySQLi-Database-Class 
- * @version   2.7
+ * @version   2.8-master
  */
 
 class MysqliDb
@@ -136,8 +136,8 @@ class MysqliDb
      * @var string
      */
     protected $host;
-    protected $username;
-    protected $password;
+    protected $_username;
+    protected $_password;
     protected $db;
     protected $port;
     protected $charset;
@@ -244,8 +244,8 @@ class MysqliDb
             $this->host = $host;
         }
 
-        $this->username = $username;
-        $this->password = $password;
+        $this->_username = $username;
+        $this->_password = $password;
         $this->db = $db;
         $this->port = $port;
         $this->charset = $charset;
@@ -278,7 +278,7 @@ class MysqliDb
             throw new Exception('MySQL host is not set');
         }
 
-        $this->_mysqli = new mysqli($this->host, $this->username, $this->password, $this->db, $this->port);
+        $this->_mysqli = new mysqli($this->host, $this->_username, $this->_password, $this->db, $this->port);
 
         if ($this->_mysqli->connect_error) {
             throw new Exception('Connect Error ' . $this->_mysqli->connect_errno . ': ' . $this->_mysqli->connect_error, $this->_mysqli->connect_errno);
