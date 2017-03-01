@@ -278,8 +278,13 @@ class MysqliDb
             throw new Exception('MySQL host is not set');
         }
 
-        $this->_mysqli = new mysqli($this->host, $this->username, $this->password, $this->db, $this->port);
-
+	// get rid of warnings in PHP7.0.14
+        try {
+            $this->_mysqli = @new mysqli($this->host, $this->username, $this->password, $this->db, $this->port);
+        } catch (mysqli_sql_exception $e) {
+            $this->_mysqli = null;
+            throw new Exception('Connect Error ' . $this->_mysqli->connect_errno . ': ' . $this->_mysqli->connect_error, $this->_mysqli->connect_errno);
+        }
         if ($this->_mysqli->connect_error) {
             throw new Exception('Connect Error ' . $this->_mysqli->connect_errno . ': ' . $this->_mysqli->connect_error, $this->_mysqli->connect_errno);
         }
@@ -1838,7 +1843,8 @@ class MysqliDb
         }
 
         if ($this->_mysqli) {
-            $this->_mysqli->close();
+	    // get rid of warnings in PHP7.0.14
+            @$this->_mysqli->close();
             $this->_mysqli = null;
         }
     }
