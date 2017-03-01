@@ -295,6 +295,42 @@ $products = product::arraybuilder()->paginate($page);
 echo "showing $page out of " . product::$totalPages;
 
 ```
+
+###Hidden Fields
+Sometimes it's important to block some fields that can be accessed from outside the model class (for example, the user password).
+
+To block the access to certain fields using the `->` operator, you can declare the  `$hidden` array into the model class. This array holds column names that can't be accessed with the `->` operator.
+
+For example:
+
+```php
+class User extends dbObject {
+    protected $dbFields = array(
+        'username' => array('text', 'required'),
+        'password' => array('text', 'required'),
+        'is_admin' => array('bool'),
+        'token' => array('text')
+    );
+
+    protected $hidden = array(
+        'password', 'token'
+    );
+}
+```
+
+If you try to:
+```php
+echo $user->password;
+echo $user->token;
+```
+
+Will return `null`, and also:
+```php
+$user->password = "my-new-password";
+```
+
+Won't change the current `password` value.
+
 ###Examples
 
 Please look for a use examples in <a href='tests/dbObjectTests.php'>tests file</a> and test models inside the <a href='tests/models/'>test models</a> directory
