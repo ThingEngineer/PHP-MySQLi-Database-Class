@@ -465,14 +465,6 @@ $results = $db->get ('users');
 // Gives: SELECT * FROM users WHERE firstName='John' OR firstName='peter'
 ```
 
-```php
-$db->where ('firstName', 'John');
-$db->orWhere ('firstName', 'Peter');
-$results = $db->get ('users');
-// Gives: SELECT * FROM users WHERE firstName='John' OR firstName='peter'
-```
-
-
 NULL comparison:
 ```php
 $db->where ("lastName", NULL, 'IS NOT');
