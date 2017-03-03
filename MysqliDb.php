@@ -447,6 +447,7 @@ class MysqliDb
         }
 
 		if (self::$isPreview) {
+			$this->reset();
 			return $this;
 		}
 
@@ -525,6 +526,7 @@ class MysqliDb
         $stmt = $this->_buildQuery($numRows);
 
 		if (self::$isPreview) {
+			$this->reset();
 			return $this;
 		}
 
@@ -616,7 +618,12 @@ class MysqliDb
             $column . " FROM " . $this->_tableName;
         $stmt = $this->_buildQuery($numRows);
 
-        if ($this->isSubQuery || self::$isPreview) {
+        if ($this->isSubQuery) {
+            return $this;
+        }
+
+        if (self::$isPreview) {
+            $this->reset();
             return $this;
         }
 
@@ -785,6 +792,7 @@ class MysqliDb
         $stmt = $this->_buildQuery($numRows, $tableData);
 
 		if (self::$isPreview) {
+			$this->reset();
 			return $this;
 		}
 
@@ -823,6 +831,7 @@ class MysqliDb
         $stmt = $this->_buildQuery($numRows);
 
 		if (self::$isPreview) {
+			$this->reset();
 			return $this;
 		}
 
@@ -1394,6 +1403,7 @@ class MysqliDb
         $stmt = $this->_buildQuery(null, $insertData);
 
 		if (self::$isPreview) {
+			$this->reset();
 			return true;
 		}
 
