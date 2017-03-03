@@ -140,6 +140,7 @@ class MysqliDb
     protected $_password;
     protected $db;
     protected $port;
+    protected $socket;
     protected $charset;
 
     /**
@@ -225,9 +226,10 @@ class MysqliDb
      * @param string $password
      * @param string $db
      * @param int $port
+     * @param int $socket
      * @param string $charset
      */
-    public function __construct($host = null, $username = null, $password = null, $db = null, $port = null, $charset = 'utf8')
+    public function __construct($host = null, $username = null, $password = null, $db = null, $port = null, $socket = null, $charset = 'utf8')
     {
         $isSubQuery = false;
 
@@ -248,6 +250,7 @@ class MysqliDb
         $this->_password = $password;
         $this->db = $db;
         $this->port = $port;
+        $this->socket = $socket;
         $this->charset = $charset;
 
         if ($isSubQuery) {
@@ -278,7 +281,7 @@ class MysqliDb
             throw new Exception('MySQL host is not set');
         }
 
-        $this->_mysqli = new mysqli($this->host, $this->_username, $this->_password, $this->db, $this->port);
+        $this->_mysqli = new mysqli($this->host, $this->_username, $this->_password, $this->db, $this->port, $this->socket);
 
         if ($this->_mysqli->connect_error) {
             throw new Exception('Connect Error ' . $this->_mysqli->connect_errno . ': ' . $this->_mysqli->connect_error, $this->_mysqli->connect_errno);
