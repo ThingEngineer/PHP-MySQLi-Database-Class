@@ -699,6 +699,11 @@ if($db->has("users")) {
 }
 ``` 
 ### Helper methods
+Disconnect from the database:
+```php
+    $db->disconnect();
+```
+
 Reconnect in case mysql connection died:
 ```php
 if (!$db->ping())
