@@ -290,6 +290,20 @@ class MysqliDb
     }
 
     /**
+     * A method to disconnect from the database
+     *
+     * @throws Exception
+     * @return void
+     */
+    public function disconnect()
+    {
+        if (!$this->_mysqli)
+            return;
+        $this->_mysqli->close();
+        $this->_mysqli = null;
+    }
+
+    /**
      * A method to get mysqli object or create it in case needed
      * 
      * @return mysqli
