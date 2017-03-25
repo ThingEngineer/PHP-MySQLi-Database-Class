@@ -54,7 +54,7 @@ $db = new MysqliDb ('host', 'username', 'password', 'databaseName');
 
 Advanced initialization:
 ```php
-$db = new MysqliDb (Array (
+$db = new MysqliDb(array(
                 'host' => 'host',
                 'username' => 'username', 
                 'password' => 'password',
@@ -68,20 +68,20 @@ If no charset should be set charset, set it to null
 
 Also it is possible to reuse already connected mysqli object:
 ```php
-$mysqli = new mysqli ('host', 'username', 'password', 'databaseName');
-$db = new MysqliDb ($mysqli);
+$mysqli = new mysqli('host', 'username', 'password', 'databaseName');
+$db = new MysqliDb($mysqli);
 ```
 
 If no table prefix were set during object creation its possible to set it later with a separate call:
 ```php
-$db->setPrefix ('my_');
+$db->setPrefix('my_');
 ```
 
 If you need to get already created mysqliDb object from another class or function use
 ```php
     function init () {
         // db staying private here
-        $db = new MysqliDb ('host', 'username', 'password', 'databaseName');
+        $db = new MysqliDb('host', 'username', 'password', 'databaseName');
     }
     ...
     function myfunc () {
@@ -98,20 +98,20 @@ See <a href='dbObject.md'>dbObject manual for more information</a>
 ### Insert Query
 Simple example
 ```php
-$data = Array ("login" => "admin",
+$data = array("login" => "admin",
                "firstName" => "John",
                "lastName" => 'Doe'
 );
-$id = $db->insert ('users', $data);
-if($id)
+$id = $db->insert('users', $data);
+if ($id)
     echo 'user was created. Id=' . $id;
 ```
 
 Insert with functions use
 ```php
-$data = Array (
+$data = array(
 	'login' => 'admin',
-    'active' => true,
+	'active' => true,
 	'firstName' => 'John',
 	'lastName' => 'Doe',
 	'password' => $db->func('SHA1(?)',Array ("secretpassword+salt")),
@@ -123,7 +123,7 @@ $data = Array (
 	// Supported intervals [s]econd, [m]inute, [h]hour, [d]day, [M]onth, [Y]ear
 );
 
-$id = $db->insert ('users', $data);
+$id = $db->insert('users', $data);
 if ($id)
     echo 'user was created. Id=' . $id;
 else
@@ -132,7 +132,7 @@ else
 
 Insert with on duplicate key update
 ```php
-$data = Array ("login" => "admin",
+$data = array("login" => "admin",
                "firstName" => "John",
                "lastName" => 'Doe',
                "createdAt" => $db->now(),
@@ -146,12 +146,12 @@ $id = $db->insert ('users', $data);
 
 Insert multiple datasets at once
 ```php
-$data = Array(
-    Array ("login" => "admin",
+$data = array(
+    array("login" => "admin",
         "firstName" => "John",
         "lastName" => 'Doe'
     ),
-    Array ("login" => "other",
+    array("login" => "other",
         "firstName" => "Another",
         "lastName" => 'User',
         "password" => "very_cool_hash"
@@ -167,11 +167,11 @@ if(!$ids) {
 
 If all datasets only have the same keys, it can be simplified
 ```php
-$data = Array(
-    Array ("admin", "John", "Doe"),
-    Array ("other", "Another", "User")
+$data = array(
+    array("admin", "John", "Doe"),
+    array("other", "Another", "User")
 );
-$keys = Array("login", "firstName", "lastName");
+$keys = array("login", "firstName", "lastName");
 
 $ids = $db->insertMulti('users', $data, $keys);
 if(!$ids) {
@@ -186,7 +186,7 @@ if(!$ids) {
 
 ### Update Query
 ```php
-$data = Array (
+$data = array(
 	'firstName' => 'Bobby',
 	'lastName' => 'Tables',
 	'editCount' => $db->inc(2),
@@ -194,7 +194,7 @@ $data = Array (
 	'active' => $db->not()
 	// active = !active;
 );
-$db->where ('id', 1);
+$db->where('id', 1);
 if ($db->update ('users', $data))
     echo $db->count . ' records were updated';
 else
@@ -217,7 +217,7 @@ $users = $db->get('users', 10); //contains an Array 10 users
 or select with custom columns set. Functions also could be used
 
 ```php
-$cols = Array ("id", "name", "email");
+$cols = array("id", "name", "email");
 $users = $db->get ("users", null, $cols);
 if ($db->count > 0)
     foreach ($users as $user) { 
@@ -228,7 +228,7 @@ if ($db->count > 0)
 or select just one row
 
 ```php
-$db->where ("id", 1);
+$db->where("id", 1);
 $user = $db->getOne ("users");
 echo $user['id'];
 
@@ -265,7 +265,7 @@ You can also attach an optional array of options.
 Valid options are:
 
 ```php
-Array(
+array(
 	"fieldChar" => ';', 	// Char which separates the data
 	"lineChar" => '\r\n', 	// Char which separates the lines
 	"linesToIgnore" => 1	// Amount of lines to ignore at the beginning of the import
@@ -297,7 +297,7 @@ Array(
 
 Usage:
 ```php
-$options = Array("linesToIgnore" => 0, "rowTag"	=> "<user>"):
+$options = array("linesToIgnore" => 0, "rowTag"	=> "<user>"):
 $path_to_file = "/home/john/file.xml";
 $db->loadXML("users", $path_to_file, $options);
 ```
@@ -318,13 +318,13 @@ Instead of getting an pure array of results its possible to get result in an ass
 method will return result in array($k => $v) and array ($k => array ($v, $v)) in rest of the cases.
 
 ```php
-$user = $db->map ('login')->ObjectBuilder()->getOne ('users', 'login, id');
+$user = $db->map('login')->ObjectBuilder()->getOne ('users', 'login, id');
 Array
 (
     [user1] => 1
 )
 
-$user = $db->map ('login')->ObjectBuilder()->getOne ('users', 'id,login,createdAt');
+$user = $db->map('login')->ObjectBuilder()->getOne ('users', 'id,login,createdAt');
 Array
 (
     [user1] => stdClass Object
@@ -382,7 +382,7 @@ foreach ($logins as $login)
 
 More advanced examples:
 ```php
-$params = Array(1, 'admin');
+$params = array(1, 'admin');
 $users = $db->rawQuery("SELECT id, firstName, lastName FROM users WHERE id = ? AND login = ?", $params);
 print_r($users); // contains Array of returned rows
 
@@ -408,8 +408,8 @@ WARNING: In order to use column to column comparisons only raw where conditions 
 
 Regular == operator with variables:
 ```php
-$db->where ('id', 1);
-$db->where ('login', 'admin');
+$db->where('id', 1);
+$db->where('login', 'admin');
 $results = $db->get ('users');
 // Gives: SELECT * FROM users WHERE id=1 AND login='admin';
 ```
@@ -425,15 +425,15 @@ $results = $db->get ('users');
 Regular == operator with column to column comparison:
 ```php
 // WRONG
-$db->where ('lastLogin', 'createdAt');
+$db->where('lastLogin', 'createdAt');
 // CORRECT
-$db->where ('lastLogin = createdAt');
+$db->where('lastLogin = createdAt');
 $results = $db->get ('users');
 // Gives: SELECT * FROM users WHERE lastLogin = createdAt;
 ```
 
 ```php
-$db->where ('id', 50, ">=");
+$db->where('id', 50, ">=");
 // or $db->where ('id', Array ('>=' => 50));
 $results = $db->get ('users');
 // Gives: SELECT * FROM users WHERE id >= 50;
