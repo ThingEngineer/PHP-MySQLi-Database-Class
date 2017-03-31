@@ -749,7 +749,7 @@ After you executed a query you have options to check if there was an error. You 
 ```php
 $db->where('login', 'admin')->update('users', ['firstName' => 'Jack']);
 
-if ($db->getLastErrno() === 0)
+if ($db->getLastError() === 0)
     echo 'Update succesfull';
 else
     echo 'Update failed. Error: '. $db->getLastError();
