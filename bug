@@ -1,0 +1,37 @@
+hi,
+
+I think there is a bug in your script. Following, my explanation:
+I've tryed to do this:
+
+	$db->where("id", "'$login'");
+	$req = $db->getOne(DB_TABLE_USERS);
+	
+then, getOne() call get() method, then get() method call _buildQuery() method.
+Inside _buildQuery, there is a line:
+
+  $this->_lastQuery = $this->replacePlaceHolders ($this->_query, $this->_bindParams);
+
+and, following this call, _query and _lastQuery have value:
+
+  $this->_query is equals to "SELECT * FROM users WHERE   id = ?  LIMIT 1", and
+  $this->_lastQuery is equals to "SELECT * FROM users WHERE   id = 'flenain'"
+
+then, the following line inside _buildQuery:
+
+  $stmt = $this->_prepareQuery();
+
+fire an error here inside _prepareQuery:
+
+  if (!$stmt = $this->_mysqli->prepare($this->_query)) {
+
+because, $this->_query is equals to "SELECT * FROM users WHERE   id = ?  LIMIT 1", which is not a valid sql query.
+
+I guess, inside _buildQuery, the line:
+
+  $this->_lastQuery = $this->replacePlaceHolders ($this->_query, $this->_bindParams);
+
+should be:
+
+  $this->_lastQuery = $this->_query = $this->replacePlaceHolders ($this->_query, $this->_bindParams);
+
+so $this->_query will not be "SELECT * FROM users WHERE   id = ?  LIMIT 1", but "SELECT * FROM users WHERE   id = 'flenain'"
