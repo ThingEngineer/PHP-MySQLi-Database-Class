@@ -1849,23 +1849,6 @@ class MysqliDb
     }
 
     /**
-     * Close connection
-     * 
-     * @return void
-     */
-    public function __destruct()
-    {
-        if ($this->isSubQuery) {
-            return;
-        }
-
-        if ($this->_mysqli) {
-            $this->_mysqli->close();
-            $this->_mysqli = null;
-        }
-    }
-
-    /**
      * Referenced data array is required by mysqli since PHP 5.3+
      * 
      * @param array $arr
