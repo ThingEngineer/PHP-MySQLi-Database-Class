@@ -136,6 +136,7 @@ class MysqliDb
      * @var string
      */
     protected $host;
+    protected $socket;
     protected $_username;
     protected $_password;
     protected $db;
@@ -226,8 +227,9 @@ class MysqliDb
      * @param string $db
      * @param int $port
      * @param string $charset
+     * @params string $socket
      */
-    public function __construct($host = null, $username = null, $password = null, $db = null, $port = null, $charset = 'utf8')
+    public function __construct($host = null, $username = null, $password = null, $db = null, $port = null, $charset = 'utf8', $socket = null)
     {
         $isSubQuery = false;
 
@@ -240,15 +242,18 @@ class MysqliDb
         // if host were set as mysqli socket
         if (is_object($host)) {
             $this->_mysqli = $host;
-        } else {
-            $this->host = $host;
-        }
+        } else
+            // in case of using socket & host not exists in config array
+            if(is_string($host)) {
+                $this->host = $host;
+            }
 
         $this->_username = $username;
         $this->_password = $password;
         $this->db = $db;
         $this->port = $port;
         $this->charset = $charset;
+        $this->socket = $socket;
 
         if ($isSubQuery) {
             $this->isSubQuery = true;
@@ -274,11 +279,11 @@ class MysqliDb
             return;
         }
 
-        if (empty($this->host)) {
-            throw new Exception('MySQL host is not set');
+        if (empty($this->host) && empty($this->socket)) {
+            throw new Exception('MySQL host or socket is not set');
         }
 
-        $this->_mysqli = new mysqli($this->host, $this->_username, $this->_password, $this->db, $this->port);
+        $this->_mysqli = new mysqli($this->host, $this->_username, $this->_password, $this->db, $this->port, $this->socket);
 
         if ($this->_mysqli->connect_error) {
             throw new Exception('Connect Error ' . $this->_mysqli->connect_errno . ': ' . $this->_mysqli->connect_error, $this->_mysqli->connect_errno);
