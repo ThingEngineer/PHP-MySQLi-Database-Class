@@ -774,7 +774,7 @@ class MysqliDb
      * @param array  $tableData Array of data to update the desired row.
      * @param int    $numRows   Limit on the number of rows that can be updated.
      *
-     * @return bool
+     * @return int 
      */
     public function update($tableName, $tableData, $numRows = null)
     {
@@ -791,7 +791,7 @@ class MysqliDb
         $this->_stmtErrno = $stmt->errno;
         $this->count = $stmt->affected_rows;
 
-        return $status;
+        return $this->count;
     }
 
     /**
