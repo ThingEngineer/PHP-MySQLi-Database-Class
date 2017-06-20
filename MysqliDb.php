@@ -934,7 +934,7 @@ class MysqliDb
      * This method allows you to concatenate joins for the final SQL statement.
      *
      * @uses $MySqliDb->join('table1', 'field1 <> field2', 'LEFT')
-     * @uses $MySqliDb->join('table1') 
+     * @uses $MySqliDb->join('table1')
      *
      * @param string $joinTable The name of the table.
      * @param string $joinCondition the condition.
@@ -947,19 +947,16 @@ class MysqliDb
     {
         $allowedTypes = array('NATURAL', 'LEFT', 'RIGHT', 'OUTER', 'INNER', 'LEFT OUTER', 'RIGHT OUTER');
         $joinType = strtoupper(trim($joinType));
-
         if ($joinType && !in_array($joinType, $allowedTypes)) {
             throw new Exception('Wrong JOIN type: ' . $joinType);
         }
-
         if (!is_object($joinTable)) {
             $joinTable = self::$prefix . $joinTable;
         }
-
         $this->_join[] = Array($joinType, $joinTable, $joinCondition);
-
         return $this;
     }
+
 
 
 	/**
