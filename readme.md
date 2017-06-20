@@ -600,6 +600,14 @@ print_r ($products);
 // Gives: SELECT  u.login, p.productName FROM products p LEFT JOIN users u ON (p.tenantID=u.tenantID OR u.tenantID = 5)
 ```
 
+### NATURAL JOIN method
+```php
+$db->join("users");
+$products = $db->get ("products");
+print_r ($products);
+// Gives: SELECT * FROM products NATURAL JOIN users
+```
+
 ### Properties sharing
 Its is also possible to copy properties
 
