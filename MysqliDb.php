@@ -934,6 +934,7 @@ class MysqliDb
      * This method allows you to concatenate joins for the final SQL statement.
      *
      * @uses $MySqliDb->join('table1', 'field1 <> field2', 'LEFT')
+     * @uses $MySqliDb->join('table1') 
      *
      * @param string $joinTable The name of the table.
      * @param string $joinCondition the condition.

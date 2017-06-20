@@ -56,7 +56,7 @@ Advanced initialization:
 ```php
 $db = new MysqliDb (Array (
                 'host' => 'host',
-                'username' => 'username', 
+                'username' => 'username',
                 'password' => 'password',
                 'db'=> 'databaseName',
                 'port' => 3306,
@@ -210,7 +210,7 @@ $db->update ('users', $data, 10);
 ### Select Query
 After any select/get function calls amount or returned rows is stored in $count variable
 ```php
-$users = $db->get('users'); //contains an Array of all users 
+$users = $db->get('users'); //contains an Array of all users
 $users = $db->get('users', 10); //contains an Array 10 users
 ```
 
@@ -220,7 +220,7 @@ or select with custom columns set. Functions also could be used
 $cols = Array ("id", "name", "email");
 $users = $db->get ("users", null, $cols);
 if ($db->count > 0)
-    foreach ($users as $user) { 
+    foreach ($users as $user) {
         print_r ($user);
     }
 ```
@@ -393,7 +393,7 @@ $q = "(
         WHERE a = ? AND B = ?
         ORDER BY a LIMIT ?
 ) UNION (
-    SELECT a FROM t2 
+    SELECT a FROM t2
         WHERE a = ? AND B = ?
         ORDER BY a LIMIT ?
 )";
@@ -600,6 +600,14 @@ print_r ($products);
 // Gives: SELECT  u.login, p.productName FROM products p LEFT JOIN users u ON (p.tenantID=u.tenantID OR u.tenantID = 5)
 ```
 
+NATURAL JOIN statement
+```php
+$db->join("users");
+$products = $db->get ("products");
+print_r ($products);
+// Gives: SELECT * FROM products NATURAL JOIN users
+```
+
 ### Properties sharing
 Its is also possible to copy properties
 
@@ -624,7 +632,7 @@ Subquery init without an alias to use in inserts/updates/where Eg. (select * fro
 $sq = $db->subQuery();
 $sq->get ("users");
 ```
- 
+
 A subquery with an alias specified to use in JOINs . Eg. (select * from users) sq
 ```php
 $sq = $db->subQuery("sq");
@@ -689,7 +697,7 @@ if($db->has("users")) {
 } else {
     return "Wrong user/password";
 }
-``` 
+```
 ### Helper methods
 Disconnect from the database:
 ```php
@@ -737,7 +745,7 @@ if (!$db->insert ('myTable', $insertData)) {
 
 
 ### Error helpers
-After you executed a query you have options to check if there was an error. You can get the MySQL error string or the error code for the last executed query. 
+After you executed a query you have options to check if there was an error. You can get the MySQL error string or the error code for the last executed query.
 ```php
 $db->where('login', 'admin')->update('users', ['firstName' => 'Jack']);
 
@@ -776,7 +784,7 @@ print_r ($db->trace);
 ```
 
 ##Table Locking
-To lock tables, you can use the **lock** method together with **setLockMethod**. 
+To lock tables, you can use the **lock** method together with **setLockMethod**.
 The following example will lock the table **users** for **write** access.
 ```php
 $db->setLockMethod("WRITE")->lock("users");
@@ -795,4 +803,3 @@ $db->setLockMethod("READ")->lock(array("users", "log"));
 ```
 This will lock the tables **users** and **log** for **READ** access only.
 Make sure you use **unlock()* afterwards or your tables will remain locked!
-
