@@ -245,7 +245,6 @@ class MysqliDb
     public function __construct($host = null, $username = null, $password = null, $db = null, $port = null, $charset = 'utf8', $socket = null)
     {
         $isSubQuery = false;
-        $profile = ['host' => null];
 
         // if params were passed as array
         if (is_array($host)) {
@@ -253,16 +252,9 @@ class MysqliDb
                 $$key = $val;
             }
         }
-        // if host were set as mysqli socket
-        if (is_object($host)) {
-            $this->_mysqli[self::$defConnectionName] = $host;
-        }
-        // in case of using socket & host not exists in config array
-        if (is_string($host)) {
-            $profile['host'] = $host;
-        }
 
-        $this->connectionsSettings[self::$defConnectionName] = array_merge($profile, [
+        $this->addConnection(self::$defConnectionName, [
+            'host' => $host,
             'username' => $username,
             'password' => $password,
             'db' => $db,
@@ -373,12 +365,24 @@ class MysqliDb
      * Create & store at _mysqli new mysqli instance
      * @param string $name
      * @param array $params
+     * @return $this
      */
     public function addConnection($name, array $params)
     {
         $this->connectionsSettings[$name] = [];
-        foreach (['host', 'username', 'password', 'db', 'port', 'socket', 'charset'] as $k)
-            $this->connectionsSettings[$name][$k] = isset($params[$k]) ? $params[$k] : null;
+        foreach (['host', 'username', 'password', 'db', 'port', 'socket', 'charset'] as $k) {
+            $prm = isset($params[$k]) ? $params[$k] : null;
+
+            if ($k == 'host') {
+                if (is_object($prm))
+                    $this->_mysqli[$name] = $prm;
+
+                if (!is_string($prm))
+                    $prm = null;
+            }
+            $this->connectionsSettings[$name][$k] = $prm;
+        }
+        return $this;
     }
 
     /**
@@ -438,6 +442,7 @@ class MysqliDb
         $this->_updateColumns = null;
         $this->_mapKey = null;
         $this->useConnection = null;
+        return $this;
     }
 
     /**
