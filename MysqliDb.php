@@ -1155,20 +1155,20 @@ class MysqliDb
     /**
      * This method allows you to specify multiple (method chaining optional) ORDER BY statements for SQL queries.
      *
-     * @uses $MySqliDb->orderBy('id', 'desc')->orderBy('name', 'desc');
+     * @uses $MySqliDb->orderBy('id', 'desc')->orderBy('name', 'desc', '^[a-z]')->orderBy('name', 'desc');
      *
      * @param string $orderByField The name of the database field.
      * @param string $orderByDirection Order direction.
-     * @param array $customFields Fieldset for ORDER BY FIELD() ordering
+     * @param mixed $customFieldsOrRegExp Array with fieldset for ORDER BY FIELD() ordering or string with regular expresion for ORDER BY REGEXP ordering
      * 
      * @throws Exception
      * @return MysqliDb
      */
-    public function orderBy($orderByField, $orderbyDirection = "DESC", $customFields = null)
+    public function orderBy($orderByField, $orderbyDirection = "DESC", $customFieldsOrRegExp = null)
     {
         $allowedDirection = Array("ASC", "DESC");
         $orderbyDirection = strtoupper(trim($orderbyDirection));
-        $orderByField = preg_replace("/[^-a-z0-9\.\(\),_`\*\'\"]+/i", '', $orderByField);
+        $orderByField = preg_replace("/[^ -a-z0-9\.\(\),_`\*\'\"]+/i", '', $orderByField);
 
         // Add table prefix to orderByField if needed.
         //FIXME: We are adding prefix only if table is enclosed into `` to distinguish aliases
@@ -1180,13 +1180,16 @@ class MysqliDb
             throw new Exception('Wrong order direction: ' . $orderbyDirection);
         }
 
-        if (is_array($customFields)) {
-            foreach ($customFields as $key => $value) {
-                $customFields[$key] = preg_replace("/[^-a-z0-9\.\(\),_` ]+/i", '', $value);
+        if (is_array($customFieldsOrRegExp)) {
+            foreach ($customFieldsOrRegExp as $key => $value) {
+                $customFieldsOrRegExp[$key] = preg_replace("/[^-a-z0-9\.\(\),_` ]+/i", '', $value);
             }
-
-            $orderByField = 'FIELD (' . $orderByField . ', "' . implode('","', $customFields) . '")';
-        }
+            $orderByField = 'FIELD (' . $orderByField . ', "' . implode('","', $customFieldsOrRegExp) . '")';
+        }elseif(is_string($customFieldsOrRegExp)){
+	    $orderByField = $orderByField . " REGEXP '" . $customFieldsOrRegExp . "'";
+	}elseif($customFieldsOrRegExp !== null){
+	    throw new Exception('Wrong custom field or Regular Expression: ' . $customFieldsOrRegExp);
+	}
 
         $this->_orderBy[$orderByField] = $orderbyDirection;
         return $this;
@@ -1919,20 +1922,6 @@ class MysqliDb
         }
 
         return $stmt;
-    }
-
-    /**
-     * Close connection
-     * 
-     * @return void
-     */
-    public function __destruct()
-    {
-        if ($this->isSubQuery) {
-            return;
-        }
-
-        $this->disconnectAll();
     }
 
     /**
