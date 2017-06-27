@@ -227,11 +227,7 @@ class MysqliDb
     /**
      * @var string the name of a default (main) mysqli connection
      */
-    public static $defConnectionName = 'default';
-    /**
-     * @var string|null the connection name to use in next query
-     */
-    protected $useConnection = null;
+    public $defConnectionName = 'default';
 
     /**
      * @param string $host
@@ -253,7 +249,7 @@ class MysqliDb
             }
         }
 
-        $this->addConnection(self::$defConnectionName, [
+        $this->addConnection('default', [
             'host' => $host,
             'username' => $username,
             'password' => $password,
@@ -282,17 +278,12 @@ class MysqliDb
      * @throws Exception
      * @return void
      */
-    public function connect($connectionName = null)
+    public function connect($connectionName)
     {
-        if ($connectionName === null)
-            $connectionName = self::$defConnectionName;
-
-        $pro = $this->connectionsSettings[$connectionName];
-
-        if (empty($pro)) {
+        if(!isset($this->connectionsSettings[$connectionName]))
             throw new Exception('Connection profile not set');
-        }
-
+        
+        $pro = $this->connectionsSettings[$connectionName];
         $params = array_values($pro);
         $charset = array_pop($params);
 
@@ -330,30 +321,24 @@ class MysqliDb
      * @return $this
      * @throws Exception
      */
-    public function connection($name = null)
+    public function connection($name)
     {
-        if ($name === null)
-            $name = self::$defConnectionName;
-
-        if (!in_array($name, array_keys($this->connectionsSettings)))
+        if (!isset($this->connectionsSettings[$name]))
             throw new Exception('Connection ' . $name . ' was not added.');
 
-        $this->useConnection = $name;
+        $this->defConnectionName = $name;
         return $this;
     }
 
     /**
      * A method to disconnect from the database
      *
-     * @params string|null $connection connection name to disconnect
+     * @params string $connection connection name to disconnect
      * @throws Exception
      * @return void
      */
-    public function disconnect($connection = null)
+    public function disconnect($connection = 'default')
     {
-        if (!$connection)
-            $connection = self::$defConnectionName;
-
         if (!isset($this->_mysqli[$connection]))
             return;
 
@@ -392,11 +377,10 @@ class MysqliDb
      */
     public function mysqli()
     {
-        $p = $this->useConnection ?: self::$defConnectionName;
-        if (!isset($this->_mysqli[$p])) {
-            $this->connect($p);
+        if (!isset($this->_mysqli[$this->defConnectionName])) {
+            $this->connect($this->defConnectionName);
         }
-        return $this->_mysqli[$p];
+        return $this->_mysqli[$this->defConnectionName];
     }
 
     /**
@@ -441,7 +425,7 @@ class MysqliDb
         $this->_lastInsertId = null;
         $this->_updateColumns = null;
         $this->_mapKey = null;
-        $this->useConnection = null;
+        $this->defConnectionName = 'default';
         return $this;
     }
 
@@ -2000,7 +1984,7 @@ class MysqliDb
      */
     public function getLastError()
     {
-        if (!$this->_mysqli[self::$defConnectionName]) {
+        if (!isset($this->_mysqli[$this->defConnectionName])) {
             return "mysqli is null";
         }
         return trim($this->_stmtError . " " . $this->mysqli()->error);
