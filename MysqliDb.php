@@ -132,18 +132,6 @@ class MysqliDb
     protected $_stmtErrno;
 
     /**
-     * Database credentials
-     * @var string
-     */
-    protected $host;
-    protected $socket;
-    protected $_username;
-    protected $_password;
-    protected $db;
-    protected $port;
-    protected $charset;
-
-    /**
      * Is Subquery object
      * @var bool
      */
@@ -2013,7 +2001,7 @@ class MysqliDb
         array_shift($this->_bindParams);
         $val = Array('query' => $this->_query,
             'params' => $this->_bindParams,
-            'alias' => $this->host
+            'alias' => isset($this->connectionsSettings[$this->defConnectionName]) ? $this->connectionsSettings[$this->defConnectionName]['host'] : null
         );
         $this->reset();
         return $val;
@@ -2261,7 +2249,8 @@ class MysqliDb
 
         foreach ($tables as $i => $value)
             $tables[$i] = self::$prefix . $value;
-        $this->where('table_schema', $this->db);
+        $db = isset($this->connectionsSettings[$this->defConnectionName]) ? $this->connectionsSettings[$this->defConnectionName]['db'] : null;
+        $this->where('table_schema', $db);
         $this->where('table_name', $tables, 'in');
         $this->get('information_schema.tables', $count);
         return $this->count == $count;
