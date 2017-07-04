@@ -29,10 +29,10 @@ class MysqliDb
     public static $prefix = '';
 
     /**
-     * MySQLi instance
-     * @var mysqli
+     * MySQLi instances
+     * @var mysqli[]
      */
-    protected $_mysqli;
+    protected $_mysqli = [];
 
     /**
      * The SQL query to be prepared and executed
@@ -132,18 +132,6 @@ class MysqliDb
     protected $_stmtErrno;
 
     /**
-     * Database credentials
-     * @var string
-     */
-    protected $host;
-    protected $socket;
-    protected $_username;
-    protected $_password;
-    protected $db;
-    protected $port;
-    protected $charset;
-
-    /**
      * Is Subquery object
      * @var bool
      */
@@ -221,13 +209,22 @@ class MysqliDb
     public $totalPages = 0;
 
     /**
+     * @var array connections settings [profile_name=>[same_as_contruct_args]]
+     */
+    protected $connectionsSettings = [];
+    /**
+     * @var string the name of a default (main) mysqli connection
+     */
+    public $defConnectionName = 'default';
+
+    /**
      * @param string $host
      * @param string $username
      * @param string $password
      * @param string $db
      * @param int $port
      * @param string $charset
-     * @params string $socket
+     * @param string $socket
      */
     public function __construct($host = null, $username = null, $password = null, $db = null, $port = null, $charset = 'utf8', $socket = null)
     {
@@ -239,21 +236,16 @@ class MysqliDb
                 $$key = $val;
             }
         }
-        // if host were set as mysqli socket
-        if (is_object($host)) {
-            $this->_mysqli = $host;
-        } else
-            // in case of using socket & host not exists in config array
-            if(is_string($host)) {
-                $this->host = $host;
-            }
 
-        $this->_username = $username;
-        $this->_password = $password;
-        $this->db = $db;
-        $this->port = $port;
-        $this->charset = $charset;
-        $this->socket = $socket;
+        $this->addConnection('default', [
+            'host' => $host,
+            'username' => $username,
+            'password' => $password,
+            'db' => $db,
+            'port' => $port,
+            'socket' => $socket,
+            'charset' => $charset
+        ]);
 
         if ($isSubQuery) {
             $this->isSubQuery = true;
@@ -269,43 +261,101 @@ class MysqliDb
 
     /**
      * A method to connect to the database
-     * 
+     *
+     * @param null|string $connectionName
      * @throws Exception
      * @return void
      */
-    public function connect()
+    public function connect($connectionName)
     {
+        if(!isset($this->connectionsSettings[$connectionName]))
+            throw new Exception('Connection profile not set');
+        
+        $pro = $this->connectionsSettings[$connectionName];
+        $params = array_values($pro);
+        $charset = array_pop($params);
+
         if ($this->isSubQuery) {
             return;
         }
 
-        if (empty($this->host) && empty($this->socket)) {
+        if (empty($pro['host']) && empty($pro['socket'])) {
             throw new Exception('MySQL host or socket is not set');
         }
 
-        $this->_mysqli = new mysqli($this->host, $this->_username, $this->_password, $this->db, $this->port, $this->socket);
+        $mysqlic = new ReflectionClass('mysqli');
+        $mysqli = $mysqlic->newInstanceArgs($params);
 
-        if ($this->_mysqli->connect_error) {
-            throw new Exception('Connect Error ' . $this->_mysqli->connect_errno . ': ' . $this->_mysqli->connect_error, $this->_mysqli->connect_errno);
+        if ($mysqli->connect_error) {
+            throw new Exception('Connect Error ' . $mysqli->connect_errno . ': ' . $mysqli->connect_error, $mysqli->connect_errno);
         }
 
-        if ($this->charset) {
-            $this->_mysqli->set_charset($this->charset);
+        if (!empty($charset)) {
+            $mysqli->set_charset($charset);
         }
+        $this->_mysqli[$connectionName] = $mysqli;
+    }
+
+    public function disconnectAll()
+    {
+        foreach (array_keys($this->_mysqli) as $k) {
+            $this->disconnect($k);
+        }
+    }
+
+    /**
+     * Set the connection name to use in the next query
+     * @param string $name
+     * @return $this
+     * @throws Exception
+     */
+    public function connection($name)
+    {
+        if (!isset($this->connectionsSettings[$name]))
+            throw new Exception('Connection ' . $name . ' was not added.');
+
+        $this->defConnectionName = $name;
+        return $this;
     }
 
     /**
      * A method to disconnect from the database
      *
+     * @params string $connection connection name to disconnect
      * @throws Exception
      * @return void
      */
-    public function disconnect()
+    public function disconnect($connection = 'default')
     {
-        if (!$this->_mysqli)
+        if (!isset($this->_mysqli[$connection]))
             return;
-        $this->_mysqli->close();
-        $this->_mysqli = null;
+
+        $this->_mysqli[$connection]->close();
+        unset($this->_mysqli[$connection]);
+    }
+
+    /**
+     * Create & store at _mysqli new mysqli instance
+     * @param string $name
+     * @param array $params
+     * @return $this
+     */
+    public function addConnection($name, array $params)
+    {
+        $this->connectionsSettings[$name] = [];
+        foreach (['host', 'username', 'password', 'db', 'port', 'socket', 'charset'] as $k) {
+            $prm = isset($params[$k]) ? $params[$k] : null;
+
+            if ($k == 'host') {
+                if (is_object($prm))
+                    $this->_mysqli[$name] = $prm;
+
+                if (!is_string($prm))
+                    $prm = null;
+            }
+            $this->connectionsSettings[$name][$k] = $prm;
+        }
+        return $this;
     }
 
     /**
@@ -315,10 +365,10 @@ class MysqliDb
      */
     public function mysqli()
     {
-        if (!$this->_mysqli) {
-            $this->connect();
+        if (!isset($this->_mysqli[$this->defConnectionName])) {
+            $this->connect($this->defConnectionName);
         }
-        return $this->_mysqli;
+        return $this->_mysqli[$this->defConnectionName];
     }
 
     /**
@@ -363,6 +413,8 @@ class MysqliDb
         $this->_lastInsertId = null;
         $this->_updateColumns = null;
         $this->_mapKey = null;
+        $this->defConnectionName = 'default';
+        return $this;
     }
 
     /**
@@ -1831,6 +1883,7 @@ class MysqliDb
      * and throws an error if there was a problem.
      *
      * @return mysqli_stmt
+     * @throws Exception
      */
     protected function _prepareQuery()
     {
@@ -1919,7 +1972,7 @@ class MysqliDb
      */
     public function getLastError()
     {
-        if (!$this->_mysqli) {
+        if (!isset($this->_mysqli[$this->defConnectionName])) {
             return "mysqli is null";
         }
         return trim($this->_stmtError . " " . $this->mysqli()->error);
@@ -1948,7 +2001,7 @@ class MysqliDb
         array_shift($this->_bindParams);
         $val = Array('query' => $this->_query,
             'params' => $this->_bindParams,
-            'alias' => $this->host
+            'alias' => isset($this->connectionsSettings[$this->defConnectionName]) ? $this->connectionsSettings[$this->defConnectionName]['host'] : null
         );
         $this->reset();
         return $val;
@@ -2088,7 +2141,7 @@ class MysqliDb
     public function copy()
     {
         $copy = unserialize(serialize($this));
-        $copy->_mysqli = null;
+        $copy->_mysqli = [];
         return $copy;
     }
 
@@ -2196,7 +2249,8 @@ class MysqliDb
 
         foreach ($tables as $i => $value)
             $tables[$i] = self::$prefix . $value;
-        $this->where('table_schema', $this->db);
+        $db = isset($this->connectionsSettings[$this->defConnectionName]) ? $this->connectionsSettings[$this->defConnectionName]['db'] : null;
+        $this->where('table_schema', $db);
         $this->where('table_name', $tables, 'in');
         $this->get('information_schema.tables', $count);
         return $this->count == $count;
