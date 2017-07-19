@@ -48,7 +48,7 @@ class MysqliDb
 
     /**
      * The SQL query options required after SELECT, INSERT, UPDATE or DELETE
-     * @var string
+     * @var array
      */
     protected $_queryOptions = array();
 
@@ -216,6 +216,8 @@ class MysqliDb
      * @var string the name of a default (main) mysqli connection
      */
     public $defConnectionName = 'default';
+    
+    public $autoReconnect = true;
 
     /**
      * @param string $host
@@ -477,15 +479,20 @@ class MysqliDb
 		// Execute query
 		$stmt = $this->mysqli()->query($query);
 
-		// Failed?
-		if(!$stmt){
-			throw new Exception("Unprepared Query Failed, ERRNO: ".$this->mysqli()->errno." (".$this->mysqli()->error.")", $this->mysqli()->errno);
-		};
-		
-		// return stmt for future use
-		return $stmt;
-	}
-	
+        // Failed?
+        if(!$stmt){
+            if ($this->mysqli()->errno === 2006 && $this->autoReconnect === true) {
+                $this->connect($this->defConnectionName);
+                $this->mysqli()->query($query);
+            } else {
+                throw new Exception("Unprepared Query Failed, ERRNO: " . $this->mysqli()->errno . " (" . $this->mysqli()->error . ")", $this->mysqli()->errno);
+            }
+        };
+
+        // return stmt for future use
+        return $stmt;
+    }
+
     /**
      * Execute raw SQL query.
      *
@@ -811,7 +818,7 @@ class MysqliDb
      *
      * @param string  $tableName The name of the database table to work with.
      *
-     * @return array Contains the returned rows from the select query.
+     * @return bool
      */
     public function has($tableName)
     {
@@ -1887,11 +1894,19 @@ class MysqliDb
      */
     protected function _prepareQuery()
     {
-        if (!$stmt = $this->mysqli()->prepare($this->_query)) {
-            $msg = $this->mysqli()->error . " query: " . $this->_query;
-            $num = $this->mysqli()->errno;
-            $this->reset();
-            throw new Exception($msg, $num);
+        $stmt = $this->mysqli()->prepare($this->_query);
+        
+        if(!$stmt) {
+            // Server has gone away
+            if($this->mysqli()->errno === 2006 && $this->autoReconnect === true) {
+                $this->connect($this->defConnectionName);
+                $stmt = $this->mysqli()->prepare($this->_query);
+            } else {
+                $msg = $this->mysqli()->error . " query: " . $this->_query;
+                $num = $this->mysqli()->errno;
+                $this->reset();
+                throw new Exception($msg, $num);
+            }
         }
 
         if ($this->traceEnabled) {
@@ -2019,6 +2034,7 @@ class MysqliDb
      * @param string $func Initial date
      *
      * @return string
+     * @throws Exception
      */
     public function interval($diff, $func = "NOW()")
     {
@@ -2087,6 +2103,7 @@ class MysqliDb
      * @param int $num increment by int or float. 1 by default
      * 
      * @return array
+     * @throws Exception
      */
     public function dec($num = 1)
     {
@@ -2296,7 +2313,7 @@ class MysqliDb
      * @param string $whereProp  The name of the database field.
      * @param mixed  $whereValue The value of the database field.
      *
-     * @return dbWrapper
+     * @return $this
      */
     public function joinWhere($whereJoin, $whereProp, $whereValue = 'DBNULL', $operator = '=', $cond = 'AND')
     {
