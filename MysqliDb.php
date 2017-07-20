@@ -218,6 +218,7 @@ class MysqliDb
     public $defConnectionName = 'default';
     
     public $autoReconnect = true;
+    protected $arCnt = 0;
 
     /**
      * @param string $host
@@ -481,9 +482,10 @@ class MysqliDb
 
         // Failed?
         if(!$stmt){
-            if ($this->mysqli()->errno === 2006 && $this->autoReconnect === true) {
+            if ($this->mysqli()->errno === 2006 && $this->autoReconnect === true && $this->arCnt === 0) {
                 $this->connect($this->defConnectionName);
                 $this->mysqli()->query($query);
+                $this->arCnt++;
             } else {
                 throw new Exception("Unprepared Query Failed, ERRNO: " . $this->mysqli()->errno . " (" . $this->mysqli()->error . ")", $this->mysqli()->errno);
             }
@@ -1898,9 +1900,10 @@ class MysqliDb
         
         if(!$stmt) {
             // Server has gone away
-            if($this->mysqli()->errno === 2006 && $this->autoReconnect === true) {
+            if($this->mysqli()->errno === 2006 && $this->autoReconnect === true && $this->arCnt === 0) {
                 $this->connect($this->defConnectionName);
                 $stmt = $this->mysqli()->prepare($this->_query);
+                $this->arCnt++;
             } else {
                 $msg = $this->mysqli()->error . " query: " . $this->_query;
                 $num = $this->mysqli()->errno;
