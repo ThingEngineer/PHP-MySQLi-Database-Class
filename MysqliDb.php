@@ -484,7 +484,7 @@ class MysqliDb
         if(!$stmt){
             if ($this->mysqli()->errno === 2006 && $this->autoReconnect === true && $this->arCnt === 0) {
                 $this->connect($this->defConnectionName);
-                $this->mysqli()->query($query);
+                $stmt = $this->mysqli()->query($query);
                 $this->arCnt++;
             } else {
                 throw new Exception("Unprepared Query Failed, ERRNO: " . $this->mysqli()->errno . " (" . $this->mysqli()->error . ")", $this->mysqli()->errno);
