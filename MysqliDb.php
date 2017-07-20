@@ -218,7 +218,7 @@ class MysqliDb
     public $defConnectionName = 'default';
     
     public $autoReconnect = true;
-    protected $arCnt = 0;
+    protected $autoReconnectCount = 0;
 
     /**
      * @param string $host
@@ -417,6 +417,7 @@ class MysqliDb
         $this->_updateColumns = null;
         $this->_mapKey = null;
         $this->defConnectionName = 'default';
+        $this->autoReconnectCount = 0;
         return $this;
     }
 
@@ -476,23 +477,21 @@ class MysqliDb
 	 * @param [[Type]] $query [[Description]]
 	 */
 	private function queryUnprepared($query)
-	{	
-		// Execute query
-		$stmt = $this->mysqli()->query($query);
+	{
+        // Execute query
+        $stmt = $this->mysqli()->query($query);
 
         // Failed?
-        if(!$stmt){
-            if ($this->mysqli()->errno === 2006 && $this->autoReconnect === true && $this->arCnt === 0) {
-                $this->connect($this->defConnectionName);
-                $stmt = $this->mysqli()->query($query);
-                $this->arCnt++;
-            } else {
-                throw new Exception("Unprepared Query Failed, ERRNO: " . $this->mysqli()->errno . " (" . $this->mysqli()->error . ")", $this->mysqli()->errno);
-            }
-        };
+        if ($stmt !== false)
+            return $stmt;
 
-        // return stmt for future use
-        return $stmt;
+        if ($this->mysqli()->errno === 2006 && $this->autoReconnect === true && $this->autoReconnectCount === 0) {
+            $this->connect($this->defConnectionName);
+            $this->autoReconnectCount++;
+            return $this->queryUnprepared($query);
+        }
+
+        throw new Exception(sprintf('Unprepared Query Failed, ERRNO: %u (%s)', $this->mysqli()->errno, $this->mysqli()->error), $this->mysqli()->errno);
     }
 
     /**
@@ -1897,21 +1896,20 @@ class MysqliDb
     protected function _prepareQuery()
     {
         $stmt = $this->mysqli()->prepare($this->_query);
-        
-        if(!$stmt) {
-            // Server has gone away
-            if($this->mysqli()->errno === 2006 && $this->autoReconnect === true && $this->arCnt === 0) {
-                $this->connect($this->defConnectionName);
-                $stmt = $this->mysqli()->prepare($this->_query);
-                $this->arCnt++;
-            } else {
-                $msg = $this->mysqli()->error . " query: " . $this->_query;
-                $num = $this->mysqli()->errno;
-                $this->reset();
-                throw new Exception($msg, $num);
-            }
-        }
 
+        if ($stmt !== false)
+            goto release;
+
+        if ($this->mysqli()->errno === 2006 && $this->autoReconnect === true && $this->autoReconnectCount === 0) {
+            $this->connect($this->defConnectionName);
+            $this->autoReconnectCount++;
+            return $this->_prepareQuery();
+        }
+        
+        $this->reset();
+        throw new Exception(sprintf('%s query: %s', $this->mysqli()->error, $this->_query), $this->mysqli()->errno);
+
+        release:
         if ($this->traceEnabled) {
             $this->traceStartQ = microtime(true);
         }
