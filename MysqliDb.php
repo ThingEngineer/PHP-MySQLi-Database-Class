@@ -2404,6 +2404,72 @@ class MysqliDb
                     $this->_query .= $this->_buildPair ($operator, $val);
         }
     }
+    
+    /**
+     * MySQL aggregate function AVERAGE
+     * @param String $tableName
+     * @param String $fieldName
+     */
+    public function average($tableName, $fieldName) 
+    {
+        $res = $this->getOne($tableName, "AVG({$fieldName}) as aaavg");
+        return $res['aaavg'];
+    }    
+
+    /**
+     * MySQL aggregate function COUNT
+     * @param String $tableName
+     * @param String $fieldName
+     */
+    public function count($tableName, $fieldName) 
+    {
+        $res = $this->getOne($tableName, "COUNT({$fieldName}) as cccount");
+        return $res['cccount'];
+    }    
+
+    /**
+     * MySQL aggregate function DISTINCT
+     * @param String $tableName
+     * @param String $fieldName
+     */
+    public function distinct($tableName, $fieldName) 
+    {
+        $res = $this->get($tableName, null, "DISTINCT({$fieldName})");
+        return $res;
+    }    
+
+    /**
+     * MySQL aggregate function MAX
+     * @param String $tableName
+     * @param String $fieldName
+     */
+    public function max($tableName, $fieldName) 
+    {
+        $res = $this->getOne($tableName, "MAX({$fieldName}) as mmmax");
+        return $res['mmmax'];
+    }    
+
+    /**
+     * MySQL aggregate function MIN
+     * @param String $tableName
+     * @param String $fieldName
+     */
+    public function min($tableName, $fieldName) 
+    {
+        $res = $this->getOne($tableName, "MIN({$fieldName}) as mmmin");
+        return $res['mmmin'];
+    }    
+
+    /**
+     * MySQL aggregate function SUM
+     * @param String $tableName
+     * @param String $fieldName
+     */
+    public function sum($tableName, $fieldName) 
+    {
+        $res = $this->getOne($tableName, "SUM({$fieldName}) as sssum");
+        return $res['sssum'];
+    }    
 }
 
 // END class
