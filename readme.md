@@ -78,6 +78,12 @@ If no table prefix were set during object creation its possible to set it later 
 $db->setPrefix ('my_');
 ```
 
+If connection to mysql will be dropped Mysqlidb will try to automatically reconnect to the database once. 
+To disable this behavoir use
+```php
+$db->autoReconnect = false;
+```
+
 If you need to get already created mysqliDb object from another class or function use
 ```php
     function init () {
@@ -90,6 +96,24 @@ If you need to get already created mysqliDb object from another class or functio
         $db = MysqliDb::getInstance();
         ...
     }
+```
+
+### Multiple database connection
+If you need to connect to multiple databases use following method:
+```php
+$db->addConnection('slave', Array (
+                'host' => 'host',
+                'username' => 'username',
+                'password' => 'password',
+                'db'=> 'databaseName',
+                'port' => 3306,
+                'prefix' => 'my_',
+                'charset' => 'utf8')
+);
+```
+To select database use connection() method
+```php
+$users = $db->connection('slave')->get('users');
 ```
 
 ### Objects mapping
