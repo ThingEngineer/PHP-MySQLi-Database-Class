@@ -1,5 +1,6 @@
 MysqliDb -- Simple MySQLi wrapper and object mapper with prepared statements
 <hr>
+
 ### Table of Contents
 
 **[Initialization](#initialization)**  
@@ -253,7 +254,7 @@ foreach ($logins as $login)
     echo $login;
 ```
 
-###Insert Data
+### Insert Data
 You can also load .CSV or .XML data into a specific table.
 To insert .csv data, use the following syntax:
 ```php
@@ -278,7 +279,7 @@ $options = Array("fieldChar" => ';', "lineChar" => '\r\n', "linesToIgnore" => 1)
 $db->loadData("users", "/home/john/file.csv", $options);
 ```
 
-###Insert XML
+### Insert XML
 To load XML data into a table, you can use the method **loadXML**.
 The syntax is smillar to the loadData syntax.
 ```php
@@ -302,7 +303,7 @@ $path_to_file = "/home/john/file.xml";
 $db->loadXML("users", $path_to_file, $options);
 ```
 
-###Pagination
+### Pagination
 Use paginate() instead of get() to fetch paginated result
 ```php
 $page = 1;
@@ -669,7 +670,7 @@ print_r ($products);
 // SELECT u.login, p.productName FROM products p LEFT JOIN (SELECT * FROM t_users WHERE active = 1) u on p.userId=u.id;
 ```
 
-###EXISTS / NOT EXISTS condition
+### EXISTS / NOT EXISTS condition
 ```php
 $sub = $db->subQuery();
     $sub->where("company", 'testCompany');
@@ -775,7 +776,7 @@ print_r ($db->trace);
 
 ```
 
-##Table Locking
+### Table Locking
 To lock tables, you can use the **lock** method together with **setLockMethod**. 
 The following example will lock the table **users** for **write** access.
 ```php
