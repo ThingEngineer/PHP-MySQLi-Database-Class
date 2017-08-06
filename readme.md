@@ -267,6 +267,14 @@ or select one column value or function result
 $count = $db->getValue ("users", "count(*)");
 echo "{$count} users found";
 ```
+you can also select **average, count, distinct, max, min** or **sum** of a column:
+
+```php
+$count = $db->count("users", "id");
+$sum = $db->sum("product", "price");
+$avg = $db->where("category", "fruit")->average("product", "price");
+$min = $db->min("product", "stock");
+```
 
 select one column value or function result from multiple rows:
 ```php
