@@ -7,7 +7,7 @@
  * @author    Alexander V. Butenko <a.butenka@gmail.com>
  * @copyright Copyright (c) 2015-2017
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
- * @link      http://github.com/joshcam/PHP-MySQLi-Database-Class 
+ * @link      http://github.com/joshcam/PHP-MySQLi-Database-Class
  * @version   2.9-master
  *
  * @method int count ()
@@ -126,7 +126,7 @@ class dbObject {
     public function __set ($name, $value) {
         if (property_exists ($this, 'hidden') && array_search ($name, $this->hidden) !== false)
             return;
-	    
+
         $this->data[$name] = $value;
     }
 
@@ -139,9 +139,9 @@ class dbObject {
      */
     public function __get ($name) {
         if (property_exists ($this, 'hidden') && array_search ($name, $this->hidden) !== false)
-	    return null;
-		
-	if (isset ($this->data[$name]) && $this->data[$name] instanceof dbObject)
+            return null;
+
+        if (isset ($this->data[$name]) && $this->data[$name] instanceof dbObject)
             return $this->data[$name];
 
         if (property_exists ($this, 'relations') && isset ($this->relations[$name])) {
@@ -266,7 +266,7 @@ class dbObject {
         $sqlData = $this->prepareData ();
         if (!$this->validate ($sqlData))
             return false;
-        
+
         $this->db->where ($this->primaryKey, $this->data[$this->primaryKey]);
         return $this->db->update ($this->dbTable, $sqlData);
     }
@@ -409,7 +409,7 @@ class dbObject {
 
         if (!$primaryKey)
             $primaryKey = MysqliDb::$prefix . $joinObj->dbTable . "." . $joinObj->primaryKey;
-		
+
         if (!strchr ($key, '.'))
             $joinStr = MysqliDb::$prefix . $this->dbTable . ".{$key} = " . $primaryKey;
         else
@@ -443,8 +443,8 @@ class dbObject {
         $this->db->pageLimit = self::$pageLimit;
         $res = $this->db->paginate ($this->dbTable, $page, $fields);
         self::$totalPages = $this->db->totalPages;
-	if ($this->db->count == 0) return null;
-	    
+        if ($this->db->count == 0) return null;
+
         foreach ($res as &$r) {
             $this->processArrays ($r);
             $this->data = $r;
@@ -550,11 +550,11 @@ class dbObject {
                 $obj = new $modelName;
                 $table = $obj->dbTable;
                 $primaryKey = $obj->primaryKey;
-				
+
                 if (!isset ($data[$table])) {
                     $data[$name] = $this->$name;
                     continue;
-                } 
+                }
                 if ($data[$table][$primaryKey] === null) {
                     $data[$name] = null;
                 } else {
