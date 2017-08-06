@@ -7,10 +7,10 @@
  * @author    Jeffery Way <jeffrey@jeffrey-way.com>
  * @author    Josh Campbell <jcampbell@ajillion.com>
  * @author    Alexander V. Butenko <a.butenka@gmail.com>
- * @copyright Copyright (c) 2010-2016
+ * @copyright Copyright (c) 2010-2017
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      http://github.com/joshcam/PHP-MySQLi-Database-Class 
- * @version   2.8-master
+ * @version   2.9-master
  */
 
 class MysqliDb
@@ -582,7 +582,7 @@ class MysqliDb
      * A method to perform select query
      * 
      * @param string $query   Contains a user-provided select query.
-     * @param int|array $numRows Array to define SQL limit in format Array ($count, $offset)
+     * @param int|array $numRows Array to define SQL limit in format Array ($offset, $count)
      *
      * @return array Contains the returned rows from the query.
      */
@@ -654,7 +654,7 @@ class MysqliDb
      * A convenient SELECT * function.
      *
      * @param string  $tableName The name of the database table to work with.
-     * @param int|array $numRows Array to define SQL limit in format Array ($count, $offset)
+     * @param int|array $numRows Array to define SQL limit in format Array ($offset, $count)
      *                               or only $count
      * @param string $columns Desired columns
      *
@@ -858,7 +858,7 @@ class MysqliDb
      * Delete query. Call the "where" method first.
      *
      * @param string  $tableName The name of the database table to work with.
-     * @param int|array $numRows Array to define SQL limit in format Array ($count, $offset)
+     * @param int|array $numRows Array to define SQL limit in format Array ($offset, $count)
      *                               or only $count
      *
      * @return bool Indicates success. 0 or 1.
@@ -1477,7 +1477,7 @@ class MysqliDb
      * any passed update data, and the desired rows.
      * It then builds the SQL query.
      *
-     * @param int|array $numRows Array to define SQL limit in format Array ($count, $offset)
+     * @param int|array $numRows Array to define SQL limit in format Array ($offset, $count)
      *                               or only $count
      * @param array $tableData Should contain an array of data for updating the database.
      *
@@ -1871,7 +1871,7 @@ class MysqliDb
     /**
      * Abstraction method that will build the LIMIT part of the WHERE statement
      *
-     * @param int|array $numRows Array to define SQL limit in format Array ($count, $offset)
+     * @param int|array $numRows Array to define SQL limit in format Array ($offset, $count)
      *                               or only $count
      * 
      * @return void

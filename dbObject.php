@@ -5,10 +5,10 @@
  * @category  Database Access
  * @package   MysqliDb
  * @author    Alexander V. Butenko <a.butenka@gmail.com>
- * @copyright Copyright (c) 2015
+ * @copyright Copyright (c) 2015-2017
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      http://github.com/joshcam/PHP-MySQLi-Database-Class 
- * @version   2.6-master
+ * @version   2.9-master
  *
  * @method int count ()
  * @method dbObject ArrayBuilder()
@@ -383,7 +383,7 @@ class dbObject {
      * @return dbObject
      */
     private function with ($objectName) {
-        if (!property_exists ($this, 'relations') && !isset ($this->relations[$name]))
+        if (!property_exists ($this, 'relations') || !isset ($this->relations[$objectName]))
             die ("No relation with name $objectName found");
 
         $this->_with[$objectName] = $this->relations[$objectName];
@@ -641,7 +641,7 @@ class dbObject {
                 continue;
 
             switch ($type) {
-                case "text";
+                case "text":
                     $regexp = null;
                     break;
                 case "int":

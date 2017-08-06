@@ -1,5 +1,6 @@
 MysqliDb -- Simple MySQLi wrapper and object mapper with prepared statements
 <hr>
+
 ### Table of Contents
 
 **[Initialization](#initialization)**  
@@ -77,6 +78,12 @@ If no table prefix were set during object creation its possible to set it later 
 $db->setPrefix ('my_');
 ```
 
+If connection to mysql will be dropped Mysqlidb will try to automatically reconnect to the database once. 
+To disable this behavoir use
+```php
+$db->autoReconnect = false;
+```
+
 If you need to get already created mysqliDb object from another class or function use
 ```php
     function init () {
@@ -89,6 +96,24 @@ If you need to get already created mysqliDb object from another class or functio
         $db = MysqliDb::getInstance();
         ...
     }
+```
+
+### Multiple database connection
+If you need to connect to multiple databases use following method:
+```php
+$db->addConnection('slave', Array (
+                'host' => 'host',
+                'username' => 'username',
+                'password' => 'password',
+                'db'=> 'databaseName',
+                'port' => 3306,
+                'prefix' => 'my_',
+                'charset' => 'utf8')
+);
+```
+To select database use connection() method
+```php
+$users = $db->connection('slave')->get('users');
 ```
 
 ### Objects mapping
@@ -253,7 +278,7 @@ foreach ($logins as $login)
     echo $login;
 ```
 
-###Insert Data
+### Insert Data
 You can also load .CSV or .XML data into a specific table.
 To insert .csv data, use the following syntax:
 ```php
@@ -276,9 +301,17 @@ Attach them using
 ```php
 $options = Array("fieldChar" => ';', "lineChar" => '\r\n', "linesToIgnore" => 1);
 $db->loadData("users", "/home/john/file.csv", $options);
+// LOAD DATA ...
 ```
 
-###Insert XML
+You can specify to **use LOCAL DATA** instead of **DATA**:
+```php
+$options = Array("fieldChar" => ';', "lineChar" => '\r\n', "linesToIgnore" => 1, "loadDataLocal" => true);
+$db->loadData("users", "/home/john/file.csv", $options);
+// LOAD DATA LOCAL ...
+```
+
+### Insert XML
 To load XML data into a table, you can use the method **loadXML**.
 The syntax is smillar to the loadData syntax.
 ```php
@@ -302,7 +335,7 @@ $path_to_file = "/home/john/file.xml";
 $db->loadXML("users", $path_to_file, $options);
 ```
 
-###Pagination
+### Pagination
 Use paginate() instead of get() to fetch paginated result
 ```php
 $page = 1;
@@ -669,7 +702,7 @@ print_r ($products);
 // SELECT u.login, p.productName FROM products p LEFT JOIN (SELECT * FROM t_users WHERE active = 1) u on p.userId=u.id;
 ```
 
-###EXISTS / NOT EXISTS condition
+### EXISTS / NOT EXISTS condition
 ```php
 $sub = $db->subQuery();
     $sub->where("company", 'testCompany');
@@ -775,7 +808,7 @@ print_r ($db->trace);
 
 ```
 
-##Table Locking
+### Table Locking
 To lock tables, you can use the **lock** method together with **setLockMethod**. 
 The following example will lock the table **users** for **write** access.
 ```php
