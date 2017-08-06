@@ -1019,8 +1019,73 @@ class MysqliDb
 
         return $this;
     }
-	
-	
+
+    /**
+     * MySQL aggregate function AVERAGE
+     * @param string $tableName The name of the database table to work with.
+     * @param string $column    The desired column
+     */
+    public function average($tableName, $column)
+    {
+        $res = $this->getOne($tableName, "AVG({$column}) as result");
+        return $res['result'];
+    }
+
+    /**
+     * MySQL aggregate function COUNT
+     * @param string $tableName The name of the database table to work with.
+     * @param string $column    The desired column
+     */
+    public function count($tableName, $column)
+    {
+        $res = $this->getOne($tableName, "COUNT({$column}) as result");
+        return $res['result'];
+    }
+
+    /**
+     * MySQL aggregate function DISTINCT
+     * @param string $tableName The name of the database table to work with.
+     * @param string $column    The desired column
+     */
+    public function distinct($tableName, $column)
+    {
+        $res = $this->get($tableName, null, "DISTINCT({$column})");
+        return $res;
+    }
+
+    /**
+     * MySQL aggregate function MAX
+     * @param string $tableName The name of the database table to work with.
+     * @param string $column    The desired column
+     */
+    public function max($tableName, $column)
+    {
+        $res = $this->getOne($tableName, "MAX({$column}) as result");
+        return $res['result'];
+    }
+
+    /**
+     * MySQL aggregate function MIN
+     * @param string $tableName The name of the database table to work with.
+     * @param string $column    The desired column
+     */
+    public function min($tableName, $column)
+    {
+        $res = $this->getOne($tableName, "MIN({$column}) as result");
+        return $res['result'];
+    }
+
+    /**
+     * MySQL aggregate function SUM
+     * @param string $tableName The name of the database table to work with.
+     * @param string $column    The desired column
+     */
+    public function sum($tableName, $column)
+    {
+        $res = $this->getOne($tableName, "SUM({$column}) as result");
+        return $res['result'];
+    }
+
 	/**
 	 * This is a basic method which allows you to import raw .CSV data into a table
 	 * Please check out http://dev.mysql.com/doc/refman/5.7/en/load-data.html for a valid .csv file.

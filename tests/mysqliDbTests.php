@@ -43,7 +43,8 @@ $tables = Array (
     'products' => Array (
         'customerId' => 'int(10) not null',
         'userId' => 'int(10) not null',
-        'productName' => 'char(50)'
+        'productName' => 'char(50)',
+    'price' => 'int(10) null'
     )
 );
 $data = Array (
@@ -84,22 +85,27 @@ $data = Array (
         Array ('customerId' => 1,
                'userId' => 1,
                'productName' => 'product1',
+         'price' => '10',
         ),
         Array ('customerId' => 1,
                'userId' => 1,
                'productName' => 'product2',
+         'price' => '20',
         ),
         Array ('customerId' => 1,
                'userId' => 1,
                'productName' => 'product3',
+         'price' => '30',
         ),
         Array ('customerId' => 1,
                'userId' => 2,
                'productName' => 'product4',
+         'price' => NULL,
         ),
         Array ('customerId' => 1,
                'userId' => 2,
                'productName' => 'product5',
+         'price' => NULL,
         ),
 
     )
@@ -484,6 +490,14 @@ foreach ($data as $name => $datas) {
         exit;
     }
 }
+
+// Do count tests with prices
+$db->average("products", "price");
+$db->count("products", "price");
+$db->max("products", "price");
+$db->min("products", "price");
+$db->where('userId', 2)->sum("products", "price"); // NULL
+$db->distinct("products", "price");
 
 ///
 //TODO: insert test
