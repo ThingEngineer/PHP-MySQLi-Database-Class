@@ -44,7 +44,7 @@ $tables = Array (
         'customerId' => 'int(10) not null',
         'userId' => 'int(10) not null',
         'productName' => 'char(50)',
-    'price' => 'int(10) null'
+        'price' => 'int(10) null'
     )
 );
 $data = Array (
@@ -85,27 +85,27 @@ $data = Array (
         Array ('customerId' => 1,
                'userId' => 1,
                'productName' => 'product1',
-         'price' => '10',
+               'price' => '10',
         ),
         Array ('customerId' => 1,
                'userId' => 1,
                'productName' => 'product2',
-         'price' => '20',
+               'price' => '20',
         ),
         Array ('customerId' => 1,
                'userId' => 1,
                'productName' => 'product3',
-         'price' => '30',
+               'price' => '30',
         ),
         Array ('customerId' => 1,
                'userId' => 2,
                'productName' => 'product4',
-         'price' => NULL,
+               'price' => NULL,
         ),
         Array ('customerId' => 1,
                'userId' => 2,
                'productName' => 'product5',
-         'price' => NULL,
+               'price' => NULL,
         ),
 
     )
