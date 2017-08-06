@@ -641,7 +641,7 @@ class dbObject {
                 continue;
 
             switch ($type) {
-                case "text";
+                case "text":
                     $regexp = null;
                     break;
                 case "int":
