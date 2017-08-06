@@ -746,6 +746,27 @@ class MysqliDb
     }
 
     /**
+     * Check if the column exists.
+     *
+     * @param string       $tableName The name of the table.
+     * @param string|array $columns   Desired columns
+     *
+     * @return bool Boolean indicating whether all columns exists or not
+     */
+    public function columnExists($tableName, $columns){
+        $tableName = self::$prefix . $tableName;
+        if(!is_array($columns)){ $columns = array($columns); }
+
+        foreach($columns as $col){
+            $col = "%".$col."%";
+            $res = $this->rawQuery("SHOW COLUMNS FROM $tableName LIKE '$col'");
+            if(!$res){ return false; }
+        }
+
+        return true; 
+    }
+
+    /**
      * Insert method to add new row
      *
      * @param string $tableName The name of the table.

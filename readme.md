@@ -740,6 +740,13 @@ Check if table exists:
         echo "hooray";
 ```
 
+Check if column/s exists:
+```php
+    if (!$db->columnExists('users', array("firstName", "lastName", "nonExisting") )){
+        echo "Missing columns.";
+    }
+```
+
 mysqli_real_escape_string() wrapper:
 ```php
     $escaped = $db->escape ("' and 1=1");
