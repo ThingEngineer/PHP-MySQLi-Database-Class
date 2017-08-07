@@ -1002,9 +1002,9 @@ class MysqliDb
      * @throws Exception
      * @return MysqliDb
      */
-    public function join($joinTable, $joinCondition, $joinType = '')
+    public function join($joinTable, $joinCondition = NULL, $joinType = 'NATURAL')
     {
-        $allowedTypes = array('LEFT', 'RIGHT', 'OUTER', 'INNER', 'LEFT OUTER', 'RIGHT OUTER');
+        $allowedTypes = array('NATURAL', 'LEFT', 'RIGHT', 'OUTER', 'INNER', 'LEFT OUTER', 'RIGHT OUTER');
         $joinType = strtoupper(trim($joinType));
 
         if ($joinType && !in_array($joinType, $allowedTypes)) {
@@ -2356,7 +2356,7 @@ class MysqliDb
             else
                 $joinStr = $joinTable;
 
-            $this->_query .= " " . $joinType. " JOIN " . $joinStr ." on " . $joinCondition;
+            $this->_query .= " " . $joinType. " JOIN " . $joinStr . ($joinCondition ? " on " . $joinCondition : "");
 
             // Add join and query
             if (!empty($this->_joinAnd) && isset($this->_joinAnd[$joinStr])) {
