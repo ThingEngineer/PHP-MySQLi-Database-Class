@@ -301,6 +301,14 @@ Attach them using
 ```php
 $options = Array("fieldChar" => ';', "lineChar" => '\r\n', "linesToIgnore" => 1);
 $db->loadData("users", "/home/john/file.csv", $options);
+// LOAD DATA ...
+```
+
+You can specify to **use LOCAL DATA** instead of **DATA**:
+```php
+$options = Array("fieldChar" => ';', "lineChar" => '\r\n', "linesToIgnore" => 1, "loadDataLocal" => true);
+$db->loadData("users", "/home/john/file.csv", $options);
+// LOAD DATA LOCAL ...
 ```
 
 ### Insert XML

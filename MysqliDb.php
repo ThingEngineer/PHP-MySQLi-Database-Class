@@ -1042,7 +1042,7 @@ class MysqliDb
 		
 		// Define the default values
 		// We will merge it later
-		$settings 				= Array("fieldChar" => ';', "lineChar" => PHP_EOL, "linesToIgnore" => 1);
+		$settings = Array("fieldChar" => ';', "lineChar" => PHP_EOL, "linesToIgnore" => 1);
 		
 		// Check the import settings 
 		if(gettype($importSettings) == "array") {
@@ -1056,9 +1056,12 @@ class MysqliDb
 		// Add 1 more slash to every slash so maria will interpret it as a path
 		$importFile = str_replace("\\", "\\\\", $importFile);  
 		
+		// Switch between LOAD DATA and LOAD DATA LOCAL
+		$loadDataLocal = isset($settings["loadDataLocal"]) ? 'LOCAL' : '';
+			
 		// Build SQL Syntax
-		$sqlSyntax = sprintf('LOAD DATA INFILE \'%s\' INTO TABLE %s', 
-					$importFile, $table);
+		$sqlSyntax = sprintf('LOAD DATA %s INFILE \'%s\' INTO TABLE %s', 
+			$loadDataLocal, $importFile, $table);
 		
 		// FIELDS
 		$sqlSyntax .= sprintf(' FIELDS TERMINATED BY \'%s\'', $settings["fieldChar"]);

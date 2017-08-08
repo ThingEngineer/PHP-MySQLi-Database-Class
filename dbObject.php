@@ -383,7 +383,7 @@ class dbObject {
      * @return dbObject
      */
     private function with ($objectName) {
-        if (!property_exists ($this, 'relations') && !isset ($this->relations[$name]))
+        if (!property_exists ($this, 'relations') || !isset ($this->relations[$objectName]))
             die ("No relation with name $objectName found");
 
         $this->_with[$objectName] = $this->relations[$objectName];
@@ -641,7 +641,7 @@ class dbObject {
                 continue;
 
             switch ($type) {
-                case "text";
+                case "text":
                     $regexp = null;
                     break;
                 case "int":
