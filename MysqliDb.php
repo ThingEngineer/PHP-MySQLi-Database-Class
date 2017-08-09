@@ -1908,9 +1908,12 @@ class MysqliDb
             $this->autoReconnectCount++;
             return $this->_prepareQuery();
         }
-        
+       
+        $error = $this->mysqli()->error;
+        $query = $this->_query;
+        $errno = $this->mysqli()->errno;
         $this->reset();
-        throw new Exception(sprintf('%s query: %s', $this->mysqli()->error, $this->_query), $this->mysqli()->errno);
+        throw new Exception(sprintf('%s query: %s', $error, $query), $errno);
 
         release:
         if ($this->traceEnabled) {
