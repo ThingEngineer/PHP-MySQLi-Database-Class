@@ -651,7 +651,7 @@ class dbObject {
                     $regexp = "/^[0-9\.]*$/";
                     break;
                 case "bool":
-                    $regexp = '/^[yes|no|0|1|true|false]$/i';
+                    $regexp = '/^(yes|no|0|1|true|false)$/i';
                     break;
                 case "datetime":
                     $regexp = "/^[0-9a-zA-Z -:]*$/";

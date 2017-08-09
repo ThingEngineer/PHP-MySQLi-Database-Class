@@ -1004,7 +1004,7 @@ class MysqliDb
      */
     public function join($joinTable, $joinCondition, $joinType = '')
     {
-        $allowedTypes = array('LEFT', 'RIGHT', 'OUTER', 'INNER', 'LEFT OUTER', 'RIGHT OUTER');
+        $allowedTypes = array('LEFT', 'RIGHT', 'OUTER', 'INNER', 'LEFT OUTER', 'RIGHT OUTER', 'NATURAL');
         $joinType = strtoupper(trim($joinType));
 
         if ($joinType && !in_array($joinType, $allowedTypes)) {
@@ -1649,7 +1649,7 @@ class MysqliDb
                 $joinStr = $joinTable;
             }
 
-            $this->_query .= " " . $joinType . " JOIN " . $joinStr . 
+            $this->_query .= " " . $joinType . " JOIN " . $joinStr .
                 (false !== stripos($joinCondition, 'using') ? " " : " on ")
                 . $joinCondition;
         }
@@ -1900,8 +1900,11 @@ class MysqliDb
     {
         $stmt = $this->mysqli()->prepare($this->_query);
 
-        if ($stmt !== false)
-            goto release;
+        if ($stmt !== false) {
+            if ($this->traceEnabled)
+                $this->traceStartQ = microtime(true);
+            return $stmt;
+        }
 
         if ($this->mysqli()->errno === 2006 && $this->autoReconnect === true && $this->autoReconnectCount === 0) {
             $this->connect($this->defConnectionName);
@@ -1909,15 +1912,11 @@ class MysqliDb
             return $this->_prepareQuery();
         }
         
+        $error = $this->mysqli()->error;
+        $query = $this->_query;
+        $errno = $this->mysqli()->errno;
         $this->reset();
-        throw new Exception(sprintf('%s query: %s', $this->mysqli()->error, $this->_query), $this->mysqli()->errno);
-
-        release:
-        if ($this->traceEnabled) {
-            $this->traceStartQ = microtime(true);
-        }
-
-        return $stmt;
+        throw new Exception(sprintf('%s query: %s', error, query), errno);
     }
 
     /**
@@ -2356,7 +2355,9 @@ class MysqliDb
             else
                 $joinStr = $joinTable;
 
-            $this->_query .= " " . $joinType. " JOIN " . $joinStr ." on " . $joinCondition;
+            $this->_query .= " " . $joinType. " JOIN " . $joinStr . 
+                (false !== stripos($joinCondition, 'using') ? " " : " on ") 
+                . $joinCondition;
 
             // Add join and query
             if (!empty($this->_joinAnd) && isset($this->_joinAnd[$joinStr])) {
