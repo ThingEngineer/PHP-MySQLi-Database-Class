@@ -32,7 +32,7 @@ class MysqliDb
      * MySQLi instances
      * @var mysqli[]
      */
-    protected $_mysqli = [];
+    protected $_mysqli = array();
 
     /**
      * The SQL query to be prepared and executed
@@ -211,7 +211,7 @@ class MysqliDb
     /**
      * @var array connections settings [profile_name=>[same_as_contruct_args]]
      */
-    protected $connectionsSettings = [];
+    protected $connectionsSettings = array();
     /**
      * @var string the name of a default (main) mysqli connection
      */
@@ -240,7 +240,7 @@ class MysqliDb
             }
         }
 
-        $this->addConnection('default', [
+        $this->addConnection('default', array(
             'host' => $host,
             'username' => $username,
             'password' => $password,
@@ -248,7 +248,7 @@ class MysqliDb
             'port' => $port,
             'socket' => $socket,
             'charset' => $charset
-        ]);
+        ));
 
         if ($isSubQuery) {
             $this->isSubQuery = true;
@@ -345,8 +345,8 @@ class MysqliDb
      */
     public function addConnection($name, array $params)
     {
-        $this->connectionsSettings[$name] = [];
-        foreach (['host', 'username', 'password', 'db', 'port', 'socket', 'charset'] as $k) {
+        $this->connectionsSettings[$name] = array();
+        foreach (array('host', 'username', 'password', 'db', 'port', 'socket', 'charset') as $k) {
             $prm = isset($params[$k]) ? $params[$k] : null;
 
             if ($k == 'host') {
@@ -2161,7 +2161,7 @@ class MysqliDb
     public function copy()
     {
         $copy = unserialize(serialize($this));
-        $copy->_mysqli = [];
+        $copy->_mysqli = array();
         return $copy;
     }
 
