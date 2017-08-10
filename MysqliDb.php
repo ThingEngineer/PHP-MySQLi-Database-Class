@@ -1916,7 +1916,7 @@ class MysqliDb
         $query = $this->_query;
         $errno = $this->mysqli()->errno;
         $this->reset();
-        throw new Exception(sprintf('%s query: %s', error, query), errno);
+        throw new Exception(sprintf('%s query: %s', $error, $query), $errno);
     }
 
     /**
