@@ -269,7 +269,7 @@ class MysqliDb
      * @throws Exception
      * @return void
      */
-    public function connect($connectionName)
+    public function connect($connectionName = 'default')
     {
         if(!isset($this->connectionsSettings[$connectionName]))
             throw new Exception('Connection profile not set');
