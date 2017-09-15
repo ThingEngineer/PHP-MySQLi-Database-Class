@@ -490,7 +490,7 @@ $results = $db->get('users');
 // Gives: SELECT * FROM users WHERE id IN (1, 5, 27, -1, 'd');
 ```
 
-OR CASE
+OR CASE:
 ```php
 $db->where ('firstName', 'John');
 $db->orWhere ('firstName', 'Peter');
@@ -503,6 +503,13 @@ NULL comparison:
 $db->where ("lastName", NULL, 'IS NOT');
 $results = $db->get("users");
 // Gives: SELECT * FROM users where lastName IS NOT NULL
+```
+
+LIKE comparison:
+```php
+$db->where ("fullName", 'John%', 'like');
+$results = $db->get("users");
+// Gives: SELECT * FROM users where fullName like 'John%'
 ```
 
 Also you can use raw where conditions:
