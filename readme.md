@@ -560,7 +560,7 @@ $db->get("users");
 // GIVES: SELECT SQL_NO_CACHE * FROM USERS;
 ```
 
-Optionally you can use method chaining to call where multiple times without referencing your object over an over:
+Optionally you can use method chaining to call where multiple times without referencing your object over and over:
 
 ```php
 $results = $db
@@ -641,7 +641,7 @@ print_r ($products);
 ```
 
 ### Properties sharing
-Its is also possible to copy properties
+It is also possible to copy properties
 
 ```php
 $db->where ("agentId", 10);
