@@ -10,7 +10,7 @@
  * @copyright Copyright (c) 2010-2017
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      http://github.com/joshcam/PHP-MySQLi-Database-Class 
- * @version   2.9-master
+ * @version   2.9
  */
 
 class MysqliDb
@@ -416,7 +416,9 @@ class MysqliDb
         $this->_lastInsertId = null;
         $this->_updateColumns = null;
         $this->_mapKey = null;
-        $this->defConnectionName = 'default';
+        if(!$this->_transaction_in_progress ) {
+            $this->defConnectionName = 'default';
+        }
         $this->autoReconnectCount = 0;
         return $this;
     }
