@@ -416,7 +416,9 @@ class MysqliDb
         $this->_lastInsertId = null;
         $this->_updateColumns = null;
         $this->_mapKey = null;
-        $this->defConnectionName = 'default';
+        if(!$this->_transaction_in_progress ) {
+            $this->defConnectionName = 'default';
+        }
         $this->autoReconnectCount = 0;
         return $this;
     }
