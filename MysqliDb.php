@@ -10,7 +10,7 @@
  * @copyright Copyright (c) 2010-2017
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      http://github.com/joshcam/PHP-MySQLi-Database-Class 
- * @version   2.9
+ * @version   2.9.1
  */
 
 class MysqliDb
@@ -219,6 +219,11 @@ class MysqliDb
     
     public $autoReconnect = true;
     protected $autoReconnectCount = 0;
+
+    /**
+     * @var bool Operations in transaction indicator
+     */
+    protected $_transaction_in_progress = false;
 
     /**
      * @param string $host
