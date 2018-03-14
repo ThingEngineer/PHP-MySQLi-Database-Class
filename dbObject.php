@@ -7,7 +7,7 @@
  * @author    Alexander V. Butenko <a.butenka@gmail.com>
  * @copyright Copyright (c) 2015-2017
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
- * @link      http://github.com/joshcam/PHP-MySQLi-Database-Class 
+ * @link      http://github.com/joshcam/PHP-MySQLi-Database-Class
  * @version   2.9-master
  *
  * @method int count ()
@@ -105,6 +105,11 @@ class dbObject {
      * @var stating
      */
     protected $dbTable;
+
+	/**
+	 * @var array name of the fields that will be skipped during validation, preparing & saving
+	 */
+    protected $toSkip = array();
 
     /**
      * @param array $data Data to preload on object creation
@@ -256,8 +261,12 @@ class dbObject {
             return false;
 
         if ($data) {
-            foreach ($data as $k => $v)
-                $this->$k = $v;
+            foreach ($data as $k => $v) {
+	            if (in_array($k, $this->toSkip))
+		            continue;
+
+	            $this->$k = $v;
+            }
         }
 
         if (!empty ($this->timestamps) && in_array ("updatedAt", $this->timestamps))
@@ -293,6 +302,24 @@ class dbObject {
 
         $this->db->where ($this->primaryKey, $this->data[$this->primaryKey]);
         return $this->db->delete ($this->dbTable);
+    }
+
+	/**
+	 * chained method that append a field or fields to skipping
+	 * @param mixed|array|false $field field name; array of names; empty skipping if false
+	 * @return $this
+	 */
+    public function skip($field){
+	    if(is_array($field)) {
+		    foreach ($field as $f) {
+			    $this->toSkip[] = $f;
+		    }
+	    } else if($field === false) {
+	    	$this->toSkip = [];
+	    } else{
+	    	$this->toSkip[] = $field;
+	    }
+	    return $this;
     }
 
     /**
@@ -618,6 +645,9 @@ class dbObject {
             return true;
 
         foreach ($this->dbFields as $key => $desc) {
+        	if(in_array($key, $this->toSkip))
+        		continue;
+
             $type = null;
             $required = false;
             if (isset ($data[$key]))
@@ -684,6 +714,9 @@ class dbObject {
             return $this->data;
 
         foreach ($this->data as $key => &$value) {
+        	if(in_array($key, $this->toSkip))
+        		continue;
+
             if ($value instanceof dbObject && $value->isNew == true) {
                 $id = $value->save();
                 if ($id)
