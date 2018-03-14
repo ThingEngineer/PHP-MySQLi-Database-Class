@@ -246,7 +246,7 @@ class dbObject {
         if (!empty ($this->primaryKey) && empty ($this->data[$this->primaryKey]))
             $this->data[$this->primaryKey] = $id;
         $this->isNew = false;
-
+	    $this->toSkip = array();
         return $id;
     }
 
@@ -277,7 +277,9 @@ class dbObject {
             return false;
         
         $this->db->where ($this->primaryKey, $this->data[$this->primaryKey]);
-        return $this->db->update ($this->dbTable, $sqlData);
+	    $res = $this->db->update ($this->dbTable, $sqlData);
+	    $this->toSkip = array();
+        return $res;
     }
 
     /**
@@ -301,7 +303,9 @@ class dbObject {
             return false;
 
         $this->db->where ($this->primaryKey, $this->data[$this->primaryKey]);
-        return $this->db->delete ($this->dbTable);
+        $res = $this->db->delete ($this->dbTable);
+        $this->toSkip = array();
+        return $res;
     }
 
 	/**
@@ -315,7 +319,7 @@ class dbObject {
 			    $this->toSkip[] = $f;
 		    }
 	    } else if($field === false) {
-	    	$this->toSkip = [];
+	    	$this->toSkip = array();
 	    } else{
 	    	$this->toSkip[] = $field;
 	    }
