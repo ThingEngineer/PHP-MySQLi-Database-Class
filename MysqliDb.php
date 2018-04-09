@@ -621,7 +621,7 @@ class MysqliDb
      *
      * @uses $MysqliDb->setQueryOption('name');
      *
-     * @param string|array $options The optons name of the query.
+     * @param string|array $options The options name of the query.
      *
      * @throws Exception
      * @return MysqliDb
@@ -2348,10 +2348,12 @@ class MysqliDb
      *
      * @uses $dbWrapper->joinWhere('user u', 'u.id', 7)->where('user u', 'u.title', 'MyTitle');
      *
-     * @param string $whereJoin  The name of the table followed by its prefix.
-     * @param string $whereProp  The name of the database field.
-     * @param mixed  $whereValue The value of the database field.
+     * @param string $whereJoin The name of the table followed by its prefix.
+     * @param string $whereProp The name of the database field.
+     * @param mixed $whereValue The value of the database field.
      *
+     * @param string $operator
+     * @param string $cond
      * @return $this
      */
     public function joinWhere($whereJoin, $whereProp, $whereValue = 'DBNULL', $operator = '=', $cond = 'AND')
