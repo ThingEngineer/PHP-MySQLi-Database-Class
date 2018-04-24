@@ -888,9 +888,10 @@ class MysqliDb
         $stmt->execute();
         $this->_stmtError = $stmt->error;
         $this->_stmtErrno = $stmt->errno;
+        $this->count = $stmt->affected_rows;
         $this->reset();
 
-        return ($stmt->affected_rows > -1);	//	affected_rows returns 0 if nothing matched where statement, or required updating, -1 if error
+        return ($stmt->affected_rows > -1);	//	-1 indicates that the query returned an error
     }
 
     /**
