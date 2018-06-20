@@ -385,14 +385,14 @@ class dbObject {
         if ($this->db->count == 0)
             return null;
 
-        foreach ($results as &$r) {
+        foreach ($results as $k => &$r) {
             $this->processArrays ($r);
             $this->data = $r;
             $this->processAllWith ($r, false);
             if ($this->returnType == 'Object') {
                 $item = new static ($r);
                 $item->isNew = false;
-                $objects[] = $item;
+                $objects[$k] = $item;
             }
         }
         $this->_with = Array();
@@ -476,14 +476,14 @@ class dbObject {
         self::$totalPages = $this->db->totalPages;
 	if ($this->db->count == 0) return null;
 	    
-        foreach ($res as &$r) {
+        foreach ($res as $k => &$r) {
             $this->processArrays ($r);
             $this->data = $r;
             $this->processAllWith ($r, false);
             if ($this->returnType == 'Object') {
                 $item = new static ($r);
                 $item->isNew = false;
-                $objects[] = $item;
+                $objects[$k] = $item;
             }
         }
         $this->_with = Array();
