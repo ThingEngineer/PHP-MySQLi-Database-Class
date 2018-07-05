@@ -146,7 +146,7 @@ class dbObject {
         if (property_exists ($this, 'hidden') && array_search ($name, $this->hidden) !== false)
 	    return null;
 		
-	if (isset ($this->data[$name]) && $this->data[$name] instanceof dbObject)
+	if (isset ($this->data[$name]))
             return $this->data[$name];
 
         if (property_exists ($this, 'relations') && isset ($this->relations[$name])) {
