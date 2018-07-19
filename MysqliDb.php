@@ -779,40 +779,39 @@ class MysqliDb
         // only auto-commit our inserts, if no transaction is currently running
         $autoCommit = (isset($this->_transaction_in_progress) ? !$this->_transaction_in_progress : true);
         $ids = array();
-
         $options = [
             '_queryOptions' => $this->_queryOptions,
             '_nestJoin' => $this->_nestJoin,
             '_forUpdate' => $this->_forUpdate,
-            '_lockInShareMode' => $this->_lockInShareMode 
+            '_lockInShareMode' => $this->_lockInShareMode
         ];
-        
         if($autoCommit) {
             $this->startTransaction();
         }
-
         foreach ($multiInsertData as $insertData) {
+            $this->_queryOptions = $options['_queryOptions'];
+            $this->_nestJoin = $options['_nestJoin'];
+            $this->_forUpdate = $options['_forUpdate'];
+            $this->_lockInShareMode = $options['_lockInShareMode'];
             if($dataKeys !== null) {
                 // apply column-names if given, else assume they're already given in the data
                 $insertData = array_combine($dataKeys, $insertData);
             }
-       
             foreach ($options as $k => $v) {
                 $this->${'k'} = $v;
             }
-
             $id = $this->insert($tableName, $insertData);
-            if(!$id) {
-                if($autoCommit) {
+            if(!$id ) {
+                if($autoCommit &&  !in_array('IGNORE', $options['_queryOptions'])) {
                     $this->rollback();
                 }
-                return false;
+                $id = false;
             }
             $ids[] = $id;
-        }
+        }   
         if($autoCommit) {
             $this->commit();
-        }
+	}
         return $ids;
     }
 	
