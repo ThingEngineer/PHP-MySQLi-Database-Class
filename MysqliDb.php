@@ -780,6 +780,13 @@ class MysqliDb
         $autoCommit = (isset($this->_transaction_in_progress) ? !$this->_transaction_in_progress : true);
         $ids = array();
 
+        $options = [
+            '_queryOptions' => $this->_queryOptions,
+            '_nestJoin' => $this->_nestJoin,
+            '_forUpdate' => $this->_forUpdate,
+            '_lockInShareMode' => $this->_lockInShareMode 
+        ];
+        
         if($autoCommit) {
             $this->startTransaction();
         }
@@ -788,6 +795,10 @@ class MysqliDb
             if($dataKeys !== null) {
                 // apply column-names if given, else assume they're already given in the data
                 $insertData = array_combine($dataKeys, $insertData);
+            }
+       
+            foreach ($options as $k => $v) {
+                $this->${'k'} = $v;
             }
 
             $id = $this->insert($tableName, $insertData);
@@ -799,14 +810,12 @@ class MysqliDb
             }
             $ids[] = $id;
         }
-
         if($autoCommit) {
             $this->commit();
         }
-
         return $ids;
     }
-
+	
     /**
      * Replace method to add new row
      *
