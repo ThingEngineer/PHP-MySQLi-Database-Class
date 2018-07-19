@@ -789,10 +789,6 @@ class MysqliDb
             $this->startTransaction();
         }
         foreach ($multiInsertData as $insertData) {
-            $this->_queryOptions = $options['_queryOptions'];
-            $this->_nestJoin = $options['_nestJoin'];
-            $this->_forUpdate = $options['_forUpdate'];
-            $this->_lockInShareMode = $options['_lockInShareMode'];
             if($dataKeys !== null) {
                 // apply column-names if given, else assume they're already given in the data
                 $insertData = array_combine($dataKeys, $insertData);
