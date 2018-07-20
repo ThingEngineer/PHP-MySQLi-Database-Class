@@ -793,15 +793,15 @@ class MysqliDb
                 // apply column-names if given, else assume they're already given in the data
                 $insertData = array_combine($dataKeys, $insertData);
             }
-            foreach ($options as $k => $v) {
-                $this->${'k'} = $v;
-            }
+	    foreach ($options as $k => $v) {
+    		$this->{$k} = $v;
+	    }
             $id = $this->insert($tableName, $insertData);
             if(!$id ) {
                 if($autoCommit &&  !in_array('IGNORE', $options['_queryOptions'])) {
                     $this->rollback();
                 }
-                $id = false;
+                return $id; 
             }
             $ids[] = $id;
         }   
