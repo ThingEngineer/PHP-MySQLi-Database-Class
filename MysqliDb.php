@@ -774,7 +774,7 @@ class MysqliDb
      *
      * @return bool|array Boolean indicating the insertion failed (false), else return id-array ([int])
      */
-    public function insertMulti($tableName, array $multiInsertData, array $dataKeys = null)
+    public function insertMulti($tableName, $multiInsertData, $dataKeys = null)
     {
         // only auto-commit our inserts, if no transaction is currently running
         $autoCommit = (isset($this->_transaction_in_progress) ? !$this->_transaction_in_progress : true);
@@ -785,9 +785,11 @@ class MysqliDb
             '_forUpdate' => $this->_forUpdate,
             '_lockInShareMode' => $this->_lockInShareMode
         ];
+	    
         if($autoCommit) {
             $this->startTransaction();
         }
+	    
         foreach ($multiInsertData as $insertData) {
             if($dataKeys !== null) {
                 // apply column-names if given, else assume they're already given in the data
@@ -805,9 +807,11 @@ class MysqliDb
             }
             $ids[] = $id;
         }   
+	    
         if($autoCommit) {
             $this->commit();
 	}
+	    
         return $ids;
     }
 	
