@@ -7,12 +7,16 @@
  * @author    Jeffery Way <jeffrey@jeffrey-way.com>
  * @author    Josh Campbell <jcampbell@ajillion.com>
  * @author    Alexander V. Butenko <a.butenka@gmail.com>
- * @copyright Copyright (c) 2010-2017
+ * @author    Veszter Márton <vesztermarton@outlook.com>
+ * @copyright Copyright (c) 2010-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      http://github.com/joshcam/PHP-MySQLi-Database-Class 
- * @version   2.9.2
+ * @version   2.10.0
  */
 
+/**
+ * @brief     Mysqli Database manager
+ */
 class MysqliDb
 {
 
@@ -58,6 +62,13 @@ class MysqliDb
      */
     protected $_join = array();
 
+	 /**
+     * An array that holds where unions
+     * @var array
+     */
+	protected $_union = array();
+	
+	protected $_subUnions = false;
     /**
      * An array that holds where conditions
      * @var array
@@ -225,6 +236,9 @@ class MysqliDb
      */
     protected $_transaction_in_progress = false;
 
+	
+	protected $queryObjectAsync = array();
+	
     /**
      * @param string $host
      * @param string $username
@@ -421,6 +435,7 @@ class MysqliDb
         $this->_lastInsertId = null;
         $this->_updateColumns = null;
         $this->_mapKey = null;
+		$this->queryObjectAsync = array();
         if(!$this->_transaction_in_progress ) {
             $this->defConnectionName = 'default';
         }
@@ -697,6 +712,121 @@ class MysqliDb
 
         return $res;
     }
+	
+	
+	
+    /**
+     * A convenient SELECT * function.
+     * @param int|array $numRows Array to define SQL limit in format Array ($offset, $count)
+     *                               or only $count
+     * @param string $columns Desired columns
+     *
+     * @return array Contains the returned rows from the select query.
+     */
+	public function getSubUnionQuery($numRows = null, $columns = '*'){
+		if (empty($columns)) {
+            $columns = '*';
+        }
+
+        $column = is_array($columns) ? implode(', ', $columns) : $columns;
+
+		$this->_subUnions = true;
+
+        $this->_query = 'SELECT ' . implode(' ', $this->_queryOptions) . ' ' .
+            $column . " FROM (";
+        $stmt = $this->_buildQuery($numRows,null,true);
+	
+		
+        if ($this->isSubQuery) {
+            return $this;
+        }
+
+		$stmt = $this->_prepareQuery();
+		
+        $stmt->execute();
+        $this->_stmtError = $stmt->error;
+        $this->_stmtErrno = $stmt->errno;
+        $res = $this->_dynamicBindResults($stmt);
+        $this->reset();
+
+        return $res;
+	}
+	
+	public function getAsync($tableName, $numRows = null, $columns = '*')
+    {
+        if (empty($columns)) {
+            $columns = '*';
+        }
+
+        $column = is_array($columns) ? implode(', ', $columns) : $columns;
+
+        if (strpos($tableName, '.') === false) {
+            $this->_tableName = self::$prefix . $tableName;
+        } else {
+            $this->_tableName = $tableName;
+        }
+
+        $this->_query = 'SELECT ' . implode(' ', $this->_queryOptions) . ' ' .
+            $column . " FROM " . $this->_tableName;
+        $stmt = $this->_buildQuery($numRows,null,true);
+		
+        if ($this->isSubQuery) {
+            return $this;
+        }
+		
+		$queryObject = new dbGetResult($stmt);
+		
+		$this->queryObjectAsync[] = $queryObject;
+		
+		return $queryObject;
+    }
+	
+	public function runAsync(){
+		
+		$sql = '';
+		$first = true;
+		
+		foreach($this->queryObjectAsync as $query){
+			if(!$first){
+				$sql .= ';';
+			}
+			$sql .= $query->getQuery();
+			$this->_lastQuery = $sql;
+			$first = false;
+		}
+			
+		$i = 0;
+
+		
+			if ($this->traceEnabled)
+                $this->traceStartQ = microtime(true);
+
+			if ($this->mysqli()->multi_query($sql)) {
+				do {
+					/* store first result set */
+					if ($result = $this->mysqli()->store_result()) {
+						
+						$rows = array();
+						
+						while ($row = $result->fetch_array()) {
+							$rows[] = $row;
+						}
+						
+						$this->queryObjectAsync[$i]->addResult($rows);
+						
+						$i++;
+						$result->free();
+					}
+					/* print divider */
+					if ($this->mysqli()->more_results()) {
+
+					}
+				} while ($this->mysqli()->next_result());
+			}
+
+		$this->reset();
+		
+	}
 
     /**
      * A convenient SELECT * function to get one record.
@@ -1490,14 +1620,20 @@ class MysqliDb
      *
      * @return mysqli_stmt Returns the $stmt object.
      */
-    protected function _buildQuery($numRows = null, $tableData = null)
+    protected function _buildQuery($numRows = null, $tableData = null, $return = false)
     {
         // $this->_buildJoinOld();
         $this->_buildJoin();
+		$this->_buildUnion();
+		if($this->_subUnions){
+			$this->_query .= ') as a ';
+		}
         $this->_buildInsertQuery($tableData);
         $this->_buildCondition('WHERE', $this->_where);
         $this->_buildGroupBy();
-        $this->_buildCondition('HAVING', $this->_having);
+		if(!$this->_subUnions){
+        	$this->_buildCondition('HAVING', $this->_having);
+		}
         $this->_buildOrderBy();
         $this->_buildLimit($numRows);
         $this->_buildOnDuplicate($tableData);
@@ -1514,7 +1650,11 @@ class MysqliDb
         if ($this->isSubQuery) {
             return;
         }
-
+		
+		if($return){
+			return $this->_query;
+		}
+		
         // Prepare query
         $stmt = $this->_prepareQuery();
 
@@ -2377,6 +2517,35 @@ class MysqliDb
         }
     }
 
+	public function union($subSql)
+    {
+        $this->_union[] = $subSql;
+        return $this;
+    }
+	
+	
+	 protected function _buildUnion () {
+        if (empty ($this->_union))
+            return;
+
+		 $first = true;
+		 
+        foreach ($this->_union as $i => $data) {
+			if($this->_subUnions and $first){
+				$this->_query .= " ($data->_query) ";
+				$first = false;
+			}else{
+            	$this->_query .= " UNION ($data->_query) ";
+			}
+			unset($this->_union[$i]);
+        }
+		 $this->_union = array();
+    }
+
+	
+	
+	
+	
     /**
      * Convert a condition and value into the sql string
      * @param  String $operator The where constraint operator
@@ -2417,4 +2586,96 @@ class MysqliDb
     }
 }
 
+
+
+
+class dbGetResult implements ArrayAccess, Iterator{
+	
+	private $query = null;
+	private $result = null;
+	private $index = 0;
+	public $nb;
+	public $nbTotal;
+	
+	public function __construct($query){
+		$this->query = $query;
+	}
+	
+	public function __get($var){
+		return $this->result[$var];
+	}
+	public function __toString(){
+        return 'dbGetResult';
+    }
+	
+	public function __debugInfo() {
+		return $this->result;
+	}
+	
+	
+	
+	public function offsetSet($offset, $value) {
+        if (is_null($offset)) {
+            $this->result[] = $value;
+        } else {
+            $this->result[$offset] = $value;
+        }
+    }
+
+    public function offsetExists($offset) {
+         return isset($this->result[$offset]);
+    }
+
+    public function offsetUnset($offset) {
+       unset($this->result[$offset]);
+    }
+
+    public function offsetGet($offset) {
+        return $this->result[$offset];
+    }
+	
+	public function rewind(){
+		$this->index = 0;
+	}
+	public function current(){
+		$k = array_keys($this->result);
+		$var = $this->result[$k[$this->index]];
+		return $var;
+	}
+	public function key(){
+		$k = array_keys($this->result);
+		$var = $k[$this->index];
+		return $var;
+	}
+	public function next(){
+		$k = array_keys($this->result);
+		if (isset($k[++$this->index])) {
+			$var = $this->result[$k[$this->index]];
+			return $var;
+		} else {
+			return false;
+		}
+	}
+	public function valid(){
+		$k = array_keys($this->result);
+		$var = isset($k[$this->index]);
+		return $var;
+	}
+
+	
+	
+	
+	public function getQuery(){
+		return $this->query;
+	}
+	
+	public function addResult($result){
+		if($this->result == null){
+			$this->result = $result;
+		}
+	}
+	
+}
+
 // END class
+?>
