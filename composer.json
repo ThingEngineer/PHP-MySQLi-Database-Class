@@ -1,12 +1,12 @@
 {
-    "name": "joshcam/mysqli-database-class",
+    "name": "thingengineer/mysqli-database-class",
     "description": "PHP MySQL Wrapper and object mapper which utilizes MySQLi and prepared statements",
     "license": "GPL-3.0-or-later",
     "authors": [
         {
             "name": "Josh Campbell",
             "email": "josh.lee.campbell@gmail.com",
-            "homepage": "https://github.com/ThingEngineer",
+            "homepage": "https://github.com/thingengineer",
             "role": "Developer"
         },
         {
