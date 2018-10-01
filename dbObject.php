@@ -477,6 +477,8 @@ class dbObject {
      */
     private function paginate ($page, $fields = null) {
         $this->db->pageLimit = self::$pageLimit;
+        $objects = Array ();
+        $this->processHasOneWith ();	    
         $res = $this->db->paginate ($this->dbTable, $page, $fields);
         self::$totalPages = $this->db->totalPages;
 	self::$totalCount = $this->db->totalCount;
