@@ -1908,6 +1908,7 @@ class MysqliDb
         try {
             $stmt = $this->mysqli()->prepare($this->_query);
         } catch (Exception $e) {
+            //try to reconnect gracefully if the connection was broken since the last query
             if ($this->mysqli()->errno === 2006 && $this->autoReconnect === true && $this->autoReconnectCount === 0) {
                 $this->connect($this->defConnectionName);
                 $this->autoReconnectCount++;
@@ -1919,6 +1920,13 @@ class MysqliDb
             if ($this->traceEnabled)
                 $this->traceStartQ = microtime(true);
             return $stmt;
+        }
+
+        //if statement is false then the server has been down for awhile and the query is dirty, reconnect and reset
+        //we'll lose one query exection, but the next will be successful
+        if ($this->mysqli()->errno === 2006 && $this->autoReconnect === true && $this->autoReconnectCount === 0) {
+            $this->connect($this->defConnectionName);
+            $this->autoReconnectCount++;
         }
 
         $error = $this->mysqli()->error;
