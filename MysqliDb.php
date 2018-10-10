@@ -1905,7 +1905,15 @@ class MysqliDb
      */
     protected function _prepareQuery()
     {
-        $stmt = $this->mysqli()->prepare($this->_query);
+        try {
+            $stmt = $this->mysqli()->prepare($this->_query);
+        } catch (Exception $e) {
+            if ($this->mysqli()->errno === 2006 && $this->autoReconnect === true && $this->autoReconnectCount === 0) {
+                $this->connect($this->defConnectionName);
+                $this->autoReconnectCount++;
+                return $this->_prepareQuery();
+            }
+        }
 
         if ($stmt !== false) {
             if ($this->traceEnabled)
@@ -1913,12 +1921,6 @@ class MysqliDb
             return $stmt;
         }
 
-        if ($this->mysqli()->errno === 2006 && $this->autoReconnect === true && $this->autoReconnectCount === 0) {
-            $this->connect($this->defConnectionName);
-            $this->autoReconnectCount++;
-            return $this->_prepareQuery();
-        }
-        
         $error = $this->mysqli()->error;
         $query = $this->_query;
         $errno = $this->mysqli()->errno;
