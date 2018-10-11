@@ -1240,7 +1240,7 @@ class MysqliDb
 
         if (is_array($customFieldsOrRegExp)) {
             foreach ($customFieldsOrRegExp as $key => $value) {
-                $customFieldsOrRegExp[$key] = preg_replace("/[^-a-z0-9\.\(\),_` ]+/i", '', $value);
+                $customFieldsOrRegExp[$key] = preg_replace("/[^\x80-\xff-a-z0-9\.\(\),_` ]+/i", '', $value);
             }
             $orderByField = 'FIELD (' . $orderByField . ', "' . implode('","', $customFieldsOrRegExp) . '")';
         }elseif(is_string($customFieldsOrRegExp)){
