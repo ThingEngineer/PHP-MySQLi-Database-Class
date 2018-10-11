@@ -201,6 +201,7 @@ class MysqliDb
      */
 
     public $pageLimit = 20;
+    
     /**
      * Variable that holds total pages count of last paginate() query
      *
@@ -224,6 +225,14 @@ class MysqliDb
      * @var bool Operations in transaction indicator
      */
     protected $_transaction_in_progress = false;
+
+    
+     /**
+     * Variable that holds the callcount
+     *
+     * @var int
+     */
+    protected $_callCount = 0;
 
     /**
      * @param string $host
@@ -425,6 +434,9 @@ class MysqliDb
             $this->defConnectionName = 'default';
         }
         $this->autoReconnectCount = 0;
+        
+        $this->_callCount++;
+        
         return $this;
     }
 
@@ -1359,6 +1371,16 @@ class MysqliDb
     public function ping()
     {
         return $this->mysqli()->ping();
+    }
+    
+    /**
+     * Get the amount of database calls that have been done. Triggered in reset()
+     * 
+     * @access public
+     * @return void
+     */
+    public function getCallCount() {
+	    return $this->_callCount;
     }
 
     /**
