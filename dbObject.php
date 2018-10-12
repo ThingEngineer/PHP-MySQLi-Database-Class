@@ -111,6 +111,11 @@ class dbObject {
      */
     protected $dbTable;
 
+	/**
+	 * @var array name of the fields that will be skipped during validation, preparing & saving
+	 */
+    protected $toSkip = array();
+
     /**
      * @var array name of the fields that will be skipped during validation, preparing & saving
      */
@@ -481,8 +486,8 @@ class dbObject {
         $this->processHasOneWith ();        
         $res = $this->db->paginate ($this->dbTable, $page, $fields);
         self::$totalPages = $this->db->totalPages;
-    self::$totalCount = $this->db->totalCount;
-    if ($this->db->count == 0) return null;
+        self::$totalCount = $this->db->totalCount;
+        if ($this->db->count == 0) return null;
         
         foreach ($res as $k => &$r) {
             $this->processArrays ($r);

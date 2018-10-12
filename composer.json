@@ -1,12 +1,12 @@
 {
-	"name": "joshcam/mysqli-database-class",
-	"description": "PHP MySQL Wrapper and object mapper which utilizes MySQLi and prepared statements",
-	"license": "GPL-3.0",
+    "name": "thingengineer/mysqli-database-class",
+    "description": "PHP MySQL Wrapper and object mapper which utilizes MySQLi and prepared statements",
+    "license": "GPL-3.0-or-later",
     "authors": [
         {
             "name": "Josh Campbell",
             "email": "josh.lee.campbell@gmail.com",
-            "homepage": "https://github.com/joshcam",
+            "homepage": "https://github.com/thingengineer",
             "role": "Developer"
         },
         {
@@ -16,10 +16,10 @@
             "role": "Developer"
         }
     ],
-	"require": {
-		"php": ">=5.3.0"
-	},
-	"autoload": {
-		"files": ["MysqliDb.php", "dbObject.php"]
-	}
+    "require": {
+        "php": ">=5.3.0"
+    },
+    "autoload": {
+        "files": ["MysqliDb.php", "dbObject.php"]
+    }
 }

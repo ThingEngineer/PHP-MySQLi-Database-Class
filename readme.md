@@ -44,7 +44,7 @@ require_once ('MysqliDb.php');
 ### Installation with composer
 It is also possible to install library via composer
 ```
-composer require joshcam/mysqli-database-class:dev-master
+composer require thingengineer/mysqli-database-class:dev-master
 ```
 
 ### Initialization
@@ -301,6 +301,14 @@ Attach them using
 ```php
 $options = Array("fieldChar" => ';', "lineChar" => '\r\n', "linesToIgnore" => 1);
 $db->loadData("users", "/home/john/file.csv", $options);
+// LOAD DATA ...
+```
+
+You can specify to **use LOCAL DATA** instead of **DATA**:
+```php
+$options = Array("fieldChar" => ';', "lineChar" => '\r\n', "linesToIgnore" => 1, "loadDataLocal" => true);
+$db->loadData("users", "/home/john/file.csv", $options);
+// LOAD DATA LOCAL ...
 ```
 
 ### Insert XML
@@ -482,7 +490,7 @@ $results = $db->get('users');
 // Gives: SELECT * FROM users WHERE id IN (1, 5, 27, -1, 'd');
 ```
 
-OR CASE
+OR CASE:
 ```php
 $db->where ('firstName', 'John');
 $db->orWhere ('firstName', 'Peter');
@@ -495,6 +503,13 @@ NULL comparison:
 $db->where ("lastName", NULL, 'IS NOT');
 $results = $db->get("users");
 // Gives: SELECT * FROM users where lastName IS NOT NULL
+```
+
+LIKE comparison:
+```php
+$db->where ("fullName", 'John%', 'like');
+$results = $db->get("users");
+// Gives: SELECT * FROM users where fullName like 'John%'
 ```
 
 Also you can use raw where conditions:
@@ -545,7 +560,7 @@ $db->get("users");
 // GIVES: SELECT SQL_NO_CACHE * FROM USERS;
 ```
 
-Optionally you can use method chaining to call where multiple times without referencing your object over an over:
+Optionally you can use method chaining to call where multiple times without referencing your object over and over:
 
 ```php
 $results = $db
@@ -626,7 +641,7 @@ print_r ($products);
 ```
 
 ### Properties sharing
-Its is also possible to copy properties
+It is also possible to copy properties
 
 ```php
 $db->where ("agentId", 10);
