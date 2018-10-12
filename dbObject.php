@@ -88,6 +88,11 @@ class dbObject {
      */
     public static $totalPages = 0;
     /**
+     * Variable which holds an amount of returned rows during paginate queries
+     * @var string
+     */
+    public static $totalCount = 0;	
+    /**
      * An array that holds insert/update/select errors
      *
      * @var array
@@ -105,6 +110,11 @@ class dbObject {
      * @var stating
      */
     protected $dbTable;
+
+	/**
+	 * @var array name of the fields that will be skipped during validation, preparing & saving
+	 */
+    protected $toSkip = array();
 
     /**
      * @param array $data Data to preload on object creation
@@ -126,7 +136,7 @@ class dbObject {
     public function __set ($name, $value) {
         if (property_exists ($this, 'hidden') && array_search ($name, $this->hidden) !== false)
             return;
-
+	    
         $this->data[$name] = $value;
     }
 
@@ -139,9 +149,9 @@ class dbObject {
      */
     public function __get ($name) {
         if (property_exists ($this, 'hidden') && array_search ($name, $this->hidden) !== false)
-            return null;
-
-        if (isset ($this->data[$name]) && $this->data[$name] instanceof dbObject)
+	    return null;
+		
+	if (isset ($this->data[$name]) && $this->data[$name] instanceof dbObject)
             return $this->data[$name];
 
         if (property_exists ($this, 'relations') && isset ($this->relations[$name])) {
@@ -241,7 +251,7 @@ class dbObject {
         if (!empty ($this->primaryKey) && empty ($this->data[$this->primaryKey]))
             $this->data[$this->primaryKey] = $id;
         $this->isNew = false;
-
+	    $this->toSkip = array();
         return $id;
     }
 
@@ -256,8 +266,12 @@ class dbObject {
             return false;
 
         if ($data) {
-            foreach ($data as $k => $v)
-                $this->$k = $v;
+            foreach ($data as $k => $v) {
+	            if (in_array($k, $this->toSkip))
+		            continue;
+
+	            $this->$k = $v;
+            }
         }
 
         if (!empty ($this->timestamps) && in_array ("updatedAt", $this->timestamps))
@@ -266,9 +280,11 @@ class dbObject {
         $sqlData = $this->prepareData ();
         if (!$this->validate ($sqlData))
             return false;
-
+        
         $this->db->where ($this->primaryKey, $this->data[$this->primaryKey]);
-        return $this->db->update ($this->dbTable, $sqlData);
+	    $res = $this->db->update ($this->dbTable, $sqlData);
+	    $this->toSkip = array();
+        return $res;
     }
 
     /**
@@ -292,7 +308,27 @@ class dbObject {
             return false;
 
         $this->db->where ($this->primaryKey, $this->data[$this->primaryKey]);
-        return $this->db->delete ($this->dbTable);
+        $res = $this->db->delete ($this->dbTable);
+        $this->toSkip = array();
+        return $res;
+    }
+
+	/**
+	 * chained method that append a field or fields to skipping
+	 * @param mixed|array|false $field field name; array of names; empty skipping if false
+	 * @return $this
+	 */
+    public function skip($field){
+	    if(is_array($field)) {
+		    foreach ($field as $f) {
+			    $this->toSkip[] = $f;
+		    }
+	    } else if($field === false) {
+	    	$this->toSkip = array();
+	    } else{
+	    	$this->toSkip[] = $field;
+	    }
+	    return $this;
     }
 
     /**
@@ -354,14 +390,14 @@ class dbObject {
         if ($this->db->count == 0)
             return null;
 
-        foreach ($results as &$r) {
+        foreach ($results as $k => &$r) {
             $this->processArrays ($r);
             $this->data = $r;
             $this->processAllWith ($r, false);
             if ($this->returnType == 'Object') {
                 $item = new static ($r);
                 $item->isNew = false;
-                $objects[] = $item;
+                $objects[$k] = $item;
             }
         }
         $this->_with = Array();
@@ -409,7 +445,7 @@ class dbObject {
 
         if (!$primaryKey)
             $primaryKey = MysqliDb::$prefix . $joinObj->dbTable . "." . $joinObj->primaryKey;
-
+		
         if (!strchr ($key, '.'))
             $joinStr = MysqliDb::$prefix . $this->dbTable . ".{$key} = " . $primaryKey;
         else
@@ -441,18 +477,21 @@ class dbObject {
      */
     private function paginate ($page, $fields = null) {
         $this->db->pageLimit = self::$pageLimit;
+        $objects = Array ();
+        $this->processHasOneWith ();	    
         $res = $this->db->paginate ($this->dbTable, $page, $fields);
         self::$totalPages = $this->db->totalPages;
-        if ($this->db->count == 0) return null;
-
-        foreach ($res as &$r) {
+	self::$totalCount = $this->db->totalCount;
+	if ($this->db->count == 0) return null;
+	    
+        foreach ($res as $k => &$r) {
             $this->processArrays ($r);
             $this->data = $r;
             $this->processAllWith ($r, false);
             if ($this->returnType == 'Object') {
                 $item = new static ($r);
                 $item->isNew = false;
-                $objects[] = $item;
+                $objects[$k] = $item;
             }
         }
         $this->_with = Array();
@@ -550,11 +589,11 @@ class dbObject {
                 $obj = new $modelName;
                 $table = $obj->dbTable;
                 $primaryKey = $obj->primaryKey;
-
+				
                 if (!isset ($data[$table])) {
                     $data[$name] = $this->$name;
                     continue;
-                }
+                } 
                 if ($data[$table][$primaryKey] === null) {
                     $data[$name] = null;
                 } else {
@@ -618,6 +657,9 @@ class dbObject {
             return true;
 
         foreach ($this->dbFields as $key => $desc) {
+        	if(in_array($key, $this->toSkip))
+        		continue;
+
             $type = null;
             $required = false;
             if (isset ($data[$key]))
@@ -651,7 +693,7 @@ class dbObject {
                     $regexp = "/^[0-9\.]*$/";
                     break;
                 case "bool":
-                    $regexp = '/^[yes|no|0|1|true|false]$/i';
+                    $regexp = '/^(yes|no|0|1|true|false)$/i';
                     break;
                 case "datetime":
                     $regexp = "/^[0-9a-zA-Z -:]*$/";
@@ -684,6 +726,9 @@ class dbObject {
             return $this->data;
 
         foreach ($this->data as $key => &$value) {
+        	if(in_array($key, $this->toSkip))
+        		continue;
+
             if ($value instanceof dbObject && $value->isNew == true) {
                 $id = $value->save();
                 if ($id)
