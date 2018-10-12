@@ -91,7 +91,7 @@ class dbObject {
      * Variable which holds an amount of returned rows during paginate queries
      * @var string
      */
-    public static $totalCount = 0;	
+    public static $totalCount = 0;    
     /**
      * An array that holds insert/update/select errors
      *
@@ -111,9 +111,9 @@ class dbObject {
      */
     protected $dbTable;
 
-	/**
-	 * @var array name of the fields that will be skipped during validation, preparing & saving
-	 */
+    /**
+     * @var array name of the fields that will be skipped during validation, preparing & saving
+     */
     protected $toSkip = array();
 
     /**
@@ -136,7 +136,7 @@ class dbObject {
     public function __set ($name, $value) {
         if (property_exists ($this, 'hidden') && array_search ($name, $this->hidden) !== false)
             return;
-	    
+        
         $this->data[$name] = $value;
     }
 
@@ -149,9 +149,9 @@ class dbObject {
      */
     public function __get ($name) {
         if (property_exists ($this, 'hidden') && array_search ($name, $this->hidden) !== false)
-	    return null;
-		
-	if (isset ($this->data[$name]) && $this->data[$name] instanceof dbObject)
+        return null;
+        
+    if (isset ($this->data[$name]) && $this->data[$name] instanceof dbObject)
             return $this->data[$name];
 
         if (property_exists ($this, 'relations') && isset ($this->relations[$name])) {
@@ -251,7 +251,7 @@ class dbObject {
         if (!empty ($this->primaryKey) && empty ($this->data[$this->primaryKey]))
             $this->data[$this->primaryKey] = $id;
         $this->isNew = false;
-	    $this->toSkip = array();
+        $this->toSkip = array();
         return $id;
     }
 
@@ -267,10 +267,10 @@ class dbObject {
 
         if ($data) {
             foreach ($data as $k => $v) {
-	            if (in_array($k, $this->toSkip))
-		            continue;
+                if (in_array($k, $this->toSkip))
+                    continue;
 
-	            $this->$k = $v;
+                $this->$k = $v;
             }
         }
 
@@ -282,8 +282,8 @@ class dbObject {
             return false;
         
         $this->db->where ($this->primaryKey, $this->data[$this->primaryKey]);
-	    $res = $this->db->update ($this->dbTable, $sqlData);
-	    $this->toSkip = array();
+        $res = $this->db->update ($this->dbTable, $sqlData);
+        $this->toSkip = array();
         return $res;
     }
 
@@ -313,22 +313,22 @@ class dbObject {
         return $res;
     }
 
-	/**
-	 * chained method that append a field or fields to skipping
-	 * @param mixed|array|false $field field name; array of names; empty skipping if false
-	 * @return $this
-	 */
+    /**
+     * chained method that append a field or fields to skipping
+     * @param mixed|array|false $field field name; array of names; empty skipping if false
+     * @return $this
+     */
     public function skip($field){
-	    if(is_array($field)) {
-		    foreach ($field as $f) {
-			    $this->toSkip[] = $f;
-		    }
-	    } else if($field === false) {
-	    	$this->toSkip = array();
-	    } else{
-	    	$this->toSkip[] = $field;
-	    }
-	    return $this;
+        if(is_array($field)) {
+            foreach ($field as $f) {
+                $this->toSkip[] = $f;
+            }
+        } else if($field === false) {
+            $this->toSkip = array();
+        } else{
+            $this->toSkip[] = $field;
+        }
+        return $this;
     }
 
     /**
@@ -445,7 +445,7 @@ class dbObject {
 
         if (!$primaryKey)
             $primaryKey = MysqliDb::$prefix . $joinObj->dbTable . "." . $joinObj->primaryKey;
-		
+        
         if (!strchr ($key, '.'))
             $joinStr = MysqliDb::$prefix . $this->dbTable . ".{$key} = " . $primaryKey;
         else
@@ -478,12 +478,12 @@ class dbObject {
     private function paginate ($page, $fields = null) {
         $this->db->pageLimit = self::$pageLimit;
         $objects = Array ();
-        $this->processHasOneWith ();	    
+        $this->processHasOneWith ();        
         $res = $this->db->paginate ($this->dbTable, $page, $fields);
         self::$totalPages = $this->db->totalPages;
-	self::$totalCount = $this->db->totalCount;
-	if ($this->db->count == 0) return null;
-	    
+    self::$totalCount = $this->db->totalCount;
+    if ($this->db->count == 0) return null;
+        
         foreach ($res as $k => &$r) {
             $this->processArrays ($r);
             $this->data = $r;
@@ -589,7 +589,7 @@ class dbObject {
                 $obj = new $modelName;
                 $table = $obj->dbTable;
                 $primaryKey = $obj->primaryKey;
-				
+                
                 if (!isset ($data[$table])) {
                     $data[$name] = $this->$name;
                     continue;
@@ -657,8 +657,8 @@ class dbObject {
             return true;
 
         foreach ($this->dbFields as $key => $desc) {
-        	if(in_array($key, $this->toSkip))
-        		continue;
+            if(in_array($key, $this->toSkip))
+                continue;
 
             $type = null;
             $required = false;
@@ -726,8 +726,8 @@ class dbObject {
             return $this->data;
 
         foreach ($this->data as $key => &$value) {
-        	if(in_array($key, $this->toSkip))
-        		continue;
+            if(in_array($key, $this->toSkip))
+                continue;
 
             if ($value instanceof dbObject && $value->isNew == true) {
                 $id = $value->save();
