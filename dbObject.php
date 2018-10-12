@@ -110,12 +110,6 @@ class dbObject {
      * @var stating
      */
     protected $dbTable;
-
-	/**
-	 * @var array name of the fields that will be skipped during validation, preparing & saving
-	 */
-    protected $toSkip = array();
-
     /**
      * @var array name of the fields that will be skipped during validation, preparing & saving
      */
