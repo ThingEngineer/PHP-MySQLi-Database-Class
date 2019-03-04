@@ -10,7 +10,8 @@ MysqliDb -- Simple MySQLi wrapper and object mapper with prepared statements
 **[Select Query](#select-query)**  
 **[Delete Query](#delete-query)**  
 **[Insert Data](#insert-data)**  
-**[Insert XML](#insert-xml)**  
+**[Insert XML](#insert-xml)**
+**[Pagination](#pagination)**
 **[Running raw SQL queries](#running-raw-sql-queries)**  
 **[Query Keywords](#query-keywords)**  
 **[Where Conditions](#where--having-methods)**  
