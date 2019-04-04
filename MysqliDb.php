@@ -575,6 +575,10 @@ class MysqliDb
         $this->count = $stmt->affected_rows;
         $this->_stmtError = $stmt->error;
         $this->_stmtErrno = $stmt->errno;
+
+        if (!empty($this->_stmtError)) 
+            throw new Exception(sprintf('%s query: %s', $this->_stmtError, $this->_query), $this->_stmtErrno);
+
         $this->_lastQuery = $this->replacePlaceHolders($this->_query, $params);
         $res = $this->_dynamicBindResults($stmt);
         $this->reset();
