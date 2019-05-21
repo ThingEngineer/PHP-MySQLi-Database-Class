@@ -1629,7 +1629,7 @@ class MysqliDb
 
         $row = array();
         while ($field = $meta->fetch_field()) {
-            if ($field->type == $mysqlLongType) {
+            if ($field->type == $mysqlLongType && version_compare(PHP_VERSION, '5.3') <= 0) {
                 $shouldStoreResult = true;
             }
 
