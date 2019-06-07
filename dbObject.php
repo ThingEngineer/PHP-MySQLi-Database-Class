@@ -374,6 +374,22 @@ class dbObject {
 
         return $item;
     }
+	
+    /**
+     * A convenient SELECT COLUMN function to get a single column value from model object
+     *
+     * @param string $column    The desired column
+     * @param int    $limit     Limit of rows to select. Use null for unlimited..1 by default
+     *
+     * @return mixed Contains the value of a returned column / array of values
+     * @throws Exception
+     */
+    protected function getValue ($column, $limit = 1) {
+        $res = $this->db->ArrayBuilder()->getValue ($this->dbTable, $column, $limit);
+        if (!$res)
+            return null;
+        return $res;
+    }
 
     /**
      * Fetch all objects
