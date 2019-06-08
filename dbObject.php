@@ -374,7 +374,34 @@ class dbObject {
 
         return $item;
     }
+	
+    /**
+     * A convenient SELECT COLUMN function to get a single column value from model object
+     *
+     * @param string $column    The desired column
+     * @param int    $limit     Limit of rows to select. Use null for unlimited..1 by default
+     *
+     * @return mixed Contains the value of a returned column / array of values
+     * @throws Exception
+     */
+    protected function getValue ($column, $limit = 1) {
+        $res = $this->db->ArrayBuilder()->getValue ($this->dbTable, $column, $limit);
+        if (!$res)
+            return null;
+        return $res;
+    }
 
+    /**
+     * A convenient function that returns TRUE if exists at least an element that
+     * satisfy the where condition specified calling the "where" method before this one.
+     *
+     * @return bool
+     * @throws Exception
+     */
+    protected function has() {
+        return $this->db->has($this->dbTable);
+    }
+	
     /**
      * Fetch all objects
      *
