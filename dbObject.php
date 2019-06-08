@@ -392,6 +392,17 @@ class dbObject {
     }
 
     /**
+     * A convenient function that returns TRUE if exists at least an element that
+     * satisfy the where condition specified calling the "where" method before this one.
+     *
+     * @return bool
+     * @throws Exception
+     */
+    protected function has() {
+        return $this->db->has($this->dbTable);
+    }
+	
+    /**
      * Fetch all objects
      *
      * @access public
