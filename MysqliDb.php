@@ -968,12 +968,6 @@ class MysqliDb
      */
     public function where($whereProp, $whereValue = 'DBNULL', $operator = '=', $cond = 'AND')
     {
-        // forkaround for an old operation api
-        if (is_array($whereValue) && ($key = key($whereValue)) != "0") {
-            $operator = $key;
-            $whereValue = $whereValue[$key];
-        }
-
         if (count($this->_where) == 0) {
             $cond = '';
         }
