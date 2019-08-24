@@ -251,7 +251,7 @@ if ($db->count != 2) {
 //$users = $db->get("users");
 //print_r ($users);
 
-$db->where("firstname", Array ('LIKE' => '%John%'));
+$db->where("firstname", '%John%', 'like');
 $users = $db->get("users");
 if ($db->count != 1) {
     echo "Invalid insert count in LIKE: ".$db->count;
