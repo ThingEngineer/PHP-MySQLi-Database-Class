@@ -7,35 +7,37 @@
  * @author    Alexander V. Butenko <a.butenka@gmail.com>
  * @copyright Copyright (c) 2015-2017
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
- * @link      http://github.com/joshcam/PHP-MySQLi-Database-Class 
+ * @link      http://github.com/joshcam/PHP-MySQLi-Database-Class
  * @version   2.9-master
  *
  * @method int count ()
  * @method dbObject ArrayBuilder()
  * @method dbObject JsonBuilder()
  * @method dbObject ObjectBuilder()
- * @method mixed byId (string $id, mixed $fields)
- * @method mixed get (mixed $limit, mixed $fields)
- * @method mixed getOne (mixed $fields)
- * @method mixed paginate (int $page, array $fields)
- * @method dbObject query ($query, $numRows)
- * @method dbObject rawQuery ($query, $bindParams, $sanitize)
- * @method dbObject join (string $objectName, string $key, string $joinType, string $primaryKey)
- * @method dbObject with (string $objectName)
- * @method dbObject groupBy (string $groupByField)
- * @method dbObject orderBy ($orderByField, $orderbyDirection, $customFields)
- * @method dbObject where ($whereProp, $whereValue, $operator)
- * @method dbObject orWhere ($whereProp, $whereValue, $operator)
- * @method dbObject setQueryOption ($options)
- * @method dbObject setTrace ($enabled, $stripPrefix)
- * @method dbObject withTotalCount ()
- * @method dbObject startTransaction ()
- * @method dbObject commit ()
- * @method dbObject rollback ()
- * @method dbObject ping ()
- * @method string getLastError ()
- * @method string getLastQuery ()
- **/
+ * @method mixed byId(string $id, mixed $fields)
+ * @method mixed get(mixed $limit, mixed $fields)
+ * @method mixed getOne(mixed $fields)
+ * @method mixed paginate(int $page, array $fields)
+ * @method dbObject query($query, $numRows = null)
+ * @method dbObject rawQuery($query, $bindParams = null)
+ * @method dbObject join(string $objectName, string $key, string $joinType, string $primaryKey)
+ * @method dbObject with(string $objectName)
+ * @method dbObject groupBy(string $groupByField)
+ * @method dbObject orderBy($orderByField, $orderbyDirection = "DESC", $customFieldsOrRegExp = null)
+ * @method dbObject where($whereProp, $whereValue = 'DBNULL', $operator = '=', $cond = 'AND')
+ * @method dbObject orWhere($whereProp, $whereValue = 'DBNULL', $operator = '=')
+ * @method dbObject having($havingProp, $havingValue = 'DBNULL', $operator = '=', $cond = 'AND')
+ * @method dbObject orHaving($havingProp, $havingValue = null, $operator = null)
+ * @method dbObject setQueryOption($options)
+ * @method dbObject setTrace($enabled, $stripPrefix = null)
+ * @method dbObject withTotalCount()
+ * @method dbObject startTransaction()
+ * @method dbObject commit()
+ * @method dbObject rollback()
+ * @method dbObject ping()
+ * @method string getLastError()
+ * @method string getLastQuery()
+ */
 class dbObject {
     /**
      * Working instance of MysqliDb created earlier
@@ -88,6 +90,11 @@ class dbObject {
      */
     public static $totalPages = 0;
     /**
+     * Variable which holds an amount of returned rows during paginate queries
+     * @var string
+     */
+    public static $totalCount = 0;	
+    /**
      * An array that holds insert/update/select errors
      *
      * @var array
@@ -105,6 +112,11 @@ class dbObject {
      * @var stating
      */
     protected $dbTable;
+
+	/**
+	 * @var array name of the fields that will be skipped during validation, preparing & saving
+	 */
+    protected $toSkip = array();
 
     /**
      * @param array $data Data to preload on object creation
@@ -241,7 +253,7 @@ class dbObject {
         if (!empty ($this->primaryKey) && empty ($this->data[$this->primaryKey]))
             $this->data[$this->primaryKey] = $id;
         $this->isNew = false;
-
+	    $this->toSkip = array();
         return $id;
     }
 
@@ -256,8 +268,12 @@ class dbObject {
             return false;
 
         if ($data) {
-            foreach ($data as $k => $v)
-                $this->$k = $v;
+            foreach ($data as $k => $v) {
+	            if (in_array($k, $this->toSkip))
+		            continue;
+
+	            $this->$k = $v;
+            }
         }
 
         if (!empty ($this->timestamps) && in_array ("updatedAt", $this->timestamps))
@@ -268,7 +284,9 @@ class dbObject {
             return false;
         
         $this->db->where ($this->primaryKey, $this->data[$this->primaryKey]);
-        return $this->db->update ($this->dbTable, $sqlData);
+	    $res = $this->db->update ($this->dbTable, $sqlData);
+	    $this->toSkip = array();
+        return $res;
     }
 
     /**
@@ -292,7 +310,27 @@ class dbObject {
             return false;
 
         $this->db->where ($this->primaryKey, $this->data[$this->primaryKey]);
-        return $this->db->delete ($this->dbTable);
+        $res = $this->db->delete ($this->dbTable);
+        $this->toSkip = array();
+        return $res;
+    }
+
+	/**
+	 * chained method that append a field or fields to skipping
+	 * @param mixed|array|false $field field name; array of names; empty skipping if false
+	 * @return $this
+	 */
+    public function skip($field){
+	    if(is_array($field)) {
+		    foreach ($field as $f) {
+			    $this->toSkip[] = $f;
+		    }
+	    } else if($field === false) {
+	    	$this->toSkip = array();
+	    } else{
+	    	$this->toSkip[] = $field;
+	    }
+	    return $this;
     }
 
     /**
@@ -336,7 +374,34 @@ class dbObject {
 
         return $item;
     }
+	
+    /**
+     * A convenient SELECT COLUMN function to get a single column value from model object
+     *
+     * @param string $column    The desired column
+     * @param int    $limit     Limit of rows to select. Use null for unlimited..1 by default
+     *
+     * @return mixed Contains the value of a returned column / array of values
+     * @throws Exception
+     */
+    protected function getValue ($column, $limit = 1) {
+        $res = $this->db->ArrayBuilder()->getValue ($this->dbTable, $column, $limit);
+        if (!$res)
+            return null;
+        return $res;
+    }
 
+    /**
+     * A convenient function that returns TRUE if exists at least an element that
+     * satisfy the where condition specified calling the "where" method before this one.
+     *
+     * @return bool
+     * @throws Exception
+     */
+    protected function has() {
+        return $this->db->has($this->dbTable);
+    }
+	
     /**
      * Fetch all objects
      *
@@ -354,14 +419,14 @@ class dbObject {
         if ($this->db->count == 0)
             return null;
 
-        foreach ($results as &$r) {
+        foreach ($results as $k => &$r) {
             $this->processArrays ($r);
             $this->data = $r;
             $this->processAllWith ($r, false);
             if ($this->returnType == 'Object') {
                 $item = new static ($r);
                 $item->isNew = false;
-                $objects[] = $item;
+                $objects[$k] = $item;
             }
         }
         $this->_with = Array();
@@ -441,18 +506,21 @@ class dbObject {
      */
     private function paginate ($page, $fields = null) {
         $this->db->pageLimit = self::$pageLimit;
+        $objects = Array ();
+        $this->processHasOneWith ();	    
         $res = $this->db->paginate ($this->dbTable, $page, $fields);
         self::$totalPages = $this->db->totalPages;
+	self::$totalCount = $this->db->totalCount;
 	if ($this->db->count == 0) return null;
 	    
-        foreach ($res as &$r) {
+        foreach ($res as $k => &$r) {
             $this->processArrays ($r);
             $this->data = $r;
             $this->processAllWith ($r, false);
             if ($this->returnType == 'Object') {
                 $item = new static ($r);
                 $item->isNew = false;
-                $objects[] = $item;
+                $objects[$k] = $item;
             }
         }
         $this->_with = Array();
@@ -618,6 +686,9 @@ class dbObject {
             return true;
 
         foreach ($this->dbFields as $key => $desc) {
+        	if(in_array($key, $this->toSkip))
+        		continue;
+
             $type = null;
             $required = false;
             if (isset ($data[$key]))
@@ -684,6 +755,9 @@ class dbObject {
             return $this->data;
 
         foreach ($this->data as $key => &$value) {
+        	if(in_array($key, $this->toSkip))
+        		continue;
+
             if ($value instanceof dbObject && $value->isNew == true) {
                 $id = $value->save();
                 if ($id)

@@ -39,7 +39,7 @@ will not be working with an objects created with `table()` method.
 
 
 ### Selects
-Retrieving objects from the database is pretty much the same process as a mysqliDb `get()`/`getOne()` methods without a need to specify table name. All mysqlidb functions like `where()`, `orWhere()`, `orderBy()`, `join()`, etc. are supported.
+Retrieving objects from the database is pretty much the same process as a mysqliDb `get()`/`getOne()`/`getValue()` methods without a need to specify table name. All mysqlidb functions like `where()`, `orWhere()`, `orderBy()`, `join()`, etc. are supported.
 
 ## Retrieving All Records
 

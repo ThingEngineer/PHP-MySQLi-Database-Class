@@ -10,7 +10,8 @@ MysqliDb -- Simple MySQLi wrapper and object mapper with prepared statements
 **[Select Query](#select-query)**  
 **[Delete Query](#delete-query)**  
 **[Insert Data](#insert-data)**  
-**[Insert XML](#insert-xml)**  
+**[Insert XML](#insert-xml)**
+**[Pagination](#pagination)**
 **[Running raw SQL queries](#running-raw-sql-queries)**  
 **[Query Keywords](#query-keywords)**  
 **[Where Conditions](#where--having-methods)**  
@@ -44,7 +45,7 @@ require_once ('MysqliDb.php');
 ### Installation with composer
 It is also possible to install library via composer
 ```
-composer require joshcam/mysqli-database-class:dev-master
+composer require thingengineer/mysqli-database-class:dev-master
 ```
 
 ### Initialization
