@@ -428,11 +428,7 @@ class MysqliDb
      */
     public static function getInstance()
     {
-        if(isset(self::$_instance)) {
-            return self::$_instance;
-        } else {
-            return new MysqliDb();
-        }
+        return self::$_instance;
     }
 
     /**
