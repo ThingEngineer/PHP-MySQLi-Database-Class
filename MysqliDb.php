@@ -723,7 +723,9 @@ class MysqliDb
 
         $column = is_array($columns) ? implode(', ', $columns) : $columns;
 
-        if (strpos($tableName, '.') === false) {
+        if (is_object($tableName)) {
+            $this->_tableName = $this->_buildPair("", $tableName);
+        }else if (strpos($tableName, '.') === false) {
             $this->_tableName = self::$prefix . $tableName;
         } else {
             $this->_tableName = $tableName;
