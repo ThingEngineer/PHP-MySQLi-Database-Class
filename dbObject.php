@@ -769,7 +769,7 @@ class dbObject {
             if (!in_array ($key, array_keys ($this->dbFields)))
                 continue;
 
-            if (!is_array($value)) {
+            if (!is_array($value) && !is_object($value)) {
                 $sqlData[$key] = $value;
                 continue;
             }
