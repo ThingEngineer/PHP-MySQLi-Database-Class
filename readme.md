@@ -10,8 +10,8 @@ MysqliDb -- Simple MySQLi wrapper and object mapper with prepared statements
 **[Select Query](#select-query)**  
 **[Delete Query](#delete-query)**  
 **[Insert Data](#insert-data)**  
-**[Insert XML](#insert-xml)**
-**[Pagination](#pagination)**
+**[Insert XML](#insert-xml)**  
+**[Pagination](#pagination)**  
 **[Running raw SQL queries](#running-raw-sql-queries)**  
 **[Query Keywords](#query-keywords)**  
 **[Where Conditions](#where--having-methods)**  
@@ -405,7 +405,7 @@ Get 1 column value as a string:
 ```php
 $password = $db->rawQueryValue ('select password from users where id=? limit 1', Array(10));
 echo "Password is {$password}";
-NOTE: for a rawQueryValue() to return string instead of an array 'limit 1' should be added to the end of the query.
+// NOTE: for a rawQueryValue() to return string instead of an array 'limit 1' should be added to the end of the query.
 ```
 Get 1 column value from multiple rows:
 ```php
