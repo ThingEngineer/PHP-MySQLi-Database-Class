@@ -10,8 +10,8 @@ MysqliDb -- Simple MySQLi wrapper and object mapper with prepared statements
 **[Select Query](#select-query)**  
 **[Delete Query](#delete-query)**  
 **[Insert Data](#insert-data)**  
-**[Insert XML](#insert-xml)**
-**[Pagination](#pagination)**
+**[Insert XML](#insert-xml)**  
+**[Pagination](#pagination)**  
 **[Running raw SQL queries](#running-raw-sql-queries)**  
 **[Query Keywords](#query-keywords)**  
 **[Where Conditions](#where--having-methods)**  
@@ -375,7 +375,7 @@ Array
 MysqliDb can return result in 3 different formats: Array of Array, Array of Objects and a Json string. To select a return type use ArrayBuilder(), ObjectBuilder() and JsonBuilder() methods. Note that ArrayBuilder() is a default return type
 ```php
 // Array return type
-$= $db->getOne("users");
+$u= $db->getOne("users");
 echo $u['login'];
 // Object return type
 $u = $db->ObjectBuilder()->getOne("users");
@@ -395,21 +395,21 @@ To avoid long if checks there are couple helper functions to work with raw query
 
 Get 1 row of results:
 ```php
-$user = $db->rawQueryOne ('select * from users where id=?', Array(10));
+$user = $db->rawQueryOne('SELECT * from users where id=?', Array(10));
 echo $user['login'];
 // Object return type
-$user = $db->ObjectBuilder()->rawQueryOne ('select * from users where id=?', Array(10));
+$user = $db->ObjectBuilder()->rawQueryOne('SELECT * from users where id=?', Array(10));
 echo $user->login;
 ```
 Get 1 column value as a string:
 ```php
-$password = $db->rawQueryValue ('select password from users where id=? limit 1', Array(10));
+$password = $db->rawQueryValue('SELECT password from users where id=? limit 1', Array(10));
 echo "Password is {$password}";
 NOTE: for a rawQueryValue() to return string instead of an array 'limit 1' should be added to the end of the query.
 ```
 Get 1 column value from multiple rows:
 ```php
-$logins = $db->rawQueryValue ('select login from users limit 10');
+$logins = $db->rawQueryValue('SELECT login from users limit 10');
 foreach ($logins as $login)
     echo $login;
 ```
@@ -431,14 +431,14 @@ $q = "(
         WHERE a = ? AND B = ?
         ORDER BY a LIMIT ?
 )";
-$resutls = $db->rawQuery ($q, $params);
+$results = $db->rawQuery ($q, $params);
 print_r ($results); // contains Array of returned rows
 ```
 
 ### Where / Having Methods
 `where()`, `orWhere()`, `having()` and `orHaving()` methods allows you to specify where and having conditions of the query. All conditions supported by where() are supported by having() as well.
 
-WARNING: In order to use column to column comparisons only raw where conditions should be used as column name or functions cant be passed as a bind variable.
+WARNING: In order to use column to column comparisons only raw where conditions should be used as column name or functions cannot be passed as a bind variable.
 
 Regular == operator with variables:
 ```php
@@ -523,7 +523,7 @@ $results = $db->get("users");
 Or raw condition with variables:
 ```php
 $db->where ("(id = ? or id = ?)", Array(6,2));
-$db->where ("login","mike")
+$db->where ("login","mike");
 $res = $db->get ("users");
 // Gives: SELECT * FROM users WHERE (id = 6 or id = 2) and login='mike';
 ```
@@ -614,13 +614,14 @@ $results = $db->get ('users');
 // Gives: SELECT * FROM users GROUP BY name;
 ```
 
-Join table products with table users with LEFT JOIN by tenantID
 ### JOIN method
+Join table products with table users with LEFT JOIN by tenantID
 ```php
 $db->join("users u", "p.tenantID=u.tenantID", "LEFT");
 $db->where("u.id", 6);
 $products = $db->get ("products p", null, "u.name, p.productName");
 print_r ($products);
+// Gives: SELECT u.name, p.productName FROM products p LEFT JOIN users u ON p.tenantID=u.tenantID WHERE u.id = 6
 ```
 
 ### Join Conditions
@@ -630,7 +631,7 @@ $db->join("users u", "p.tenantID=u.tenantID", "LEFT");
 $db->joinWhere("users u", "u.tenantID", 5);
 $products = $db->get ("products p", null, "u.name, p.productName");
 print_r ($products);
-// Gives: SELECT  u.login, p.productName FROM products p LEFT JOIN users u ON (p.tenantID=u.tenantID AND u.tenantID = 5)
+// Gives: SELECT  u.name, p.productName FROM products p LEFT JOIN users u ON (p.tenantID=u.tenantID AND u.tenantID = 5)
 ```
 Add OR condition to join statement
 ```php
@@ -650,11 +651,11 @@ $db->where ("active", true);
 
 $customers = $db->copy ();
 $res = $customers->get ("customers", Array (10, 10));
-// SELECT * FROM customers where agentId = 10 and active = 1 limit 10, 10
+// SELECT * FROM customers WHERE agentId = 10 AND active = 1 LIMIT 10, 10
 
 $cnt = $db->getValue ("customers", "count(id)");
 echo "total records found: " . $cnt;
-// SELECT count(id) FROM users where agentId = 10 and active = 1
+// SELECT count(id) FROM customers WHERE agentId = 10 AND active = 1
 ```
 
 ### Subqueries
@@ -713,11 +714,11 @@ print_r ($products);
 ### EXISTS / NOT EXISTS condition
 ```php
 $sub = $db->subQuery();
-    $sub->where("company", 'testCompany');
-    $sub->get ("users", null, 'userId');
+$sub->where("company", 'testCompany');
+$sub->get ("users", null, 'userId');
 $db->where (null, $sub, 'exists');
 $products = $db->get ("products");
-// Gives SELECT * FROM products WHERE EXISTS (select userId from users where company='testCompany')
+// Gives SELECT * FROM products WHERE EXISTS (SELECT userId FROM users WHERE company='testCompany')
 ```
 
 ### Has method
@@ -744,7 +745,7 @@ if (!$db->ping())
 ```
 
 Get last executed SQL query:
-Please note that function returns SQL query only for debugging purposes as its execution most likely will fail due missing quotes around char variables.
+Please note that this method returns the SQL query only for debugging purposes as its execution most likely will fail due to missing quotes around char variables.
 ```php
     $db->get('users');
     echo "Last executed query was ". $db->getLastQuery();
