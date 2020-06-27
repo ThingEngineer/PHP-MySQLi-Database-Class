@@ -431,7 +431,7 @@ $q = "(
         WHERE a = ? AND B = ?
         ORDER BY a LIMIT ?
 )";
-$resutls = $db->rawQuery ($q, $params);
+$results = $db->rawQuery ($q, $params);
 print_r ($results); // contains Array of returned rows
 ```
 
