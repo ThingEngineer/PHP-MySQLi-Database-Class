@@ -34,8 +34,8 @@ $tables = Array (
         'firstName' => 'char(10) not null',
         'lastName' => 'char(10)',
         'password' => 'text not null',
-        'createdAt' => 'datetime',
-        'updatedAt' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
         'expires' => 'datetime',
         'loginCount' => 'int(10) default 0',
         'unique key' => 'login (login)'
@@ -53,8 +53,8 @@ $data = Array (
                'firstName' => 'John',
                'lastName' => 'Doe',
                'password' => $db->func('SHA1(?)',Array ("secretpassword+salt")),
-               'createdAt' => $db->now(),
-               'updatedAt' => $db->now(),
+               'created_at' => $db->now(),
+               'updated_at' => $db->now(),
                'expires' => $db->now('+1Y'),
                'loginCount' => $db->inc()
         ),
@@ -63,8 +63,8 @@ $data = Array (
                'firstName' => 'Mike',
                'lastName' => NULL,
                'password' => $db->func('SHA1(?)',Array ("secretpassword2+salt")),
-               'createdAt' => $db->now(),
-               'updatedAt' => $db->now(),
+               'created_at' => $db->now(),
+               'updated_at' => $db->now(),
                'expires' => $db->now('+1Y'),
                'loginCount' => $db->inc(2)
         ),
@@ -74,8 +74,8 @@ $data = Array (
                'firstName' => 'Pete',
                'lastName' => 'D',
                'password' => $db->func('SHA1(?)',Array ("secretpassword2+salt")),
-               'createdAt' => $db->now(),
-               'updatedAt' => $db->now(),
+               'created_at' => $db->now(),
+               'updated_at' => $db->now(),
                'expires' => $db->now('+1Y'),
                'loginCount' => $db->inc(3)
         )
@@ -147,8 +147,8 @@ $badUser = Array ('login' => null,
                'firstName' => 'John',
                'lastName' => 'Doe',
                'password' => 'test',
-               'createdAt' => $db->now(),
-               'updatedAt' => $db->now(),
+               'created_at' => $db->now(),
+               'updated_at' => $db->now(),
                'expires' => $db->now('+1Y'),
                'loginCount' => $db->inc()
         );
@@ -190,12 +190,12 @@ $user = Array ('login' => 'user3',
        'firstName' => 'Pete',
        'lastName' => 'D',
        'password' => $db->func('SHA1(?)',Array ("secretpassword2+salt")),
-       'createdAt' => $db->now(),
-       'updatedAt' => $db->now(),
+       'created_at' => $db->now(),
+       'updated_at' => $db->now(),
        'expires' => $db->now('+1Y'),
        'loginCount' => $db->inc(3)
        );
-$updateColumns = Array ("updatedAt");
+$updateColumns = Array ("updated_at");
 $insertLastId = "id";
 sleep(1);
 $db->onDuplicate($updateColumns, "id");
@@ -205,7 +205,7 @@ if ($db->count != 1) {
     echo "onDuplicate update failed. ";
     exit;
 }
-if ($nUser[0]['createdAt'] == $nUser[0]['updatedAt']) {
+if ($nUser[0]['created_at'] == $nUser[0]['updated_at']) {
     echo "onDuplicate2 update failed. ";
     exit;
 }
@@ -247,7 +247,7 @@ if ($db->count != 2) {
 }
 
 // TODO
-//$db->where("createdAt", Array (">" => $db->interval("-1h")));
+//$db->where("created_at", Array (">" => $db->interval("-1h")));
 //$users = $db->get("users");
 //print_r ($users);
 
@@ -428,7 +428,7 @@ if (key ($result) != 1 && $result[1] != 'user1') {
     echo 'map string=string failed';
     exit;
 }
-$result = $db->map ('id')->ArrayBuilder()->getOne ('users', 'id,login,createdAt');
+$result = $db->map ('id')->ArrayBuilder()->getOne ('users', 'id,login,created_at');
 if (key ($result) != 1 && !is_array ($result[1])) {
     echo 'map string=array failed';
     exit;
@@ -438,7 +438,7 @@ if (key ($result) != 1 && $result[1] != 'user1') {
     echo 'map object string=string failed';
     exit;
 }
-$result = $db->map ('id')->ObjectBuilder()->getOne ('users', 'id,login,createdAt');
+$result = $db->map ('id')->ObjectBuilder()->getOne ('users', 'id,login,created_at');
 if (key ($result) != 1 && !is_object ($result[1])) {
     echo 'map string=object failed';
     exit;

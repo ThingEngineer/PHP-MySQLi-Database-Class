@@ -93,7 +93,7 @@ class dbObject {
      * Variable which holds an amount of returned rows during paginate queries
      * @var string
      */
-    public static $totalCount = 0;	
+    public static $totalCount = 0;
     /**
      * An array that holds insert/update/select errors
      *
@@ -138,7 +138,7 @@ class dbObject {
     public function __set ($name, $value) {
         if (property_exists ($this, 'hidden') && array_search ($name, $this->hidden) !== false)
             return;
-	    
+
         $this->data[$name] = $value;
     }
 
@@ -152,7 +152,7 @@ class dbObject {
     public function __get ($name) {
         if (property_exists ($this, 'hidden') && array_search ($name, $this->hidden) !== false)
 	    return null;
-		
+
 	if (isset ($this->data[$name]) && $this->data[$name] instanceof dbObject)
             return $this->data[$name];
 
@@ -243,8 +243,8 @@ class dbObject {
      * @return mixed insert id or false in case of failure
      */
     public function insert () {
-        if (!empty ($this->timestamps) && in_array ("createdAt", $this->timestamps))
-            $this->createdAt = date("Y-m-d H:i:s");
+        if (!empty ($this->timestamps) && in_array ("created_at", $this->timestamps))
+            $this->created_at = date("Y-m-d H:i:s");
         $sqlData = $this->prepareData ();
         if (!$this->validate ($sqlData))
             return false;
@@ -276,13 +276,13 @@ class dbObject {
             }
         }
 
-        if (!empty ($this->timestamps) && in_array ("updatedAt", $this->timestamps))
-            $this->updatedAt = date("Y-m-d H:i:s");
+        if (!empty ($this->timestamps) && in_array ("updated_at", $this->timestamps))
+            $this->updated_at = date("Y-m-d H:i:s");
 
         $sqlData = $this->prepareData ();
         if (!$this->validate ($sqlData))
             return false;
-        
+
         $this->db->where ($this->primaryKey, $this->data[$this->primaryKey]);
 	    $res = $this->db->update ($this->dbTable, $sqlData);
 	    $this->toSkip = array();
@@ -374,7 +374,7 @@ class dbObject {
 
         return $item;
     }
-	
+
     /**
      * A convenient SELECT COLUMN function to get a single column value from model object
      *
@@ -401,7 +401,7 @@ class dbObject {
     protected function has() {
         return $this->db->has($this->dbTable);
     }
-	
+
     /**
      * Fetch all objects
      *
@@ -474,7 +474,7 @@ class dbObject {
 
         if (!$primaryKey)
             $primaryKey = MysqliDb::$prefix . $joinObj->dbTable . "." . $joinObj->primaryKey;
-		
+
         if (!strchr ($key, '.'))
             $joinStr = MysqliDb::$prefix . $this->dbTable . ".{$key} = " . $primaryKey;
         else
@@ -507,12 +507,12 @@ class dbObject {
     private function paginate ($page, $fields = null) {
         $this->db->pageLimit = self::$pageLimit;
         $objects = Array ();
-        $this->processHasOneWith ();	    
+        $this->processHasOneWith ();
         $res = $this->db->paginate ($this->dbTable, $page, $fields);
         self::$totalPages = $this->db->totalPages;
 	self::$totalCount = $this->db->totalCount;
 	if ($this->db->count == 0) return null;
-	    
+
         foreach ($res as $k => &$r) {
             $this->processArrays ($r);
             $this->data = $r;
@@ -618,11 +618,11 @@ class dbObject {
                 $obj = new $modelName;
                 $table = $obj->dbTable;
                 $primaryKey = $obj->primaryKey;
-				
+
                 if (!isset ($data[$table])) {
                     $data[$name] = $this->$name;
                     continue;
-                } 
+                }
                 if ($data[$table][$primaryKey] === null) {
                     $data[$name] = null;
                 } else {

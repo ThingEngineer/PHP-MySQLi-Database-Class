@@ -9,8 +9,8 @@
  * @property string firstName
  * @property string lastName
  * @property string password
- * @property string createdAt
- * @property string updatedAt
+ * @property string created_at
+ * @property string updated_at
  * @property string expires
  * @property int loginCount
  */
@@ -23,13 +23,13 @@ class user extends dbObject {
         'firstName' => Array ('/[a-zA-Z0-9 ]+/'),
         'lastName' => Array ('text'),
         'password' => Array ('text'),
-        'createdAt' => Array ('datetime'),
-        'updatedAt' => Array ('datetime'),
+        'created_at' => Array ('datetime'),
+        'updated_at' => Array ('datetime'),
         'expires' => Array ('datetime'),
         'loginCount' => Array ('int')
     );
 
-    protected $timestamps = Array ('createdAt', 'updatedAt');
+    protected $timestamps = Array ('created_at', 'updated_at');
     protected $relations = Array (
         'products' => Array ("hasMany", "product", 'userid')
     );

@@ -34,7 +34,7 @@ function action_adddb () {
         'firstName' => $_POST['firstName'],
         'lastName' => $_POST['lastName'],
         'password' => $db->func('SHA1(?)',Array ($_POST['password'] . 'salt123')),
-        'createdAt' => $db->now(),
+        'created_at' => $db->now(),
         'expires' => $db->now('+1Y')
     );
     $id = $db->insert ('users', $data);

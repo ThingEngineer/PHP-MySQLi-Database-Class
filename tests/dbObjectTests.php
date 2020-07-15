@@ -16,8 +16,8 @@ $tables = Array (
         'firstName' => 'char(10) not null',
         'lastName' => 'char(10)',
         'password' => 'text not null',
-        'createdAt' => 'datetime',
-        'updatedAt' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
         'expires' => 'datetime',
         'loginCount' => 'int(10) default 0'
     ),
@@ -224,7 +224,7 @@ if ($client->errors) {
     exit;
 }
 
-$expected = '{"customerId":2,"userId":{"id":4,"login":"testuser","active":0,"customerId":0,"firstName":"john","lastName":"Doe Jr","password":"","createdAt":"' .$client->createdAt. '","updatedAt":null,"expires":null,"loginCount":0},"productName":"product6","id":6}';
+$expected = '{"customerId":2,"userId":{"id":4,"login":"testuser","active":0,"customerId":0,"firstName":"john","lastName":"Doe Jr","password":"","created_at":"' .$client->created_at. '","updated_at":null,"expires":null,"loginCount":0},"productName":"product6","id":6}';
 
 if ($obj->with('userId')->toJson() != $expected) {
     echo "Multisave problem\n";

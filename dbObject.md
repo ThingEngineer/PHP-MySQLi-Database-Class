@@ -195,7 +195,7 @@ NOTE: Objects returned with `join()` will not save changes to a joined propertie
 Library provides a transparent way to set timestamps of an object creation and its modification:
 To enable that define `$timestamps` array as follows:
 ```php
-protected $timestamps = Array ('createdAt', 'updatedAt');
+protected $timestamps = Array ('created_at', 'updated_at');
 ```
 Field names can't be changed.
 
@@ -240,8 +240,8 @@ Validation rules must be defined in `$dbFields` array.
   protected $dbFields = Array(
     'login' => Array('text', 'required'),
     'password' => Array('text'),
-    'createdAt' => Array('datetime'),
-    'updatedAt' => Array('datetime'),
+    'created_at' => Array('datetime'),
+    'updated_at' => Array('datetime'),
     'custom' => Array('/^test/'),
   );
 ```

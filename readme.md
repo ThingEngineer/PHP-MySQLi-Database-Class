@@ -142,8 +142,8 @@ $data = Array (
 	'lastName' => 'Doe',
 	'password' => $db->func('SHA1(?)',Array ("secretpassword+salt")),
 	// password = SHA1('secretpassword+salt')
-	'createdAt' => $db->now(),
-	// createdAt = NOW()
+	'created_at' => $db->now(),
+	// created_at = NOW()
 	'expires' => $db->now('+1Y')
 	// expires = NOW() + interval 1 year
 	// Supported intervals [s]econd, [m]inute, [h]hour, [d]day, [M]onth, [Y]ear
@@ -161,10 +161,10 @@ Insert with on duplicate key update
 $data = Array ("login" => "admin",
                "firstName" => "John",
                "lastName" => 'Doe',
-               "createdAt" => $db->now(),
-               "updatedAt" => $db->now(),
+               "created_at" => $db->now(),
+               "updated_at" => $db->now(),
 );
-$updateColumns = Array ("updatedAt");
+$updateColumns = Array ("updated_at");
 $lastInsertId = "id";
 $db->onDuplicate($updateColumns, $lastInsertId);
 $id = $db->insert ('users', $data);
@@ -358,14 +358,14 @@ Array
     [user1] => 1
 )
 
-$user = $db->map ('login')->ObjectBuilder()->getOne ('users', 'id,login,createdAt');
+$user = $db->map ('login')->ObjectBuilder()->getOne ('users', 'id,login,created_at');
 Array
 (
     [user1] => stdClass Object
         (
             [id] => 1
             [login] => user1
-            [createdAt] => 2015-10-22 22:27:53
+            [created_at] => 2015-10-22 22:27:53
         )
 
 )
@@ -459,11 +459,11 @@ $results = $db->get ('users');
 Regular == operator with column to column comparison:
 ```php
 // WRONG
-$db->where ('lastLogin', 'createdAt');
+$db->where ('lastLogin', 'created_at');
 // CORRECT
-$db->where ('lastLogin = createdAt');
+$db->where ('lastLogin = created_at');
 $results = $db->get ('users');
-// Gives: SELECT * FROM users WHERE lastLogin = createdAt;
+// Gives: SELECT * FROM users WHERE lastLogin = created_at;
 ```
 
 ```php
@@ -516,7 +516,7 @@ $results = $db->get("users");
 Also you can use raw where conditions:
 ```php
 $db->where ("id != companyId");
-$db->where ("DATE(createdAt) = DATE(lastLogin)");
+$db->where ("DATE(created_at) = DATE(lastLogin)");
 $results = $db->get("users");
 ```
 
