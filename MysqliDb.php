@@ -260,6 +260,7 @@ class MysqliDb
      * @param int    $port
      * @param string $charset
      * @param string $socket
+     * @param string $owner
      */
     public function __construct($host = null, $username = null, $password = null, $db = null, $port = null, $charset = 'utf8', $socket = null)
     {
