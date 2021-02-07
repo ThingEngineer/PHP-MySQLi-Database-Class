@@ -553,7 +553,7 @@ class MysqliDb
     public function rawAddPrefix($query){
         $query = str_replace(PHP_EOL, null, $query);
         $query = preg_replace('/\s+/', ' ', $query);
-        preg_match_all("/(from|into|update|join) [\\'\\´]?([a-zA-Z0-9_-]+)[\\'\\´]?/i", $query, $matches);
+        preg_match_all("/(from|into|update|join|describe) [\\'\\´]?([a-zA-Z0-9_-]+)[\\'\\´]?/i", $query, $matches);
         list($from_table, $from, $table) = $matches;
 
         return str_replace($table[0], self::$prefix.$table[0], $query);
