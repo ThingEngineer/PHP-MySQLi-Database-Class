@@ -544,22 +544,6 @@ class MysqliDb
     }
 
     /**
-     * Prefix add raw SQL query.
-     *
-     * @author Emre Emir <https://github.com/bejutassle>
-     * @param string $query      User-provided query to execute.
-     * @return string Contains the returned rows from the query.
-     */
-    public function rawAddPrefix($query){
-        $query = str_replace(PHP_EOL, null, $query);
-        $query = preg_replace('/\s+/', ' ', $query);
-        preg_match_all("/(from|into|update|join) [\\'\\´]?([a-zA-Z0-9_-]+)[\\'\\´]?/i", $query, $matches);
-        list($from_table, $from, $table) = $matches;
-
-        return str_replace($table[0], self::$prefix.$table[0], $query);
-    }
-
-    /**
      * Execute raw SQL query.
      *
      * @param string $query      User-provided query to execute.
@@ -570,15 +554,24 @@ class MysqliDb
      */
     public function rawQuery($query, $bindParams = null)
     {
-        $query = $this->rawAddPrefix($query);
         $params = array(''); // Create the empty 0 index
         $this->_query = $query;
         $stmt = $this->_prepareQuery();
 
         if (is_array($bindParams) === true) {
             foreach ($bindParams as $prop => $val) {
-                $params[0] .= $this->_determineType($val);
-                array_push($params, $bindParams[$prop]);
+				//HENRY MOD 01
+				if ($val === null || $val == 'null' || $val == 'NULL' || is_null($val) ) {
+				    $val = 'NULL';
+				}
+				        $params[0] .= $this->_determineType($val);
+
+				if ($val === null || $val == 'null' || $val == 'NULL' || is_null($val) ) {
+				    array_push($params, NULL);
+				}else{
+					array_push($params, $bindParams[$prop]);
+				}
+				//END: HENRY MOD 01
             }
 
             call_user_func_array(array($stmt, 'bind_param'), $this->refValues($params));
@@ -588,7 +581,7 @@ class MysqliDb
         $this->count = $stmt->affected_rows;
         $this->_stmtError = $stmt->error;
         $this->_stmtErrno = $stmt->errno;
-        $this->_lastQuery = $this->replacePlaceHolders($this->_query, $params);
+		$this->_lastQuery = $this->replacePlaceHolders($this->_query, $params);
         $res = $this->_dynamicBindResults($stmt);
         $this->reset();
 
@@ -674,7 +667,9 @@ class MysqliDb
      *
      * @uses $MySqliDb->setQueryOption('name');
      *
-     * @param string|array $options The options name of the query.
+     * @param string|array $options The options name of the query.'ALL', 'DISTINCT', 'DISTINCTROW', 'HIGH_PRIORITY', 'STRAIGHT_JOIN', 'SQL_SMALL_RESULT',
+            'SQL_BIG_RESULT', 'SQL_BUFFER_RESULT', 'SQL_CACHE', 'SQL_NO_CACHE', 'SQL_CALC_FOUND_ROWS',
+            'LOW_PRIORITY', 'IGNORE', 'QUICK', 'MYSQLI_NESTJOIN', 'FOR UPDATE', 'LOCK IN SHARE MODE'
      *
      * @throws Exception
      * @return MysqliDb
@@ -1453,11 +1448,12 @@ class MysqliDb
     protected function _determineType($item)
     {
         switch (gettype($item)) {
-            case 'NULL':
+            
             case 'string':
                 return 's';
                 break;
-
+//HENRY MOD 02
+			case 'NULL':
             case 'boolean':
             case 'integer':
                 return 'i';
@@ -2057,10 +2053,13 @@ class MysqliDb
             if (is_object($val)) {
                 $val = '[object]';
             }
-            if ($val === null) {
-                $val = 'NULL';
-            }
-            $newStr .= substr($str, 0, $pos) . "'" . $val . "'";
+if ($val === null || $val == 'null' || $val == 'NULL' || is_null($val) ) {
+    $val = "NULL";
+    $newStr .= substr($str, 0, $pos) . $val ;
+}else{
+	$newStr .= substr($str, 0, $pos) . "'" . $val . "'";
+}
+            
             $str = substr($str, $pos + 1);
         }
         $newStr .= $str;
