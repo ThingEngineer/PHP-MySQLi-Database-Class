@@ -1,4 +1,5 @@
 MysqliDb -- Simple MySQLi wrapper and object mapper with prepared statements
+With 'null'/'NULL' value inserted as 'NULL' IN the rawQuery func used to update
 <hr>
 
 ### Table of Contents
