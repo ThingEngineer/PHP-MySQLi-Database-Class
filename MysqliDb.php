@@ -252,6 +252,8 @@ class MysqliDb
      */
     protected $_transaction_in_progress = false;
 
+    protected $timezone;
+
     /**
      * @param string $host
      * @param string $username
@@ -261,7 +263,7 @@ class MysqliDb
      * @param string $charset
      * @param string $socket
      */
-    public function __construct($host = null, $username = null, $password = null, $db = null, $port = null, $charset = 'utf8', $socket = null)
+    public function __construct($host = null, $username = null, $password = null, $db = null, $port = null, $charset = 'utf8', $timezone = null, $socket = null)
     {
         $isSubQuery = false;
 
@@ -289,6 +291,10 @@ class MysqliDb
 
         if (isset($prefix)) {
             $this->setPrefix($prefix);
+        }
+
+        if (isset($timezone)) {
+            $this->timezone = $timezone;
         }
 
         self::$_instance = $this;
@@ -329,6 +335,11 @@ class MysqliDb
         if (!empty($charset)) {
             $mysqli->set_charset($charset);
         }
+
+        if ($this->timezone) {
+            $mysqli->query("SET time_zone = '" . $this->timezone . "'");
+        }
+
         $this->_mysqli[$connectionName] = $mysqli;
     }
 
@@ -551,7 +562,7 @@ class MysqliDb
      * @return string Contains the returned rows from the query.
      */
     public function rawAddPrefix($query){
-        $query = str_replace(PHP_EOL, null, $query);
+        $query = str_replace(PHP_EOL, ' ', $query);
         $query = preg_replace('/\s+/', ' ', $query);
         preg_match_all("/(from|into|update|join) [\\'\\´]?([a-zA-Z0-9_-]+)[\\'\\´]?/i", $query, $matches);
         list($from_table, $from, $table) = $matches;
