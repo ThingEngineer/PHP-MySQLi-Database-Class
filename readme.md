@@ -63,7 +63,8 @@ $db = new MysqliDb (Array (
                 'db'=> 'databaseName',
                 'port' => 3306,
                 'prefix' => 'my_',
-                'charset' => 'utf8'));
+                'charset' => 'utf8',
+                'timezone' => '-5:00'));
 ```
 table prefix, port and database charset params are optional.
 If no charset should be set charset, set it to null
