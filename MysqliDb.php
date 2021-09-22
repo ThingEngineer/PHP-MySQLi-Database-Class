@@ -9,7 +9,7 @@
  * @author    Alexander V. Butenko <a.butenka@gmail.com>
  * @copyright Copyright (c) 2010-2017
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
- * @link      http://github.com/joshcam/PHP-MySQLi-Database-Class 
+ * @link      http://github.com/joshcam/PHP-MySQLi-Database-Class
  * @version   2.9.3
  */
 
@@ -243,7 +243,7 @@ class MysqliDb
      * @var string the name of a default (main) mysqli connection
      */
     public $defConnectionName = 'default';
-    
+
     public $autoReconnect = true;
     protected $autoReconnectCount = 0;
 
@@ -306,7 +306,7 @@ class MysqliDb
     {
         if(!isset($this->connectionsSettings[$connectionName]))
             throw new Exception('Connection profile not set');
-        
+
         $pro = $this->connectionsSettings[$connectionName];
         $params = array_values($pro);
         $charset = array_pop($params);
@@ -724,10 +724,10 @@ class MysqliDb
     /**
      * A convenient SELECT * function.
      *
-     * @param string    $tableName   The name of the database table to work with.
-     * @param int|array $numRows     Array to define SQL limit in format Array ($offset, $count)
-     *                               or only $count
-     * @param string    $columns     Desired columns
+     * @param string       $tableName The name of the database table to work with.
+     * @param int|array    $numRows   Array to define SQL limit in format Array ($offset, $count)
+     *                                or only $count
+     * @param string|array $columns   Desired columns
      *
      * @return array|MysqliDb Contains the returned rows from the select query.
      * @throws Exception
@@ -766,8 +766,8 @@ class MysqliDb
     /**
      * A convenient SELECT * function to get one record.
      *
-     * @param string $tableName The name of the database table to work with.
-     * @param string $columns   Desired columns
+     * @param string       $tableName The name of the database table to work with.
+     * @param string|array $columns   Desired columns
      *
      * @return array Contains the returned rows from the select query.
      * @throws Exception
@@ -2464,8 +2464,8 @@ class MysqliDb
             else
                 $joinStr = $joinTable;
 
-            $this->_query .= " " . $joinType. " JOIN " . $joinStr . 
-                (false !== stripos($joinCondition, 'using') ? " " : " on ") 
+            $this->_query .= " " . $joinType. " JOIN " . $joinStr .
+                (false !== stripos($joinCondition, 'using') ? " " : " on ")
                 . $joinCondition;
 
             // Add join and query
