@@ -2096,7 +2096,7 @@ class MysqliDb
      *
      * @return int
      */
-    public function getLastErrno () {
+    public function getLastErrno() {
         return $this->_stmtErrno;
     }
 
