@@ -669,12 +669,14 @@ class dbObject {
     private function processArrays (&$data) {
         if (isset ($this->jsonFields) && is_array ($this->jsonFields)) {
             foreach ($this->jsonFields as $key)
-                $data[$key] = json_decode ($data[$key]);
+		if ( isset($data[$key]) )
+                    $data[$key] = json_decode ($data[$key]);
         }
 
         if (isset ($this->arrayFields) && is_array($this->arrayFields)) {
             foreach ($this->arrayFields as $key)
-                $data[$key] = explode ("|", $data[$key]);
+		if ( isset($data[$key]) )
+                    $data[$key] = explode ("|", $data[$key]);
         }
     }
 
