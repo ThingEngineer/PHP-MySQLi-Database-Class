@@ -485,6 +485,9 @@ foreach ($data as $name => $datas) {
     }
 }
 
+$db->columnExists("users", ["firstName", "lastName"]);
+$db->columnExists("users", "nonExistingColumn");
+
 ///
 //TODO: insert test
 $db->delete("users");
