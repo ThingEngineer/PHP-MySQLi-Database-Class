@@ -1,4 +1,16 @@
 <?php
+/*
+* changes by EnthusiastNT 2021-12-04:
+* - added a check on isset($table[0]) because that threw an error once
+* - utf8mb4 instead of utf8 as default as recommended in the docs
+* - mb_substr instead of substr since we use utf8
+* - added 3 function aliases for easier understanding (see CHANGED)
+* - corrected some spelling and grammar in comments
+* - removed a few "@throws Exception" where it wasn't throwing anything
+* - added some line breaks for consistency
+* - moved orWhere() after where() because... OCD I guess
+*/
+
 /**
  * MysqliDb Class
  *
@@ -171,7 +183,9 @@ class MysqliDb
     protected $_updateColumns = null;
 
     /**
-     * Return type: 'array' to return results as array, 'object' as object
+     * Return type:
+     * 'array' to return results as array
+     * 'object' as object
      * 'json' as json string
      *
      * @var string
@@ -226,8 +240,8 @@ class MysqliDb
      *
      * @var int
      */
-
     public $pageLimit = 20;
+
     /**
      * Variable that holds total pages count of last paginate() query
      *
@@ -239,6 +253,7 @@ class MysqliDb
      * @var array connections settings [profile_name=>[same_as_contruct_args]]
      */
     protected $connectionsSettings = array();
+
     /**
      * @var string the name of a default (main) mysqli connection
      */
@@ -260,8 +275,9 @@ class MysqliDb
      * @param int    $port
      * @param string $charset
      * @param string $socket
+     * @return MysqliDb
      */
-    public function __construct($host = null, $username = null, $password = null, $db = null, $port = null, $charset = 'utf8', $socket = null)
+    public function __construct($host = null, $username = null, $password = null, $db = null, $port = null, $charset = 'utf8mb4', $socket = null)
     {
         $isSubQuery = false;
 
@@ -299,8 +315,8 @@ class MysqliDb
      *
      * @param null|string $connectionName
      *
-     * @throws Exception
      * @return void
+     * @throws Exception
      */
     public function connect($connectionName = 'default')
     {
@@ -333,7 +349,9 @@ class MysqliDb
     }
 
     /**
-     * @throws Exception
+     * Disconnect all instances
+     *
+     * @return void
      */
     public function disconnectAll()
     {
@@ -362,9 +380,7 @@ class MysqliDb
     /**
      * A method to disconnect from the database
      *
-     * @params string $connection connection name to disconnect
-     *
-     * @param string $connection
+     * @param string $connection connection name to disconnect
      *
      * @return void
      */
@@ -407,7 +423,6 @@ class MysqliDb
      * A method to get mysqli object or create it in case needed
      *
      * @return mysqli
-     * @throws Exception
      */
     public function mysqli()
     {
@@ -556,7 +571,10 @@ class MysqliDb
         preg_match_all("/(from|into|update|join|describe) [\\'\\´]?([a-zA-Z0-9_-]+)[\\'\\´]?/i", $query, $matches);
         list($from_table, $from, $table) = $matches;
 
-        return str_replace($table[0], self::$prefix.$table[0], $query);
+        // CHANGED
+        if ( isset($table[0]) )
+            $query = str_replace($table[0], self::$prefix.$table[0], $query);
+        return $query;
     }
 
     /**
@@ -566,7 +584,6 @@ class MysqliDb
      * @param array  $bindParams Variables array to bind to the SQL statement.
      *
      * @return array Contains the returned rows from the query.
-     * @throws Exception
      */
     public function rawQuery($query, $bindParams = null)
     {
@@ -604,7 +621,6 @@ class MysqliDb
      * @param array  $bindParams Variables array to bind to the SQL statement.
      *
      * @return array|null Contains the returned row from the query.
-     * @throws Exception
      */
     public function rawQueryOne($query, $bindParams = null)
     {
@@ -625,7 +641,6 @@ class MysqliDb
      * @param array  $bindParams Variables array to bind to the SQL statement.
      *
      * @return mixed Contains the returned rows from the query.
-     * @throws Exception
      */
     public function rawQueryValue($query, $bindParams = null)
     {
@@ -654,7 +669,6 @@ class MysqliDb
      * @param int|array $numRows Array to define SQL limit in format Array ($offset, $count)
      *
      * @return array Contains the returned rows from the query.
-     * @throws Exception
      */
     public function query($query, $numRows = null)
     {
@@ -676,7 +690,6 @@ class MysqliDb
      *
      * @param string|array $options The options name of the query.
      *
-     * @throws Exception
      * @return MysqliDb
      */
     public function setQueryOption($options)
@@ -713,7 +726,6 @@ class MysqliDb
      * Function to enable SQL_CALC_FOUND_ROWS in the get queries
      *
      * @return MysqliDb
-     * @throws Exception
      */
     public function withTotalCount()
     {
@@ -730,7 +742,6 @@ class MysqliDb
      * @param string|array $columns   Desired columns
      *
      * @return array|MysqliDb Contains the returned rows from the select query.
-     * @throws Exception
      */
     public function get($tableName, $numRows = null, $columns = '*')
     {
@@ -770,7 +781,6 @@ class MysqliDb
      * @param string|array $columns   Desired columns
      *
      * @return array Contains the returned rows from the select query.
-     * @throws Exception
      */
     public function getOne($tableName, $columns = '*')
     {
@@ -787,15 +797,15 @@ class MysqliDb
         return null;
     }
 
+
     /**
-     * A convenient SELECT COLUMN function to get a single column value from one row
+     * convenient SELECT COLUMN function to get a single column value from one row
      *
-     * @param string $tableName The name of the database table to work with.
-     * @param string $column    The desired column
-     * @param int    $limit     Limit of rows to select. Use null for unlimited..1 by default
+     * @param string $tableName name of database table to work with
+     * @param string $column    desired column
+     * @param int    $limit     limit of rows to select. Use null for unlimited. 1 by default
      *
-     * @return mixed Contains the value of a returned column / array of values
-     * @throws Exception
+     * @return mixed value of returned column / array of values
      */
     public function getValue($tableName, $column, $limit = 1)
     {
@@ -819,6 +829,36 @@ class MysqliDb
         return $newRes;
     }
 
+
+    /**
+     * CHANGED
+     * get one row (make it more obvious this is a row)
+     */
+    public function getRow($tableName, $columns = '*')
+    {
+        return $this->getOne($tableName, $columns);
+    }
+
+    /**
+     * CHANGED
+     * get one column (make it more obvious this is a column)
+     *  - parameters in same order as get()
+     */
+    public function getCol($tableName, $limit, $column)
+    {
+        return $this->getValue($tableName, $column, $limit);
+    }
+
+    /**
+     * CHANGED
+     * get one value (shorter)
+     */
+    public function getV($tableName, $column)
+    {
+        return $this->getValue($tableName, $column, 1);
+    }
+
+
     /**
      * Insert method to add new row
      *
@@ -826,7 +866,6 @@ class MysqliDb
      * @param array  $insertData Data containing information for inserting into the DB.
      *
      * @return bool Boolean indicating whether the insert query was completed successfully.
-     * @throws Exception
      */
     public function insert($tableName, $insertData)
     {
@@ -841,7 +880,6 @@ class MysqliDb
      * @param array  $dataKeys        Optional Table Key names, if not set in insertDataSet.
      *
      * @return bool|array Boolean indicating the insertion failed (false), else return id-array ([int])
-     * @throws Exception
      */
     public function insertMulti($tableName, array $multiInsertData, array $dataKeys = null)
     {
@@ -879,11 +917,10 @@ class MysqliDb
     /**
      * Replace method to add new row
      *
-     * @param string $tableName  The name of the table.
-     * @param array  $insertData Data containing information for inserting into the DB.
+     * @param string $tableName  name of the table
+     * @param array  $insertData array of data to insert one row
      *
-     * @return bool Boolean indicating whether the insert query was completed successfully.
-     * @throws Exception
+     * @return bool  true if insert was successfull
      */
     public function replace($tableName, $insertData)
     {
@@ -891,13 +928,12 @@ class MysqliDb
     }
 
     /**
-     * A convenient function that returns TRUE if exists at least an element that
-     * satisfy the where condition specified calling the "where" method before this one.
+     * convenient function that returns TRUE if at least one element exists 
+     *  that satisfies the where condition specified calling the "where" method before this one.
      *
-     * @param string $tableName The name of the database table to work with.
+     * @param string $tableName
      *
      * @return bool
-     * @throws Exception
      */
     public function has($tableName)
     {
@@ -908,12 +944,11 @@ class MysqliDb
     /**
      * Update query. Be sure to first call the "where" method.
      *
-     * @param string $tableName The name of the database table to work with.
-     * @param array  $tableData Array of data to update the desired row.
-     * @param int    $numRows   Limit on the number of rows that can be updated.
+     * @param string $tableName name of database table to work with
+     * @param array  $tableData array of data to update one row
+     * @param int    $numRows   limit number of rows to update
      *
      * @return bool
-     * @throws Exception
      */
     public function update($tableName, $tableData, $numRows = null)
     {
@@ -941,7 +976,6 @@ class MysqliDb
      *                               or only $count
      *
      * @return bool Indicates success. 0 or 1.
-     * @throws Exception
      */
     public function delete($tableName, $numRows = null)
     {
@@ -968,9 +1002,12 @@ class MysqliDb
     }
 
     /**
-     * This method allows you to specify multiple (method chaining optional) AND WHERE statements for SQL queries.
+     * specify (multiple) WHERE statement(s) for the next query
+     *  - default operator is =, cond is AND
+     *  - method chaining optional
      *
-     * @uses $MySqliDb->where('id', 7)->where('title', 'MyTitle');
+     * @uses $db->where('id', 7);
+     * @uses $db->where('date', '1900-00-00', '>');
      *
      * @param string $whereProp  The name of the database field.
      * @param mixed  $whereValue The value of the database field.
@@ -990,6 +1027,22 @@ class MysqliDb
     }
 
     /**
+     * shortcut for OR condition in WHERE statement
+     *
+     * @uses $MySqliDb->orWhere('id', 7)->orWhere('title', 'MyTitle');
+     *
+     * @param string $whereProp  The name of the database field.
+     * @param mixed  $whereValue The value of the database field.
+     * @param string $operator   Comparison operator. Default is =
+     *
+     * @return MysqliDb
+     */
+    public function orWhere($whereProp, $whereValue = 'DBNULL', $operator = '=')
+    {
+        return $this->where($whereProp, $whereValue, $operator, 'OR');
+    }
+
+    /**
      * This function store update column's name and column name of the
      * autoincrement column
      *
@@ -1003,22 +1056,6 @@ class MysqliDb
         $this->_lastInsertId = $lastInsertId;
         $this->_updateColumns = $updateColumns;
         return $this;
-    }
-
-    /**
-     * This method allows you to specify multiple (method chaining optional) OR WHERE statements for SQL queries.
-     *
-     * @uses $MySqliDb->orWhere('id', 7)->orWhere('title', 'MyTitle');
-     *
-     * @param string $whereProp  The name of the database field.
-     * @param mixed  $whereValue The value of the database field.
-     * @param string $operator   Comparison operator. Default is =
-     *
-     * @return MysqliDb
-     */
-    public function orWhere($whereProp, $whereValue = 'DBNULL', $operator = '=')
-    {
-        return $this->where($whereProp, $whereValue, $operator, 'OR');
     }
 
     /**
@@ -1076,8 +1113,8 @@ class MysqliDb
      * @param string $joinCondition the condition.
      * @param string $joinType      'LEFT', 'INNER' etc.
      *
-     * @throws Exception
      * @return MysqliDb
+     * @throws Exception
      */
     public function join($joinTable, $joinCondition, $joinType = '')
     {
@@ -1102,7 +1139,7 @@ class MysqliDb
      * This is a basic method which allows you to import raw .CSV data into a table
      * Please check out http://dev.mysql.com/doc/refman/5.7/en/load-data.html for a valid .csv file.
      *
-     * @author Jonas Barascu (Noneatme)
+     * @author Jonas Barascu
      *
      * @param string $importTable    The database table where the data will be imported into.
      * @param string $importFile     The file to be imported. Please use double backslashes \\ and make sure you
@@ -1254,11 +1291,13 @@ class MysqliDb
                 $customFieldsOrRegExp[$key] = preg_replace("/[^\x80-\xff-a-z0-9\.\(\),_` ]+/i", '', $value);
             }
             $orderByField = 'FIELD (' . $orderByField . ', "' . implode('","', $customFieldsOrRegExp) . '")';
-        }elseif(is_string($customFieldsOrRegExp)){
-	    $orderByField = $orderByField . " REGEXP '" . $customFieldsOrRegExp . "'";
-	}elseif($customFieldsOrRegExp !== null){
-	    throw new Exception('Wrong custom field or Regular Expression: ' . $customFieldsOrRegExp);
-	}
+        }
+        elseif (is_string($customFieldsOrRegExp)) {
+	        $orderByField = $orderByField . " REGEXP '" . $customFieldsOrRegExp . "'";
+    	}
+        elseif ($customFieldsOrRegExp !== null) {
+	        throw new Exception('Wrong custom field or Regular Expression: ' . $customFieldsOrRegExp);
+    	}
 
         $this->_orderBy[$orderByField] = $orderbyDirection;
         return $this;
@@ -1289,8 +1328,8 @@ class MysqliDb
      *
      * @param  string $method The table lock method. Can be READ or WRITE.
      *
-     * @throws Exception
      * @return MysqliDb
+     * @throws Exception
      */
 	public function setLockMethod($method)
 	{
@@ -1367,10 +1406,10 @@ class MysqliDb
 	}
 
     /**
-     * Unlocks all tables in a database.
-     * Also commits transactions.
+     * Unlocks all tables in a database. Also commits transactions.
      *
      * @author Jonas Barascu
+     *
      * @return MysqliDb
      * @throws Exception
      */
@@ -1406,7 +1445,6 @@ class MysqliDb
      * This methods returns the ID of the last inserted item
      *
      * @return int The last inserted item ID.
-     * @throws Exception
      */
     public function getInsertId()
     {
@@ -1419,7 +1457,6 @@ class MysqliDb
      * @param string $str The string to escape.
      *
      * @return string The escaped string.
-     * @throws Exception
      */
     public function escape($str)
     {
@@ -1433,7 +1470,6 @@ class MysqliDb
      * since _mysqli is protected.
      *
      * @return bool True if connection is up
-     * @throws Exception
      */
     public function ping()
     {
@@ -1528,7 +1564,6 @@ class MysqliDb
      * @param string $operation  Type of operation (INSERT, REPLACE)
      *
      * @return bool Boolean indicating whether the insert query was completed successfully.
-     * @throws Exception
      */
     private function _buildInsert($tableName, $insertData, $operation)
     {
@@ -1570,7 +1605,6 @@ class MysqliDb
      * @param array     $tableData   Should contain an array of data for updating the database.
      *
      * @return mysqli_stmt|bool Returns the $stmt object.
-     * @throws Exception
      */
     protected function _buildQuery($numRows = null, $tableData = null)
     {
@@ -1609,13 +1643,12 @@ class MysqliDb
     }
 
     /**
-     * This helper method takes care of prepared statements' "bind_result method
-     * , when the number of variables to pass is unknown.
+     * This helper method takes care of prepared statements' bind_result method
+     *   when the number of variables to pass is unknown.
      *
-     * @param mysqli_stmt $stmt Equal to the prepared statement object.
+     * @param mysqli_stmt $stmt  Equal to the prepared statement object.
      *
-     * @return array|string The results of the SQL fetch.
-     * @throws Exception
+     * @return array|string      The results of the SQL fetch.
      */
     protected function _dynamicBindResults(mysqli_stmt $stmt)
     {
@@ -1641,7 +1674,7 @@ class MysqliDb
             }
 
             if ($this->_nestJoin && $field->table != $this->_tableName) {
-                $field->table = substr($field->table, strlen(self::$prefix));
+                $field->table = mb_substr($field->table, mb_strlen(self::$prefix));
                 $row[$field->table][$field->name] = null;
                 $parameters[] = & $row[$field->table][$field->name];
             } else {
@@ -1650,7 +1683,7 @@ class MysqliDb
             }
         }
 
-        // avoid out of memory bug in php 5.2 and 5.3. Mysqli allocates lot of memory for long*
+        // avoid out of memory bug in php 5.2 and 5.3. Mysqli allocates a lot of memory for long*
         // and blob* types. So to avoid out of memory issues store_result is used
         // https://github.com/joshcam/PHP-MySQLi-Database-Class/pull/119
         if ($shouldStoreResult) {
@@ -1720,7 +1753,7 @@ class MysqliDb
     }
 
     /**
-     * Abstraction method that will build an JOIN part of the query
+     * Abstraction method that will build a JOIN part of the query
      *
      * @return void
      */
@@ -1811,8 +1844,6 @@ class MysqliDb
      * Helper function to add variables into the query statement
      *
      * @param array $tableData Variable with values
-     *
-     * @throws Exception
      */
     protected function _buildOnDuplicate($tableData)
     {
@@ -1839,8 +1870,6 @@ class MysqliDb
      * Abstraction method that will build an INSERT or UPDATE part of the query
      *
      * @param array $tableData
-     *
-     * @throws Exception
      */
     protected function _buildInsertQuery($tableData)
     {
@@ -1988,7 +2017,6 @@ class MysqliDb
      * and throws an error if there was a problem.
      *
      * @return mysqli_stmt
-     * @throws Exception
      */
     protected function _prepareQuery()
     {
@@ -2060,8 +2088,8 @@ class MysqliDb
             if ($val === null) {
                 $val = 'NULL';
             }
-            $newStr .= substr($str, 0, $pos) . "'" . $val . "'";
-            $str = substr($str, $pos + 1);
+            $newStr .= mb_substr($str, 0, $pos) . "'" . $val . "'";
+            $str = mb_substr($str, $pos + 1);
         }
         $newStr .= $str;
         return $newStr;
@@ -2081,7 +2109,6 @@ class MysqliDb
      * Method returns mysql error
      *
      * @return string
-     * @throws Exception
      */
     public function getLastError()
     {
@@ -2174,7 +2201,6 @@ class MysqliDb
      * @param string $func Initial date
      *
      * @return array
-     * @throws Exception
      */
     public function now($diff = null, $func = "NOW()")
     {
@@ -2186,8 +2212,8 @@ class MysqliDb
      *
      * @param int $num increment by int or float. 1 by default
      *
-     * @throws Exception
      * @return array
+     * @throws Exception
      */
     public function inc($num = 1)
     {
@@ -2267,7 +2293,6 @@ class MysqliDb
      *
      * @uses mysqli->autocommit(false)
      * @uses register_shutdown_function(array($this, "_transaction_shutdown_check"))
-     * @throws Exception
      */
     public function startTransaction()
     {
@@ -2281,7 +2306,6 @@ class MysqliDb
      *
      * @uses mysqli->commit();
      * @uses mysqli->autocommit(true);
-     * @throws Exception
      */
     public function commit()
     {
@@ -2296,7 +2320,6 @@ class MysqliDb
      *
      * @uses mysqli->rollback();
      * @uses mysqli->autocommit(true);
-     * @throws Exception
      */
     public function rollback()
     {
@@ -2311,7 +2334,6 @@ class MysqliDb
      * atomic operations sane.
      *
      * @uses mysqli->rollback();
-     * @throws Exception
      */
     public function _transaction_status_check()
     {
@@ -2359,7 +2381,6 @@ class MysqliDb
      * @param array $tables Table name or an Array of table names to check
      *
      * @return bool True if table exists
-     * @throws Exception
      */
     public function tableExists($tables)
     {
@@ -2403,7 +2424,6 @@ class MysqliDb
      * @param array|string $fields Array or coma separated list of fields to fetch
      *
      * @return array
-     * @throws Exception
      */
     public function paginate ($table, $page, $fields = null) {
         $offset = $this->pageLimit * ($page - 1);
@@ -2520,4 +2540,4 @@ class MysqliDb
     }
 }
 
-// END class
+?>
