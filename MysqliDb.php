@@ -1275,7 +1275,7 @@ class MysqliDb
      */
     public function groupBy($groupByField)
     {
-        $groupByField = preg_replace("/[^-a-z0-9\.\(\),_\* <>=!]+/i", '', $groupByField);
+        $groupByField = preg_replace("/[^-a-z0-9áéíóú\.\(\),_\* <>=!]+/i", '', $groupByField);
 
         $this->_groupBy[] = $groupByField;
         return $this;
