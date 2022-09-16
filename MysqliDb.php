@@ -9,7 +9,7 @@
  * @author    Alexander V. Butenko <a.butenka@gmail.com>
  * @copyright Copyright (c) 2010-2017
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
- * @link      http://github.com/joshcam/PHP-MySQLi-Database-Class 
+ * @link      http://github.com/joshcam/PHP-MySQLi-Database-Class
  * @version   2.9.3
  */
 
@@ -243,7 +243,7 @@ class MysqliDb
      * @var string the name of a default (main) mysqli connection
      */
     public $defConnectionName = 'default';
-    
+
     public $autoReconnect = true;
     protected $autoReconnectCount = 0;
 
@@ -306,7 +306,7 @@ class MysqliDb
     {
         if(!isset($this->connectionsSettings[$connectionName]))
             throw new Exception('Connection profile not set');
-        
+
         $pro = $this->connectionsSettings[$connectionName];
         $params = array_values($pro);
         $charset = array_pop($params);
@@ -551,9 +551,9 @@ class MysqliDb
      * @return string Contains the returned rows from the query.
      */
     public function rawAddPrefix($query){
-        $query = str_replace(PHP_EOL, null, $query);
+        $query = str_replace(PHP_EOL, '', $query);
         $query = preg_replace('/\s+/', ' ', $query);
-        preg_match_all("/(from|into|update|join) [\\'\\´]?([a-zA-Z0-9_-]+)[\\'\\´]?/i", $query, $matches);
+        preg_match_all("/(from|into|update|join|describe) [\\'\\´]?([a-zA-Z0-9_-]+)[\\'\\´]?/i", $query, $matches);
         list($from_table, $from, $table) = $matches;
 
         return str_replace($table[0], self::$prefix.$table[0], $query);
@@ -724,10 +724,10 @@ class MysqliDb
     /**
      * A convenient SELECT * function.
      *
-     * @param string    $tableName   The name of the database table to work with.
-     * @param int|array $numRows     Array to define SQL limit in format Array ($offset, $count)
-     *                               or only $count
-     * @param string    $columns     Desired columns
+     * @param string       $tableName The name of the database table to work with.
+     * @param int|array    $numRows   Array to define SQL limit in format Array ($offset, $count)
+     *                                or only $count
+     * @param string|array $columns   Desired columns
      *
      * @return array|MysqliDb Contains the returned rows from the select query.
      * @throws Exception
@@ -766,8 +766,8 @@ class MysqliDb
     /**
      * A convenient SELECT * function to get one record.
      *
-     * @param string $tableName The name of the database table to work with.
-     * @param string $columns   Desired columns
+     * @param string       $tableName The name of the database table to work with.
+     * @param string|array $columns   Desired columns
      *
      * @return array Contains the returned rows from the select query.
      * @throws Exception
@@ -2096,7 +2096,7 @@ class MysqliDb
      *
      * @return int
      */
-    public function getLastErrno () {
+    public function getLastErrno() {
         return $this->_stmtErrno;
     }
 
@@ -2464,8 +2464,8 @@ class MysqliDb
             else
                 $joinStr = $joinTable;
 
-            $this->_query .= " " . $joinType. " JOIN " . $joinStr . 
-                (false !== stripos($joinCondition, 'using') ? " " : " on ") 
+            $this->_query .= " " . $joinType. " JOIN " . $joinStr .
+                (false !== stripos($joinCondition, 'using') ? " " : " on ")
                 . $joinCondition;
 
             // Add join and query

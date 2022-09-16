@@ -451,7 +451,7 @@ class dbObject {
         if (!property_exists ($this, 'relations') || !isset ($this->relations[$objectName]))
             die ("No relation with name $objectName found");
 
-        $this->_with[$objectName] = $this->relations[$objectName];
+        $this->_with[MysqliDb::$prefix.$objectName] = $this->relations[$objectName];
 
         return $this;
     }
