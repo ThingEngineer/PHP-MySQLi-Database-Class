@@ -556,7 +556,8 @@ class MysqliDb
         preg_match_all("/(from|into|update|join|describe) [\\'\\´]?([a-zA-Z0-9_-]+)[\\'\\´]?/i", $query, $matches);
         list($from_table, $from, $table) = $matches;
 
-        return str_replace($table[0], self::$prefix.$table[0], $query);
+        $table = array_unique($table);
+        return str_replace($table, preg_filter('/^/', self::$prefix, $table), $query);
     }
 
     /**
