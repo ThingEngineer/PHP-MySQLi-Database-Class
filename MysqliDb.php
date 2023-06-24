@@ -935,6 +935,8 @@ class MysqliDb
 
     /**
      * Delete query. Call the "where" method first.
+     * For better error handling, we can make use of exceptions. 
+     * This will allow the caller to handle the error in a more specific way, including providing more specific error messages.
      *
      * @param string    $tableName   The name of the database table to work with.
      * @param int|array $numRows     Array to define SQL limit in format Array ($offset, $count)
@@ -946,8 +948,9 @@ class MysqliDb
     public function delete($tableName, $numRows = null)
     {
         if ($this->isSubQuery) {
-            return;
+            throw new Exception('Delete function cannot be used within a subquery context.');
         }
+        
 
         $table = self::$prefix . $tableName;
 
@@ -958,13 +961,17 @@ class MysqliDb
         }
 
         $stmt = $this->_buildQuery($numRows);
-        $stmt->execute();
+
+        // Error handling
+        if (!$stmt->execute()) {
+            throw new Exception('Failed to execute delete operation: ' . $this->_stmtError);
+        }
         $this->_stmtError = $stmt->error;
         $this->_stmtErrno = $stmt->errno;
         $this->count = $stmt->affected_rows;
         $this->reset();
 
-        return ($stmt->affected_rows > -1);	//	-1 indicates that the query returned an error
+        return (bool) ($stmt->affected_rows >= 0); // -1 indicates that the query returned an error
     }
 
     /**
