@@ -971,7 +971,7 @@ class MysqliDb
         $this->count = $stmt->affected_rows;
         $this->reset();
 
-        return (bool) ($stmt->affected_rows >= 0); // -1 indicates that the query returned an error
+        return ($stmt->affected_rows >= 0); // anything greater than -1 indicates success
     }
 
     /**
