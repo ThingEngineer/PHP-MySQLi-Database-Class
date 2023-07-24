@@ -216,9 +216,9 @@ class MysqliDb
     /**
      * Variables for query execution tracing
      */
-    protected $traceStartQ;
-    protected $traceEnabled;
-    protected $traceStripPrefix;
+    protected $traceStartQ = 0;
+    protected $traceEnabled = false;
+    protected $traceStripPrefix = '';
     public $trace = array();
 
     /**
@@ -2329,7 +2329,7 @@ class MysqliDb
      *
      * @return MysqliDb
      */
-    public function setTrace($enabled, $stripPrefix = null)
+    public function setTrace($enabled, $stripPrefix = '')
     {
         $this->traceEnabled = $enabled;
         $this->traceStripPrefix = $stripPrefix;
@@ -2350,7 +2350,7 @@ class MysqliDb
         }
 
         return __CLASS__ . "->" . $caller["function"] . "() >>  file \"" .
-            str_replace($this->traceStripPrefix, '', $caller["file"]) . "\" line #" . $caller["line"] . " ";
+        str_replace($this->traceStripPrefix , '', $caller["file"]) . "\" line #" . $caller["line"] . " ";
     }
 
     /**
