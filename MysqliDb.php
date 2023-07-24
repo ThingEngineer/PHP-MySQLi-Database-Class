@@ -790,11 +790,11 @@ class MysqliDb
     /**
      * A convenient SELECT COLUMN function to get a single column value from one row
      *
-     * @param string $tableName The name of the database table to work with.
-     * @param string $column    The desired column
-     * @param int    $limit     Limit of rows to select. Use null for unlimited..1 by default
+     * @param string    $tableName The name of the database table to work with.
+     * @param string    $column    The desired column
+     * @param int|null  $limit     Limit of rows to select. Use null for unlimited. 1 by default
      *
-     * @return mixed Contains the value of a returned column / array of values
+     * @return mixed    Contains the value of a returned column / array of values
      * @throws Exception
      */
     public function getValue($tableName, $column, $limit = 1)
