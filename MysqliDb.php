@@ -1689,7 +1689,12 @@ class MysqliDb
             }
             $this->count++;
             if ($this->_mapKey) {
-                $results[$row[$this->_mapKey]] = count($row) > 2 ? $result : end($result);
+                if (count($row) < 3 && $this->returnType == 'object') {
+                    $res = new ArrayIterator($result);
+                    $res->seek($_res->count() - 1);
+                    $results[$row[$this->_mapKey]] = $res->current();
+                }
+                else $results[$row[$this->_mapKey]] = count($row) > 2 ? $result : end($result);
             } else {
                 array_push($results, $result);
             }
