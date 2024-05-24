@@ -216,9 +216,9 @@ class MysqliDb
     /**
      * Variables for query execution tracing
      */
-    protected $traceStartQ;
-    protected $traceEnabled;
-    protected $traceStripPrefix;
+    protected $traceStartQ = 0;
+    protected $traceEnabled = false;
+    protected $traceStripPrefix = '';
     public $trace = array();
 
     /**
@@ -790,11 +790,11 @@ class MysqliDb
     /**
      * A convenient SELECT COLUMN function to get a single column value from one row
      *
-     * @param string $tableName The name of the database table to work with.
-     * @param string $column    The desired column
-     * @param int    $limit     Limit of rows to select. Use null for unlimited..1 by default
+     * @param string    $tableName The name of the database table to work with.
+     * @param string    $column    The desired column
+     * @param int|null  $limit     Limit of rows to select. Use null for unlimited. 1 by default
      *
-     * @return mixed Contains the value of a returned column / array of values
+     * @return mixed    Contains the value of a returned column / array of values
      * @throws Exception
      */
     public function getValue($tableName, $column, $limit = 1)
@@ -1689,7 +1689,12 @@ class MysqliDb
             }
             $this->count++;
             if ($this->_mapKey) {
-                $results[$row[$this->_mapKey]] = count($row) > 2 ? $result : end($result);
+                if (count($row) < 3 && $this->returnType == 'object') {
+                    $res = new ArrayIterator($result);
+                    $res->seek($_res->count() - 1);
+                    $results[$row[$this->_mapKey]] = $res->current();
+                }
+                else $results[$row[$this->_mapKey]] = count($row) > 2 ? $result : end($result);
             } else {
                 array_push($results, $result);
             }
@@ -2329,7 +2334,7 @@ class MysqliDb
      *
      * @return MysqliDb
      */
-    public function setTrace($enabled, $stripPrefix = null)
+    public function setTrace($enabled, $stripPrefix = '')
     {
         $this->traceEnabled = $enabled;
         $this->traceStripPrefix = $stripPrefix;
@@ -2350,7 +2355,7 @@ class MysqliDb
         }
 
         return __CLASS__ . "->" . $caller["function"] . "() >>  file \"" .
-            str_replace($this->traceStripPrefix, '', $caller["file"]) . "\" line #" . $caller["line"] . " ";
+        str_replace($this->traceStripPrefix , '', $caller["file"]) . "\" line #" . $caller["line"] . " ";
     }
 
     /**
