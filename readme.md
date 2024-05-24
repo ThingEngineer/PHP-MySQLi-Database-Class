@@ -446,6 +446,11 @@ $db->where ('id', 1);
 $db->where ('login', 'admin');
 $results = $db->get ('users');
 // Gives: SELECT * FROM users WHERE id=1 AND login='admin';
+
+// Or you can also use Chain Loaders for above query
+$results = $db->where ('id', 1)
+                ->where ('login', 'admin')
+                ->get('users');
 ```
 
 ```php
