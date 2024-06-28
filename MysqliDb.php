@@ -558,7 +558,7 @@ class MysqliDb
 
         // Check if there are matches
         if (empty($table[0]))
-            return $query; 
+            return $query;
 
         return str_replace($table[0], self::$prefix.$table[0], $query);
     }
@@ -1695,7 +1695,7 @@ class MysqliDb
             if ($this->_mapKey) {
                 if (count($row) < 3 && $this->returnType == 'object') {
                     $res = new ArrayIterator($result);
-                    $res->seek($_res->count() - 1);
+                    $res->seek($res->count() - 1);
                     $results[$row[$this->_mapKey]] = $res->current();
                 }
                 else $results[$row[$this->_mapKey]] = count($row) > 2 ? $result : end($result);
