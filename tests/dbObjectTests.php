@@ -1,9 +1,9 @@
 <?php
-error_reporting (E_ALL|E_STRICT);
+error_reporting (E_ALL);
 require_once ("../MysqliDb.php");
 require_once ("../dbObject.php");
 
-$db = new Mysqlidb('localhost', 'root', '', 'testdb');
+$db = new Mysqlidb('localhost', 'root', 'root', 'testdb');
 $prefix = 't_';
 $db->setPrefix($prefix);
 dbObject::autoload ("models");
@@ -93,7 +93,7 @@ function createTable ($name, $data) {
 
 // rawQuery test
 foreach ($tables as $name => $fields) {
-    $db->rawQuery("DROP TABLE " . $prefix . $name);
+    $db->rawQuery("DROP TABLE IF EXISTS " . $prefix . $name);
     createTable ($prefix . $name, $fields);
 }
 
