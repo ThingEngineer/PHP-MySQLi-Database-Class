@@ -17,9 +17,12 @@
         }
     ],
     "require": {
-        "php": ">=5.3.0"
+        "php": ">=8.3.0"
     },
     "autoload": {
-        "files": ["MysqliDb.php", "dbObject.php"]
+        "files": [
+            "MysqliDb.php",
+            "dbObject.php"
+        ]
     }
 }
