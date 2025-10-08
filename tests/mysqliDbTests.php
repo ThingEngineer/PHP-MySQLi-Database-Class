@@ -9,16 +9,16 @@ function pretty_print($array) {
 }
 
 $prefix = 't_';
-$db = new Mysqlidb('localhost', 'root', '', 'testdb');
+$db = new Mysqlidb('localhost', 'root', 'root', 'testdb');
 if(!$db) die("Database error");
 
-$mysqli = new mysqli ('localhost', 'root', '', 'testdb');
+$mysqli = new mysqli ('localhost', 'root', 'root', 'testdb');
 $db = new Mysqlidb($mysqli);
 
 $db = new Mysqlidb(Array (
                 'host' => 'localhost',
                 'username' => 'root',
-                'password' => '',
+                'password' => 'root',
                 'db' => 'testdb',
                 'prefix' => $prefix,
                 'charset' => null));
@@ -119,7 +119,7 @@ function createTable ($name, $data) {
 
 // rawQuery test
 foreach ($tables as $name => $fields) {
-    $db->rawQuery("DROP TABLE ".$prefix.$name);
+    $db->rawQuery("DROP TABLE IF EXISTS ".$prefix.$name);
     createTable ($prefix.$name, $fields);
 }
 
