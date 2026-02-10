@@ -1427,7 +1427,7 @@ class MysqliDb
      */
     public function escape($str)
     {
-        return $this->mysqli()->real_escape_string($str);
+        return $str ? $this->mysqli()->real_escape_string($str) : $str;
     }
 
     /**
