@@ -9,6 +9,7 @@
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      http://github.com/joshcam/PHP-MySQLi-Database-Class
  * @version   2.9-master
+ * @version   3.0-master
  *
  * @method int count ()
  * @method dbObject ArrayBuilder()
