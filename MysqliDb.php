@@ -2008,7 +2008,16 @@ class MysqliDb
      */
     protected function _prepareQuery()
     {
-        $stmt = $this->mysqli()->prepare($this->_query);
+        try {
+            $stmt = $this->mysqli()->prepare($this->_query);
+        } catch (Exception $e) {
+            //try to reconnect gracefully if the connection was broken since the last query
+            if ($this->mysqli()->errno === 2006 && $this->autoReconnect === true && $this->autoReconnectCount === 0) {
+                $this->connect($this->defConnectionName);
+                $this->autoReconnectCount++;
+                return $this->_prepareQuery();
+            }
+        }
 
         if ($stmt !== false) {
             if ($this->traceEnabled)
@@ -2016,10 +2025,11 @@ class MysqliDb
             return $stmt;
         }
 
+        //if statement is false then the server has been down for awhile and the query is dirty, reconnect and reset
+        //we'll lose one query exection, but the next will be successful
         if ($this->mysqli()->errno === 2006 && $this->autoReconnect === true && $this->autoReconnectCount === 0) {
             $this->connect($this->defConnectionName);
             $this->autoReconnectCount++;
-            return $this->_prepareQuery();
         }
 
         $error = $this->mysqli()->error;
