@@ -687,6 +687,13 @@ $ids->get ("products", null, "userId");
 $db->where ("id", $ids, 'in');
 $res = $db->get ("users");
 // Gives SELECT * FROM users WHERE id IN (SELECT userId FROM products WHERE qty > 2)
+
+$db::$prefix = "t_";
+$subQuery = $db->subQuery('u');
+$subQuery->orderBy('loginCount', 'desc')->get( "users, (select @i:=0) r", 10, ['(@i:=@i+1) ranking','id', 'login', 'firstName']);
+
+$data = $db->where( 'login', 'user3')->get( $subQuery, null, ['ranking']);
+// Gives SELECT  ranking FROM   (SELECT  (@i:=@i+1) ranking, id, login, firstName FROM t_users, (select @i:=0) r ORDER BY loginCount DESC  LIMIT 10) u WHERE  login = 'user3'
 ```
 
 Subquery in inserts:
