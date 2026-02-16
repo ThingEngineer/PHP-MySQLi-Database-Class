@@ -786,7 +786,9 @@ class MysqliDb
             return $res[0];
         } elseif ($res) {
             return $res;
-        }
+        } elseif ($res === false) {
+	    return false;	
+	}
 
         return null;
     }
