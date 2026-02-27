@@ -553,14 +553,9 @@ class MysqliDb
     public function rawAddPrefix($query){
         $query = str_replace(PHP_EOL, '', $query);
         $query = preg_replace('/\s+/', ' ', $query);
-	preg_match_all("/(from|into|update|join|describe) [\\'\\´\\`]?([a-zA-Z0-9_-]+)[\\'\\´\\`]?/i", $query, $matches);
-        list($from_table, $from, $table) = $matches;
+        $query = preg_replace("/(from|into|update|join|describe) [\\'\\´\\`]?([a-zA-Z0-9_-]+)[\\'\\´\\`]?/i", "\$1 `" . self::$prefix . "\$2`", $query);
 
-        // Check if there are matches
-        if (empty($table[0]))
-            return $query; 
-
-        return str_replace($table[0], self::$prefix.$table[0], $query);
+        return $query;
     }
 
     /**
@@ -1702,7 +1697,7 @@ class MysqliDb
             if ($this->_mapKey) {
                 if (count($row) < 3 && $this->returnType == 'object') {
                     $res = new ArrayIterator($result);
-                    $res->seek($_res->count() - 1);
+                    $res->seek($res->count() - 1);
                     $results[$row[$this->_mapKey]] = $res->current();
                 }
                 else $results[$row[$this->_mapKey]] = count($row) > 2 ? $result : end($result);
